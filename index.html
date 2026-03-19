@@ -8,66 +8,53 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif; background: #F7F6F3; color: #1a1a18; min-height: 100vh; }
 
-  /* ── 密碼畫面 ── */
-  #lock-screen {
-    position: fixed; inset: 0; background: #F7F6F3;
-    display: flex; align-items: center; justify-content: center; z-index: 999;
-  }
-  .lock-card {
-    background: #fff; border: 0.5px solid #D3D1C7; border-radius: 16px;
-    padding: 36px 32px; width: 320px; text-align: center;
-  }
+  /* 密碼畫面 */
+  #lock-screen { position: fixed; inset: 0; background: #F7F6F3; display: flex; align-items: center; justify-content: center; z-index: 999; }
+  .lock-card { background: #fff; border: 0.5px solid #D3D1C7; border-radius: 16px; padding: 36px 32px; width: 320px; text-align: center; }
   .lock-icon { font-size: 32px; margin-bottom: 14px; }
   .lock-card h2 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
   .lock-card p  { font-size: 13px; color: #888780; margin-bottom: 20px; }
-  .lock-card input {
-    width: 100%; padding: 10px 14px; font-family: inherit; font-size: 15px;
-    border: 0.5px solid #D3D1C7; border-radius: 8px; outline: none;
-    text-align: center; letter-spacing: 3px; background: #FAFAF8;
-    transition: border-color .15s;
-  }
+  .lock-card input { width: 100%; padding: 10px 14px; font-family: inherit; font-size: 15px; border: 0.5px solid #D3D1C7; border-radius: 8px; outline: none; text-align: center; letter-spacing: 3px; background: #FAFAF8; transition: border-color .15s; }
   .lock-card input:focus { border-color: #888780; background: #fff; }
   .lock-card input.error { border-color: #E24B4A; background: #FCEBEB; animation: shake .3s; }
-  .lock-btn {
-    width: 100%; margin-top: 12px; padding: 11px; font-family: inherit;
-    font-size: 14px; font-weight: 500; background: #1a1a18; color: #fff;
-    border: none; border-radius: 8px; cursor: pointer; transition: background .15s;
-  }
+  .lock-btn { width: 100%; margin-top: 12px; padding: 11px; font-family: inherit; font-size: 14px; font-weight: 500; background: #1a1a18; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
   .lock-btn:hover { background: #3d3d3a; }
   .lock-err { font-size: 12px; color: #A32D2D; margin-top: 8px; min-height: 18px; }
-  @keyframes shake {
-    0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}
-  }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
 
-  /* ── App ── */
+  /* Header */
   #app { display: none; }
-  .header { padding: 20px 28px 16px; border-bottom: 0.5px solid #D3D1C7; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .header { padding: 18px 28px 14px; border-bottom: 0.5px solid #D3D1C7; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
   .header-left h1 { font-size: 19px; font-weight: 600; }
   .header-left p  { font-size: 12px; color: #888780; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .sync-badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+  .sync-ok   { background: #EAF3DE; color: #3B6D11; }
+  .sync-busy { background: #FAEEDA; color: #854F0B; }
+  .sync-err  { background: #FCEBEB; color: #A32D2D; }
   .btn-lock { font-size: 12px; padding: 4px 12px; border-radius: 20px; background: #F1EFE8; color: #5F5E5A; border: 0.5px solid #D3D1C7; cursor: pointer; font-family: inherit; }
   .btn-lock:hover { background: #E8E6E0; }
 
-  .layout { display: flex; min-height: calc(100vh - 65px); }
+  /* Layout */
+  .layout { display: flex; min-height: calc(100vh - 63px); }
   .sidebar { width: 290px; min-width: 290px; background: #fff; border-right: 0.5px solid #D3D1C7; padding: 18px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
   .sidebar h2 { font-size: 13px; font-weight: 600; padding-bottom: 10px; border-bottom: 0.5px solid #E8E6E0; }
   .field { display: flex; flex-direction: column; gap: 4px; }
   .field label { font-size: 11px; font-weight: 500; color: #5F5E5A; text-transform: uppercase; letter-spacing: .4px; }
-  .field input, .field select, .field textarea {
-    font-family: inherit; font-size: 14px; padding: 7px 10px;
-    border: 0.5px solid #D3D1C7; border-radius: 8px; background: #FAFAF8; color: #1a1a18; outline: none; transition: border-color .15s;
-  }
+  .field input, .field select, .field textarea { font-family: inherit; font-size: 14px; padding: 7px 10px; border: 0.5px solid #D3D1C7; border-radius: 8px; background: #FAFAF8; color: #1a1a18; outline: none; transition: border-color .15s; }
   .field input:focus, .field select:focus, .field textarea:focus { border-color: #888780; background: #fff; }
   .field textarea { resize: vertical; min-height: 60px; }
   .btn-primary { padding: 10px; font-family: inherit; font-size: 14px; font-weight: 500; background: #1a1a18; color: #fff; border: none; border-radius: 8px; cursor: pointer; transition: background .15s; }
   .btn-primary:hover { background: #3d3d3a; }
+  .btn-primary:disabled { background: #B4B2A9; cursor: not-allowed; }
   .btn-secondary { padding: 8px; font-family: inherit; font-size: 13px; color: #888780; background: none; border: 0.5px solid #D3D1C7; border-radius: 8px; cursor: pointer; }
   .btn-secondary:hover { background: #F1EFE8; }
 
+  /* Timeline */
   .main { flex: 1; padding: 24px 36px; overflow-y: auto; }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 0.5px solid #E8E6E0; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #5F5E5A; }
-  .legend-dot  { width: 9px; height: 9px; border-radius: 50%; }
-
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
   .tl-item { display: flex; margin-bottom: 18px; }
   .tl-left { width: 105px; min-width: 105px; padding-right: 12px; padding-top: 13px; text-align: right; }
   .tl-date    { font-size: 14px; font-weight: 600; color: #1a1a18; line-height: 1.3; }
@@ -91,7 +78,6 @@
   .card-alert { margin-top: 7px; padding: 6px 10px 6px 11px; font-size: 12px; line-height: 1.5; }
   .alert-warn  { background: #FAEEDA; color: #633806; border-left: 3px solid #EF9F27; }
   .alert-issue { background: #FCEBEB; color: #791F1F; border-left: 3px solid #E24B4A; }
-
   .s-normal    { background:#E6F1FB; color:#185FA5; }
   .s-milestone { background:#EAF3DE; color:#3B6D11; }
   .s-warn      { background:#FAEEDA; color:#854F0B; }
@@ -102,7 +88,13 @@
   .dot-warn      { background:#EF9F27; }
   .dot-pending   { background:#EF9F27; }
   .dot-issue     { background:#E24B4A; }
-  .empty { text-align: center; padding: 60px 20px; color: #888780; font-size: 14px; }
+  .empty   { text-align: center; padding: 60px 20px; color: #888780; font-size: 14px; }
+  .loading { text-align: center; padding: 60px 20px; color: #888780; font-size: 14px; }
+
+  /* Setup banner */
+  .setup-banner { background: #E6F1FB; border: 0.5px solid #B5D4F4; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: #185FA5; line-height: 1.6; }
+  .setup-banner strong { font-weight: 600; }
+  .setup-banner a { color: #0C447C; }
 </style>
 </head>
 <body>
@@ -126,7 +118,10 @@
       <h1>施工及監造工作回報</h1>
       <p>台中電廠</p>
     </div>
-    <button class="btn-lock" onclick="lockApp()">🔒 登出</button>
+    <div class="header-right">
+      <span class="sync-badge sync-busy" id="sync-badge">連線中...</span>
+      <button class="btn-lock" onclick="lockApp()">🔒 登出</button>
+    </div>
   </div>
 
   <div class="layout">
@@ -164,21 +159,27 @@
         <div class="legend-item"><div class="legend-dot" style="background:#EF9F27"></div>待注意／待決議</div>
         <div class="legend-item"><div class="legend-dot" style="background:#E24B4A"></div>異常／已開單</div>
       </div>
-      <div id="timeline"></div>
+      <div id="setup-area"></div>
+      <div id="timeline"><div class="loading">載入中...</div></div>
     </div>
   </div>
 </div>
 
 <script>
-// ── 請在這裡修改你的密碼 ──────────────────────
-const PASSWORD = 'taichung2026';
-// ─────────────────────────────────────────────
+// ══════════════════════════════════════════
+// ① 請把你的密碼改在這裡
+const PASSWORD = 'dnvccs2026';
+
+// ② 貼上你的 Google Apps Script 網址
+//    格式：https://script.google.com/macros/s/xxxxxx/exec
+const API_URL = 'https://script.google.com/macros/s/AKfycbyCkCshAUZoYC2AEUJ1jPj3eyJHlVCvY80uCth6H8y8MfbaKJCfIHlunSFDhLo9BBCX/exec';
+// ══════════════════════════════════════════
 
 const BADGE = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
-const STORAGE_KEY = 'construction_tl';
 let entries = [];
 let editingId = null;
 
+// ── 密碼 ──
 function checkPw() {
   const val = document.getElementById('pw-input').value;
   const inp = document.getElementById('pw-input');
@@ -186,15 +187,13 @@ function checkPw() {
     sessionStorage.setItem('tl_auth', '1');
     document.getElementById('lock-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    loadData(); render();
+    loadAll();
   } else {
     document.getElementById('pw-err').textContent = '密碼錯誤，請再試一次';
-    inp.classList.add('error');
-    inp.value = '';
+    inp.classList.add('error'); inp.value = '';
     setTimeout(() => inp.classList.remove('error'), 500);
   }
 }
-
 function lockApp() {
   sessionStorage.removeItem('tl_auth');
   document.getElementById('lock-screen').style.display = 'flex';
@@ -203,21 +202,42 @@ function lockApp() {
   document.getElementById('pw-err').textContent = '';
 }
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+// ── 同步狀態 ──
+function setSync(msg, cls) {
+  const b = document.getElementById('sync-badge');
+  b.textContent = msg; b.className = 'sync-badge ' + cls;
+}
 
-function loadData() {
+// ── API ──
+async function api(params) {
+  if (!API_URL) throw new Error('尚未設定 API_URL');
+  const url = API_URL + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url);
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
+async function loadAll() {
+  if (!API_URL) {
+    setSync('未設定 API', 'sync-err');
+    showSetupBanner();
+    document.getElementById('timeline').innerHTML = '';
+    return;
+  }
+  setSync('載入中...', 'sync-busy');
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    entries = raw ? JSON.parse(raw) : getDefaultData();
-    if (!raw) saveData();
-  } catch(e) { entries = getDefaultData(); }
+    const data = await api({ action: 'getAll' });
+    entries = data.entries || [];
+    setSync('已同步 ✓', 'sync-ok');
+    render();
+  } catch(e) {
+    setSync('連線失敗', 'sync-err');
+    document.getElementById('timeline').innerHTML = '<div class="empty">無法連線到 Google Sheets，請檢查 API 網址設定。</div>';
+  }
 }
 
-function saveData() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch(e) {}
-}
-
-function submitEntry() {
+async function submitEntry() {
   const date    = document.getElementById('f-date').value;
   const weather = document.getElementById('f-weather').value;
   const status  = document.getElementById('f-status').value;
@@ -226,23 +246,40 @@ function submitEntry() {
   const alertTx = document.getElementById('f-alert').value.trim();
   if (!date || !title) { alert('請填寫日期和工項說明'); return; }
 
-  if (editingId) {
-    const idx = entries.findIndex(e => e.id === editingId);
-    if (idx !== -1) entries[idx] = { id: editingId, date, weather, status, title, sub, alert: alertTx };
-    editingId = null;
-    document.getElementById('form-title').textContent = '＋ 新增工項';
-    document.getElementById('btn-submit').textContent = '新增到時間軸';
-    document.getElementById('btn-cancel').style.display = 'none';
-  } else {
-    entries.push({ id: uid(), date, weather, status, title, sub, alert: alertTx });
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true; btn.textContent = '儲存中...';
+  setSync('儲存中...', 'sync-busy');
+
+  try {
+    if (editingId) {
+      await api({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx });
+      editingId = null;
+      document.getElementById('form-title').textContent = '＋ 新增工項';
+      document.getElementById('btn-cancel').style.display = 'none';
+    } else {
+      await api({ action:'add', date, weather, status, title, sub, alert:alertTx });
+    }
+    resetForm();
+    btn.textContent = '新增到時間軸';
+    await loadAll();
+  } catch(e) {
+    setSync('儲存失敗', 'sync-err');
+    alert('儲存失敗：' + e.message);
   }
-  saveData(); resetForm(); render();
+  btn.disabled = false;
+  btn.textContent = editingId ? '儲存變更' : '新增到時間軸';
 }
 
-function resetForm() {
-  ['f-date','f-title','f-sub','f-alert'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-status').value = 'normal';
-  document.getElementById('f-weather').value = '晴';
+async function deleteEntry(id) {
+  if (!confirm('確定要刪除這筆記錄嗎？')) return;
+  setSync('刪除中...', 'sync-busy');
+  try {
+    await api({ action:'delete', id });
+    if (editingId === id) cancelEdit();
+    await loadAll();
+  } catch(e) {
+    setSync('刪除失敗', 'sync-err');
+  }
 }
 
 function editEntry(id) {
@@ -270,11 +307,10 @@ function cancelEdit() {
   render();
 }
 
-function deleteEntry(id) {
-  if (!confirm('確定要刪除這筆記錄嗎？')) return;
-  entries = entries.filter(e => e.id !== id);
-  if (editingId === id) cancelEdit();
-  saveData(); render();
+function resetForm() {
+  ['f-date','f-title','f-sub','f-alert'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value = 'normal';
+  document.getElementById('f-weather').value = '晴';
 }
 
 function formatDate(d) {
@@ -315,28 +351,18 @@ function render() {
   }).join('');
 }
 
-function getDefaultData() {
-  return [
-    { id:uid(), date:'2026-02-11', weather:'晴', status:'milestone', title:'洗車台材料進場自檢', sub:'出工 7人（施工 3、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-02', weather:'晴', status:'issue',     title:'圍籬施工／門柱基礎灌漿完成', sub:'出工 8人（施工 4、管理 4）', alert:'灌漿作業未依核定計畫執行材料進場檢驗程序。出工人數與 TBM-KY 簽到記錄不符。' },
-    { id:uid(), date:'2026-03-05', weather:'陰', status:'normal',    title:'大門片安裝及施工組裝', sub:'出工 11人（施工 7、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-06', weather:'雨', status:'warn',      title:'轉角圍籬組裝及既有人行道、地坪打除', sub:'出工 12人（施工 8、管理 4）', alert:'轉角圍籬鋼板高度及網狀透空部分高度不足，與假設工程分項施工計畫圖 6-4 不符。' },
-    { id:uid(), date:'2026-03-09', weather:'陰', status:'normal',    title:'人行道開挖及洗車台整地', sub:'出工 8人（施工 4、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-10', weather:'陰', status:'warn',      title:'沉砂池區域既有地坪及人行道挖除及整地', sub:'出工 11人（施工 7、管理 4）', alert:'貨櫃屋既有管線與沉砂池預定位置重疊，需等改管後施作。' },
-    { id:uid(), date:'2026-03-11', weather:'晴', status:'milestone', title:'人行道開挖／測量定位／洗車台整地／圍籬防溢座灌漿', sub:'140 kgf/cm²，約 120m，約 6m³　抽查：放樣、防溢座尺寸　出工 17人（施工 13、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-12', weather:'晴', status:'issue',     title:'既有人行道／地坪拆除／部分區域整地', sub:'出工 14人（施工 10、管理 4）', alert:'承商未依核定土方暫置區暫置，且未設置汙染防制措施。開立改善事項通知單 10490817_0001。' },
-    { id:uid(), date:'2026-03-13', weather:'晴', status:'warn',      title:'防溢座灌漿／沉砂池開挖', sub:'抽查：防溢座 140 kg/cm² 混凝土　出工 13人（施工 9、管理 4）', alert:'開挖沉砂池發現兩條既有管線，已立即通知甲方及電廠，預計下週邀集電廠進行會勘。' },
-    { id:uid(), date:'2026-03-16', weather:'晴', status:'pending',   title:'沉砂池開挖／防溢座施作', sub:'出工 12人（施工 8、管理 4）', alert:'會同電廠勘查：一條初判為雨水管，另一條用途待確認。處置方案提請會議討論，本日無決議。' },
-    { id:uid(), date:'2026-03-17', weather:'晴', status:'issue',     title:'沉砂池開挖／灌木區整地／防溢座施作', sub:'混凝土取樣送驗（監造會同）　出工 11人（施工 7、管理 4）', alert:'承商疑以「辦理會客」方式使未辦工作證人員入廠施工，查證後依電廠門禁規定於相關人員開始工作前驅離。' },
-    { id:uid(), date:'2026-03-18', weather:'晴', status:'milestone', title:'沉砂池開挖並拆除既有埋管／灌木區整地／施工地坪清理', sub:'出工 13人（施工 9、管理 4）', alert:'' },
-  ];
+function showSetupBanner() {
+  document.getElementById('setup-area').innerHTML = `
+    <div class="setup-banner">
+      <strong>⚙️ 還需要一個設定步驟才能啟用雲端同步</strong><br>
+      請參考下方說明，把 Google Apps Script 網址填入 HTML 的 <code>API_URL</code> 欄位。
+    </div>`;
 }
 
-// 如果這次 session 已驗證過就自動解鎖
 if (sessionStorage.getItem('tl_auth') === '1') {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  loadData(); render();
+  loadAll();
 }
 </script>
 </body>
