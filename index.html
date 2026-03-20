@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>施工及監造工作回報 — 台中電廠</title>
+<title>施工及監造工作回報 — 減碳A標</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
@@ -348,7 +348,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         </div>
         <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
         <div class="field"><label>出工人數</label><input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）"></div>
-        <div class="field"><label>異常／備註（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
+        <div class="field"><label>異常／備注（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
         <div class="field" id="f-defect-wrap" style="display:none">
           <label>連結缺失單（選填）</label>
           <input type="text" id="f-defect-no" placeholder="例：10490817_0001">
@@ -443,7 +443,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         </div>
         <div class="export-section">
           <h3>📋 缺失單 CSV</h3>
-          <p>匯出所有缺失單記錄，包含狀態與追蹤備註。</p>
+          <p>匯出所有缺失單記錄，包含狀態與追蹤備注。</p>
           <button class="btn-export csv" onclick="exportDefectsCSV()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             下載缺失單 CSV
@@ -465,7 +465,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         <div class="field"><label>缺失單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
         <div class="field"><label>缺失說明</label><textarea id="dm-title" placeholder="簡述缺失內容"></textarea></div>
         <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
-        <div class="field"><label>追蹤備註（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
+        <div class="field"><label>追蹤備注（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
         <div class="field"><label>初始狀態</label>
           <select id="dm-status">
             <option value="open">未結案</option>
@@ -484,6 +484,42 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
 </div><!-- app -->
 
 <script>
+// ── 全域錯誤保護：防止任何 JS 錯誤導致空白頁面 ──
+window.onerror = function(msg, src, line, col, err) {
+  console.error('App error:', msg, err);
+  showErrorBanner('發生錯誤：' + msg);
+  return true;
+};
+window.onunhandledrejection = function(e) {
+  console.error('Unhandled promise rejection:', e.reason);
+  showErrorBanner('非同步錯誤：' + (e.reason?.message || e.reason));
+};
+function showErrorBanner(msg) {
+  try {
+    const app = document.getElementById('app');
+    if (!app || app.style.display === 'none') return;
+    let banner = document.getElementById('global-err-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'global-err-banner';
+      banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#7f1d1d;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:90vw;';
+      banner.innerHTML = '<span id="global-err-msg"></span><button onclick="recoverApp()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit;">重新載入</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:16px;line-height:1;">×</button>';
+      document.body.appendChild(banner);
+    }
+    document.getElementById('global-err-msg').textContent = msg;
+  } catch(e) {}
+}
+function recoverApp() {
+  try {
+    // 清除可能損壞的資料再重試
+    const banner = document.getElementById('global-err-banner');
+    if (banner) banner.remove();
+    init();
+  } catch(e) {
+    location.reload();
+  }
+}
+
 // ══════════════════════════
 const PASSWORD = 'dnvccs2026';
 const API_URL  = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
@@ -520,45 +556,147 @@ function lockApp() {
 }
 
 // ── STORAGE ──
-function localSave()  { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(entries)); } catch(e){} }
-function localLoad()  { try { const r = localStorage.getItem(LOCAL_KEY);  return r ? JSON.parse(r) : null; } catch(e){ return null; } }
-function defectSave() { try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); } catch(e){} }
-function defectLoad() { try { const r = localStorage.getItem(DEFECT_KEY); return r ? JSON.parse(r) : []; } catch(e){ return []; } }
+function localSave()  {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(entries)); }
+  catch(e) { console.warn('localSave failed:', e); }
+}
+function localLoad()  {
+  try {
+    const r = localStorage.getItem(LOCAL_KEY);
+    if (!r) return null;
+    const parsed = JSON.parse(r);
+    // 基本驗證：必須是陣列
+    if (!Array.isArray(parsed)) { console.warn('localStorage data invalid, resetting'); return null; }
+    return parsed;
+  } catch(e) {
+    console.warn('localLoad parse error, clearing corrupted data:', e);
+    try { localStorage.removeItem(LOCAL_KEY); } catch(_) {}
+    return null;
+  }
+}
+function defectSave() {
+  try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); }
+  catch(e) { console.warn('defectSave failed:', e); }
+}
+function defectLoad() {
+  try {
+    const r = localStorage.getItem(DEFECT_KEY);
+    if (!r) return [];
+    const parsed = JSON.parse(r);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch(e) {
+    console.warn('defectLoad parse error:', e);
+    try { localStorage.removeItem(DEFECT_KEY); } catch(_) {}
+    return [];
+  }
+}
 
 async function apiCall(params) {
   const url = API_URL + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url);
-  const json = await res.json();
+  let res;
+  try {
+    res = await fetch(url);
+  } catch(e) {
+    throw new Error('網路連線失敗：' + e.message);
+  }
+  let json;
+  try {
+    json = await res.json();
+  } catch(e) {
+    throw new Error('伺服器回應格式錯誤（非 JSON），可能是 GAS 設定問題');
+  }
   if (json.error) throw new Error(json.error);
   return json;
 }
 
-async function init() {
-  defects = defectLoad();
-  if (useCloud()) {
-    setSync('載入中…', 'sync-busy');
-    try {
-      const data = await apiCall({ action:'getAll' });
-      entries = data.entries || [];
-      localSave();
-      setSync('已同步 ✓', 'sync-ok');
-    } catch(e) {
-      setSync('離線，使用本機', 'sync-err');
-      entries = localLoad() || getDefaultData();
+// 日期正規化：2026/3/18 → 2026-03-18，已是正確格式則不變
+function normalizeDate(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  // 已是 YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // YYYY/M/D 或 YYYY/MM/DD
+  const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  // 嘗試用 Date 物件解析（最後手段）
+  try {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      const y = d.getFullYear();
+      const mo = String(d.getMonth()+1).padStart(2,'0');
+      const dy = String(d.getDate()).padStart(2,'0');
+      return `${y}-${mo}-${dy}`;
     }
-  } else {
-    setSync('本機模式', 'sync-local');
-    const saved = localLoad();
-    entries = saved || getDefaultData();
-    if (!saved) localSave();
-    document.getElementById('banner-area').innerHTML =
-      `<div class="info-banner">目前使用<strong>本機模式</strong>，資料只存在這台裝置。設定 Google Apps Script 後即可跨裝置同步。</div>`;
+  } catch(_) {}
+  return s; // 無法解析就原樣回傳
+}
+const VALID_STATUS = new Set(['normal','milestone','warn','pending','issue']);
+function sanitizeEntry(raw) {
+  const get = (obj, ...keys) => {
+    for (const k of keys) {
+      const found = Object.keys(obj).find(ok => ok.toLowerCase() === k.toLowerCase());
+      if (found !== undefined && obj[found] !== undefined && String(obj[found]).trim() !== '') return String(obj[found]).trim();
+    }
+    return '';
+  };
+  const status = get(raw, 'status');
+  return {
+    id:       get(raw, 'id')       || uid(),
+    date:     normalizeDate(get(raw, 'date')),
+    weather:  get(raw, 'weather')  || '☀️ 晴',
+    status:   VALID_STATUS.has(status) ? status : 'normal',
+    title:    get(raw, 'title')    || '（無說明）',
+    sub:      get(raw, 'sub', 'workers', 'people') || '',
+    alert:    get(raw, 'alert', 'note', 'notes', 'remark') || '',
+    defectNo: get(raw, 'defectno', 'defect_no', 'defectNo') || '',
+  };
+}
+
+async function init() {
+  try {
+    defects = defectLoad();
+    if (useCloud()) {
+      setSync('載入中…', 'sync-busy');
+      try {
+        const data = await apiCall({ action:'getAll' });
+        const raw = Array.isArray(data.entries) ? data.entries : [];
+        entries = raw.map(sanitizeEntry).filter(e => e.date); // 過濾沒有日期的空列
+        localSave();
+        setSync(`已同步 ✓ (${entries.length} 筆)`, 'sync-ok');
+      } catch(e) {
+        setSync('離線，使用本機', 'sync-err');
+        entries = localLoad() || getDefaultData();
+        document.getElementById('banner-area').innerHTML =
+          `<div class="info-banner">⚠️ 雲端同步失敗（${e.message}），目前顯示本機快取資料。</div>`;
+      }
+    } else {
+      setSync('本機模式', 'sync-local');
+      const saved = localLoad();
+      entries = saved || getDefaultData();
+      if (!saved) localSave();
+      document.getElementById('banner-area').innerHTML =
+        `<div class="info-banner">目前使用<strong>本機模式</strong>，資料只存在這台裝置。設定 Google Apps Script 後即可跨裝置同步。</div>`;
+    }
+    populateMonthFilter();
+    renderDashboard();
+    render();
+    renderDefects();
+    updateOpenCount();
+  } catch(e) {
+    console.error('init failed:', e);
+    showErrorBanner('初始化失敗，嘗試使用預設資料復原中…');
+    try {
+      entries = localLoad() || getDefaultData();
+      defects = [];
+      populateMonthFilter();
+      renderDashboard();
+      render();
+      renderDefects();
+      updateOpenCount();
+    } catch(e2) {
+      console.error('recovery also failed:', e2);
+    }
   }
-  populateMonthFilter();
-  renderDashboard();
-  render();
-  renderDefects();
-  updateOpenCount();
 }
 
 // ── TABS ──
@@ -713,11 +851,15 @@ function getFiltered() {
 // ── RENDER TIMELINE ──
 function formatDate(d) {
   if (!d) return '';
-  const [y,m,day] = d.split('-');
+  const norm = normalizeDate(d);
+  const parts = norm.split('-');
+  if (parts.length !== 3) return d;
+  const [y, m, day] = parts;
   return m.replace(/^0/,'') + '/' + day.replace(/^0/,'') + '\n' + y;
 }
 
 function render() {
+  try {
   const filtered = getFiltered().sort((a,b) => b.date.localeCompare(a.date)); // newest first
   const count = document.getElementById('filter-count');
   if (count) count.textContent = `共 ${filtered.length} 筆`;
@@ -738,16 +880,17 @@ function render() {
 
   const tl = document.getElementById('timeline');
   if (!filtered.length) { tl.innerHTML = '<div class="empty">沒有符合條件的記錄</div>'; return; }
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   tl.innerHTML = filtered.map((e,i) => {
     const alertCls = e.status==='issue' ? 'alert-issue' : 'alert-warn';
     const defect = e.defectNo ? defects.find(d => d.no === e.defectNo) : null;
     const defectTag = defect
-      ? `<span class="defect-tag iss-${defect.status}" onclick="switchTab('defects')" title="缺失單 ${defect.no}">📋 ${defect.no} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||defect.status}</span>`
-      : (e.defectNo ? `<span class="defect-tag iss-open" onclick="switchTab('defects')">📋 ${e.defectNo}</span>` : '');
+      ? `<span class="defect-tag iss-${esc(defect.status)}" onclick="switchTab('defects')" title="缺失單 ${esc(defect.no)}">📋 ${esc(defect.no)} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||esc(defect.status)}</span>`
+      : (e.defectNo ? `<span class="defect-tag iss-open" onclick="switchTab('defects')">📋 ${esc(e.defectNo)}</span>` : '');
     return `<div class="tl-item" style="animation-delay:${Math.min(i*0.03,0.3)}s">
       <div class="tl-left">
         <div class="tl-date">${formatDate(e.date).replace('\n','<br>')}</div>
-        <div class="tl-weather">${e.weather||''}</div>
+        <div class="tl-weather">${esc(e.weather)}</div>
       </div>
       <div class="tl-spine">
         <div class="tl-line${i===0?' hidden':''}"></div>
@@ -756,19 +899,23 @@ function render() {
       </div>
       <div class="tl-card${e.id===editingId?' editing':''}">
         <div class="card-top">
-          <span class="badge s-${e.status}">${BADGE[e.status]||e.status}</span>
+          <span class="badge s-${e.status}">${BADGE[e.status]||esc(e.status)}</span>
           ${defectTag}
           <div class="card-actions">
             <button class="btn-sm edit" onclick="editEntry('${e.id}')">編輯</button>
             <button class="btn-sm del"  onclick="deleteEntry('${e.id}')">刪除</button>
           </div>
         </div>
-        <div class="card-title">${e.title.replace(/\n/g,'<br>')}</div>
-        ${e.sub   ? `<div class="card-sub">${e.sub}</div>` : ''}
-        ${e.alert ? `<div class="card-alert ${alertCls}">${e.alert.replace(/\n/g,'<br>')}</div>` : ''}
+        <div class="card-title">${esc(e.title).replace(/\n/g,'<br>')}</div>
+        ${e.sub   ? `<div class="card-sub">${esc(e.sub)}</div>` : ''}
+        ${e.alert ? `<div class="card-alert ${alertCls}">${esc(e.alert).replace(/\n/g,'<br>')}</div>` : ''}
       </div>
     </div>`;
   }).join('');
+  } catch(err) {
+    console.error('render() error:', err);
+    showErrorBanner('畫面更新失敗，請點「重新載入」');
+  }
 }
 
 // ── DASHBOARD ──
@@ -836,7 +983,7 @@ function renderDefects() {
         <div class="defect-title">${d.title}</div>
         <span class="badge iss-${d.status}" style="flex-shrink:0">${statusMap[d.status]||d.status}</span>
       </div>
-      <div class="defect-body">${(d.notes||'（無追蹤備註）').replace(/\n/g,'<br>')}</div>
+      <div class="defect-body">${(d.notes||'（無追蹤備注）').replace(/\n/g,'<br>')}</div>
       <div class="defect-meta">
         <span>📅 ${d.date||'—'}</span>
       </div>
@@ -847,7 +994,7 @@ function renderDefects() {
         <button class="btn-sm del" style="margin-left:auto" onclick="deleteDefect('${d.id}')">刪除</button>
       </div>
       <div class="defect-notes">
-        <textarea placeholder="追蹤備註（回覆內容、複驗結果等）" onblur="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
+        <textarea placeholder="追蹤備注（回覆內容、複驗結果等）" onblur="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
       </div>
     </div>`).join('');
 }
@@ -888,13 +1035,13 @@ function exportCSV() {
   const onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
   const data = onlyIssues ? entries.filter(e=>e.status==='issue') : entries;
   const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
-  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
+  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備注','缺失單號']];
   const BADGE2 = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
   sorted.forEach(e => rows.push([e.date, e.weather||'', BADGE2[e.status]||e.status, e.title, e.sub||'', e.alert||'', e.defectNo||'']));
   downloadCSV(rows, '施工時間軸_' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function exportDefectsCSV() {
-  const rows = [['缺失單號','缺失說明','相關日期','狀態','追蹤備註']];
+  const rows = [['缺失單號','缺失說明','相關日期','狀態','追蹤備注']];
   const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
   defects.sort((a,b)=>b.date.localeCompare(a.date)).forEach(d =>
     rows.push([d.no||'', d.title, d.date||'', statusMap[d.status]||d.status, d.notes||'']));
