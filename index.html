@@ -3,176 +3,501 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>施工時間軸</title>
+<title>施工及監造工作回報 — 台中電廠</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif; background: #F7F6F3; color: #1a1a18; min-height: 100vh; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-  #lock-screen { position: fixed; inset: 0; background: #F7F6F3; display: flex; align-items: center; justify-content: center; z-index: 999; }
-  .lock-card { background: #fff; border: 0.5px solid #D3D1C7; border-radius: 16px; padding: 36px 32px; width: 320px; text-align: center; }
-  .lock-icon { font-size: 32px; margin-bottom: 14px; }
-  .lock-card h2 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
-  .lock-card p  { font-size: 13px; color: #888780; margin-bottom: 20px; }
-  .lock-card input { width: 100%; padding: 10px 14px; font-family: inherit; font-size: 15px; border: 0.5px solid #D3D1C7; border-radius: 8px; outline: none; text-align: center; letter-spacing: 3px; background: #FAFAF8; transition: border-color .15s; }
-  .lock-card input:focus { border-color: #888780; background: #fff; }
-  .lock-card input.error { border-color: #E24B4A; background: #FCEBEB; animation: shake .3s; }
-  .lock-btn { width: 100%; margin-top: 12px; padding: 11px; font-family: inherit; font-size: 14px; font-weight: 500; background: #1a1a18; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
-  .lock-btn:hover { background: #3d3d3a; }
-  .lock-err { font-size: 12px; color: #A32D2D; margin-top: 8px; min-height: 18px; }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+:root {
+  --bg: #F4F3EF;
+  --surface: #FFFFFF;
+  --border: #DDD9D0;
+  --border-light: #EAE7E0;
+  --text-primary: #1C1B18;
+  --text-secondary: #6B6860;
+  --text-muted: #9C9A93;
+  --accent: #1C1B18;
 
-  #app { display: none; }
-  .header { padding: 18px 28px 14px; border-bottom: 0.5px solid #D3D1C7; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-  .header-left h1 { font-size: 19px; font-weight: 600; }
-  .header-left p  { font-size: 12px; color: #888780; margin-top: 2px; }
-  .header-right { display: flex; align-items: center; gap: 10px; }
-  .sync-badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
-  .sync-ok    { background: #EAF3DE; color: #3B6D11; }
-  .sync-busy  { background: #FAEEDA; color: #854F0B; }
-  .sync-err   { background: #FCEBEB; color: #A32D2D; }
-  .sync-local { background: #F1EFE8; color: #5F5E5A; }
-  .btn-lock { font-size: 12px; padding: 4px 12px; border-radius: 20px; background: #F1EFE8; color: #5F5E5A; border: 0.5px solid #D3D1C7; cursor: pointer; font-family: inherit; }
-  .btn-lock:hover { background: #E8E6E0; }
+  --c-blue: #2563EB;   --c-blue-bg: #EFF6FF;   --c-blue-border: #BFDBFE;
+  --c-green: #16A34A;  --c-green-bg: #F0FDF4;  --c-green-border: #BBF7D0;
+  --c-amber: #D97706;  --c-amber-bg: #FFFBEB;  --c-amber-border: #FDE68A;
+  --c-red: #DC2626;    --c-red-bg: #FEF2F2;    --c-red-border: #FECACA;
+  --c-purple: #7C3AED; --c-purple-bg: #F5F3FF; --c-purple-border: #DDD6FE;
 
-  .layout { display: flex; min-height: calc(100vh - 63px); }
-  .sidebar { width: 290px; min-width: 290px; background: #fff; border-right: 0.5px solid #D3D1C7; padding: 18px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-  .sidebar h2 { font-size: 13px; font-weight: 600; padding-bottom: 10px; border-bottom: 0.5px solid #E8E6E0; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 11px; font-weight: 500; color: #5F5E5A; text-transform: uppercase; letter-spacing: .4px; }
-  .field input, .field select, .field textarea { font-family: inherit; font-size: 14px; padding: 7px 10px; border: 0.5px solid #D3D1C7; border-radius: 8px; background: #FAFAF8; color: #1a1a18; outline: none; transition: border-color .15s; }
-  .field input:focus, .field select:focus, .field textarea:focus { border-color: #888780; background: #fff; }
-  .field textarea { resize: vertical; min-height: 60px; }
-  .btn-primary { padding: 10px; font-family: inherit; font-size: 14px; font-weight: 500; background: #1a1a18; color: #fff; border: none; border-radius: 8px; cursor: pointer; transition: background .15s; }
-  .btn-primary:hover { background: #3d3d3a; }
-  .btn-primary:disabled { background: #B4B2A9; cursor: not-allowed; }
-  .btn-secondary { padding: 8px; font-family: inherit; font-size: 13px; color: #888780; background: none; border: 0.5px solid #D3D1C7; border-radius: 8px; cursor: pointer; }
-  .btn-secondary:hover { background: #F1EFE8; }
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+}
 
-  .main { flex: 1; padding: 24px 36px; overflow-y: auto; }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 0.5px solid #E8E6E0; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #5F5E5A; }
-  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-  .tl-item { display: flex; margin-bottom: 18px; }
-  .tl-left { width: 105px; min-width: 105px; padding-right: 12px; padding-top: 13px; text-align: right; }
-  .tl-date    { font-size: 14px; font-weight: 600; color: #1a1a18; line-height: 1.3; }
-  .tl-weather { font-size: 12px; color: #888780; margin-top: 2px; }
-  .tl-spine   { display: flex; flex-direction: column; align-items: center; width: 22px; min-width: 22px; }
-  .tl-line    { width: 2px; flex: 1; min-height: 14px; background: #D3D1C7; }
-  .tl-line.hidden { opacity: 0; }
-  .tl-dot     { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; border: 2.5px solid #F7F6F3; }
-  .tl-card    { flex: 1; margin: 6px 0 6px 12px; padding: 11px 13px; background: #fff; border: 0.5px solid #D3D1C7; border-radius: 10px; transition: border-color .15s; }
-  .tl-card:hover { border-color: #888780; }
-  .tl-card.editing { border-color: #378ADD; box-shadow: 0 0 0 3px rgba(55,138,221,0.1); }
-  .card-top   { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .badge      { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
-  .card-actions { margin-left: auto; display: flex; gap: 5px; opacity: 0; transition: opacity .15s; }
-  .tl-card:hover .card-actions { opacity: 1; }
-  .btn-sm     { font-size: 11px; padding: 2px 8px; border-radius: 6px; cursor: pointer; font-family: inherit; border: 0.5px solid #D3D1C7; background: #F7F6F3; color: #5F5E5A; }
-  .btn-sm.edit:hover { background: #E6F1FB; color: #185FA5; border-color: #B5D4F4; }
-  .btn-sm.del:hover  { background: #FCEBEB; color: #A32D2D; border-color: #F09595; }
-  .card-title { font-size: 15px; font-weight: 600; color: #1a1a18; line-height: 1.4; margin-bottom: 2px; }
-  .card-sub   { font-size: 13px; color: #5F5E5A; line-height: 1.5; }
-  .card-alert { margin-top: 7px; padding: 6px 10px 6px 11px; font-size: 12px; line-height: 1.5; }
-  .alert-warn  { background: #FAEEDA; color: #633806; border-left: 3px solid #EF9F27; }
-  .alert-issue { background: #FCEBEB; color: #791F1F; border-left: 3px solid #E24B4A; }
-  .s-normal    { background:#E6F1FB; color:#185FA5; }
-  .s-milestone { background:#EAF3DE; color:#3B6D11; }
-  .s-warn      { background:#FAEEDA; color:#854F0B; }
-  .s-pending   { background:#FAEEDA; color:#854F0B; }
-  .s-issue     { background:#FCEBEB; color:#A32D2D; }
-  .dot-normal    { background:#378ADD; }
-  .dot-milestone { background:#1D9E75; }
-  .dot-warn      { background:#EF9F27; }
-  .dot-pending   { background:#EF9F27; }
-  .dot-issue     { background:#E24B4A; }
-  .empty { text-align: center; padding: 60px 20px; color: #888780; font-size: 14px; }
-  .info-banner { background: #E6F1FB; border: 0.5px solid #B5D4F4; border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: #185FA5; line-height: 1.6; }
+/* ── LOCK ── */
+#lock-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.lock-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px 32px; width: 340px; text-align: center; box-shadow: var(--shadow-md); }
+.lock-logo { width: 48px; height: 48px; background: var(--text-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+.lock-logo svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lock-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.lock-card p  { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+.lock-card input { width: 100%; padding: 11px 14px; font-family: 'DM Mono', monospace; font-size: 16px; letter-spacing: 4px; border: 1px solid var(--border); border-radius: var(--radius); outline: none; text-align: center; background: var(--bg); transition: border-color .15s, background .15s; }
+.lock-card input:focus { border-color: var(--text-primary); background: #fff; }
+.lock-card input.error { border-color: var(--c-red); background: var(--c-red-bg); animation: shake .3s; }
+.lock-btn { width: 100%; margin-top: 12px; padding: 12px; font-family: inherit; font-size: 14px; font-weight: 600; background: var(--text-primary); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; transition: opacity .15s; }
+.lock-btn:hover { opacity: .85; }
+.lock-err { font-size: 12px; color: var(--c-red); margin-top: 10px; min-height: 18px; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* ── APP ── */
+#app { display: none; }
+
+/* ── HEADER ── */
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+.header-logo { width: 34px; height: 34px; background: var(--text-primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.header-logo svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+.header-title { flex: 1; min-width: 0; }
+.header-title h1 { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header-title p { font-size: 12px; color: var(--text-muted); }
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sync-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: .3px; }
+.sync-ok    { background: var(--c-green-bg); color: var(--c-green); border: 1px solid var(--c-green-border); }
+.sync-busy  { background: var(--c-amber-bg); color: var(--c-amber); border: 1px solid var(--c-amber-border); }
+.sync-err   { background: var(--c-red-bg);   color: var(--c-red);   border: 1px solid var(--c-red-border); }
+.sync-local { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; transition: background .15s; }
+.btn-icon:hover { background: var(--border-light); }
+
+/* ── TABS ── */
+.tabs { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 0; overflow-x: auto; }
+.tab-btn { padding: 12px 18px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: color .15s, border-color .15s; }
+.tab-btn.active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+.tab-btn:hover:not(.active) { color: var(--text-primary); }
+.tab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700; margin-left: 6px; background: var(--c-red-bg); color: var(--c-red); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: calc(100vh - 105px); }
+.sidebar { width: 280px; min-width: 280px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; transition: transform .25s; }
+.sidebar-inner { padding: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.sidebar-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.field input, .field select, .field textarea { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-primary); outline: none; transition: border-color .15s, background .15s; width: 100%; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--text-primary); background: #fff; }
+.field textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-primary { padding: 10px 16px; font-family: inherit; font-size: 13px; font-weight: 600; background: var(--text-primary); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: opacity .15s; width: 100%; }
+.btn-primary:hover { opacity: .85; }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+.btn-secondary { padding: 9px 16px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: background .15s; width: 100%; }
+.btn-secondary:hover { background: var(--border-light); }
+
+/* ── MAIN ── */
+.main { flex: 1; min-width: 0; overflow-y: auto; }
+
+/* ── TAB PANELS ── */
+.tab-panel { display: none; padding: 20px 24px; }
+.tab-panel.active { display: block; }
+
+/* ── DASHBOARD ── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.stat-card.red .stat-value { color: var(--c-red); }
+.stat-card.amber .stat-value { color: var(--c-amber); }
+.stat-card.green .stat-value { color: var(--c-green); }
+.stat-card.blue .stat-value { color: var(--c-blue); }
+
+.dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.dash-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.dash-box h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+.bar-label { width: 72px; color: var(--text-secondary); flex-shrink: 0; }
+.bar-track { flex: 1; height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.bar-count { width: 24px; text-align: right; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-secondary); }
+
+.open-issues-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
+.mini-issue { padding: 10px 12px; border-radius: var(--radius-sm); border-left: 3px solid; font-size: 12px; line-height: 1.5; }
+.mini-issue.open  { background: var(--c-red-bg);    border-color: var(--c-red);   color: #7f1d1d; }
+.mini-issue.pending { background: var(--c-amber-bg); border-color: var(--c-amber); color: #78350f; }
+.mini-issue-date { font-family: 'DM Mono', monospace; font-size: 10px; opacity: .7; margin-bottom: 2px; }
+.mini-issue-title { font-weight: 600; }
+.mini-issue-status { display: inline-block; margin-top: 4px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+.iss-open    { background: var(--c-red-bg);    color: var(--c-red); }
+.iss-replied { background: var(--c-amber-bg);  color: var(--c-amber); }
+.iss-closed  { background: var(--c-green-bg);  color: var(--c-green); }
+.iss-pending { background: var(--c-purple-bg); color: var(--c-purple); }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar input[type=search] { font-family: inherit; font-size: 13px; padding: 8px 12px 8px 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); outline: none; width: 200px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239C9A93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 10px center; transition: border-color .15s; }
+.filter-bar input[type=search]:focus { border-color: var(--text-primary); }
+.filter-select { font-family: inherit; font-size: 12px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-secondary); outline: none; cursor: pointer; }
+.filter-select:focus { border-color: var(--text-primary); }
+.filter-count { font-size: 12px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+
+/* ── TIMELINE ── */
+.alert-banner { background: var(--c-red-bg); border: 1px solid var(--c-red-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #7f1d1d; display: flex; align-items: center; gap: 8px; }
+.alert-banner a { color: var(--c-red); font-weight: 600; cursor: pointer; text-decoration: underline; }
+.info-banner { background: var(--c-blue-bg); border: 1px solid var(--c-blue-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #1e3a8a; }
+
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.tl-item { display: flex; margin-bottom: 12px; animation: fadeUp .25s ease both; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+.tl-left { width: 88px; min-width: 88px; padding-right: 10px; padding-top: 12px; text-align: right; }
+.tl-date    { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.4; }
+.tl-weather { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.tl-spine   { display: flex; flex-direction: column; align-items: center; width: 20px; min-width: 20px; }
+.tl-line    { width: 2px; flex: 1; min-height: 12px; background: var(--border); }
+.tl-line.hidden { opacity: 0; }
+.tl-dot     { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 2.5px solid var(--bg); box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+.tl-card    { flex: 1; margin: 4px 0 4px 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s; }
+.tl-card:hover { border-color: #B5B2A8; box-shadow: var(--shadow-md); }
+.tl-card.editing { border-color: var(--c-blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+.card-top   { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; flex-wrap: wrap; }
+.badge      { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; letter-spacing: .2px; }
+.card-actions { margin-left: auto; display: flex; gap: 4px; }
+.tl-card .card-actions { opacity: 0; transition: opacity .15s; }
+.tl-card:hover .card-actions { opacity: 1; }
+@media (hover: none) { .tl-card .card-actions { opacity: 1; } }
+.btn-sm { font-size: 11px; padding: 3px 9px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); transition: background .12s, color .12s; }
+.btn-sm.edit:hover { background: var(--c-blue-bg); color: var(--c-blue); border-color: var(--c-blue-border); }
+.btn-sm.del:hover  { background: var(--c-red-bg);  color: var(--c-red);  border-color: var(--c-red-border); }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.5; margin-bottom: 3px; }
+.card-sub   { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.card-alert { margin-top: 8px; padding: 7px 10px 7px 12px; font-size: 12px; line-height: 1.6; border-radius: var(--radius-sm); }
+.alert-warn  { background: var(--c-amber-bg); color: #78350f; border-left: 3px solid var(--c-amber); }
+.alert-issue { background: var(--c-red-bg);   color: #7f1d1d; border-left: 3px solid var(--c-red); }
+
+/* defect badge on card */
+.defect-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; border: 1px solid; cursor: pointer; transition: opacity .12s; }
+.defect-tag:hover { opacity: .75; }
+.defect-tag.iss-open    { background: var(--c-red-bg);    color: var(--c-red);    border-color: var(--c-red-border); }
+.defect-tag.iss-replied { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
+.defect-tag.iss-closed  { background: var(--c-green-bg);  color: var(--c-green);  border-color: var(--c-green-border); }
+
+/* status badges */
+.s-normal    { background: var(--c-blue-bg);   color: var(--c-blue);   border: 1px solid var(--c-blue-border); }
+.s-milestone { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green-border); }
+.s-warn      { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber-border); }
+.s-pending   { background: var(--c-purple-bg); color: var(--c-purple); border: 1px solid var(--c-purple-border); }
+.s-issue     { background: var(--c-red-bg);    color: var(--c-red);    border: 1px solid var(--c-red-border); }
+.dot-normal    { background: var(--c-blue); }
+.dot-milestone { background: var(--c-green); }
+.dot-warn      { background: var(--c-amber); }
+.dot-pending   { background: var(--c-purple); }
+.dot-issue     { background: var(--c-red); }
+.empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+
+/* ── DEFECTS TAB ── */
+.defect-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.defect-header h2 { font-size: 14px; font-weight: 700; }
+.defects-list { display: flex; flex-direction: column; gap: 10px; }
+.defect-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.defect-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.defect-no { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: var(--text-muted); }
+.defect-title { font-size: 14px; font-weight: 600; flex: 1; }
+.defect-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+.defect-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); }
+.defect-meta span { display: flex; align-items: center; gap: 4px; }
+.defect-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-light); }
+.btn-status { font-family: inherit; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); cursor: pointer; transition: background .12s; }
+.btn-status:hover { background: var(--border-light); }
+.btn-status.active-open    { background: var(--c-red-bg);    color: var(--c-red);    border-color: var(--c-red-border); }
+.btn-status.active-replied { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
+.btn-status.active-closed  { background: var(--c-green-bg);  color: var(--c-green);  border-color: var(--c-green-border); }
+.defect-notes { margin-top: 8px; }
+.defect-notes textarea { width: 100%; font-family: inherit; font-size: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); resize: vertical; min-height: 52px; outline: none; color: var(--text-primary); }
+.defect-notes textarea:focus { border-color: var(--text-primary); background: #fff; }
+
+/* ── EXPORT ── */
+.export-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.export-section h3 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.export-section p { font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.6; }
+.export-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.export-opt { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+.export-opt input { accent-color: var(--text-primary); }
+.btn-export { font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: opacity .15s; display: inline-flex; align-items: center; gap: 7px; }
+.btn-export:hover { opacity: .85; }
+.btn-export.csv  { background: var(--c-green-bg); color: var(--c-green); border: 1px solid var(--c-green-border); }
+.btn-export.print { background: var(--text-primary); color: #fff; }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
+.modal { background: var(--surface); border-radius: 14px; width: 100%; max-width: 480px; box-shadow: var(--shadow-md); overflow: hidden; }
+.modal-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { font-size: 15px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; }
+.modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+.btn-modal { font-family: inherit; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); transition: background .12s; }
+.btn-modal.primary { background: var(--text-primary); color: #fff; border-color: transparent; }
+.btn-modal:hover:not(.primary) { background: var(--border-light); }
+.btn-modal.primary:hover { opacity: .85; }
+
+/* ── MOBILE ── */
+.sidebar-toggle { display: none; }
+@media (max-width: 720px) {
+  .sidebar { position: fixed; top: 105px; left: 0; bottom: 0; z-index: 200; transform: translateX(-100%); width: 280px; }
+  .sidebar.open { transform: none; box-shadow: var(--shadow-md); }
+  .sidebar-toggle { display: flex; }
+  .layout { position: relative; }
+  .main { width: 100%; }
+  .tab-panel { padding: 14px 14px; }
+  .dash-row { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .tl-left { width: 68px; min-width: 68px; }
+  .filter-bar input[type=search] { width: 100%; }
+  .overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 199; }
+  .overlay-bg.show { display: block; }
+}
+@media (max-width: 400px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── PRINT ── */
+@media print {
+  .header, .tabs, .sidebar, .sidebar-toggle, .card-actions, .filter-bar, .btn-export, .export-section, .tab-panel:not(#panel-timeline) { display: none !important; }
+  .layout { display: block; }
+  .main { overflow: visible; }
+  #panel-timeline { display: block !important; padding: 0; }
+  .tl-card { box-shadow: none; break-inside: avoid; }
+  body { background: #fff; }
+  .print-header { display: block !important; padding: 0 0 16px; border-bottom: 2px solid #000; margin-bottom: 20px; }
+}
+.print-header { display: none; }
 </style>
 </head>
 <body>
 
+<!-- LOCK -->
 <div id="lock-screen">
   <div class="lock-card">
-    <div class="lock-icon">🔒</div>
-    <h2>施工時間軸</h2>
-    <p>請輸入密碼以繼續</p>
+    <div class="lock-logo">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h2>施工及監造回報</h2>
+    <p>台中電廠　請輸入密碼以繼續</p>
     <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
     <button class="lock-btn" onclick="checkPw()">進入</button>
     <div class="lock-err" id="pw-err"></div>
   </div>
 </div>
 
+<!-- APP -->
 <div id="app">
+
+  <!-- Header -->
   <div class="header">
-    <div class="header-left">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="header-title">
       <h1>施工及監造工作回報</h1>
       <p>台中電廠</p>
     </div>
-    <div class="header-right">
+    <div class="header-actions">
       <span class="sync-badge sync-local" id="sync-badge">本機模式</span>
-      <button class="btn-lock" onclick="lockApp()">🔒 登出</button>
+      <button class="btn-icon sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="新增工項">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="btn-icon" onclick="lockApp()" title="登出">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
     </div>
   </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('dashboard')">📊 儀表板</button>
+    <button class="tab-btn" onclick="switchTab('timeline')">📋 時間軸</button>
+    <button class="tab-btn" onclick="switchTab('defects')" id="tab-defects">🔴 缺失追蹤 <span class="tab-badge" id="open-count">0</span></button>
+    <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出</button>
+  </div>
+
+  <div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
 
   <div class="layout">
-    <div class="sidebar">
-      <h2 id="form-title">＋ 新增工項</h2>
-      <div class="field"><label>施工日期</label><input type="date" id="f-date"></div>
-      <div class="field">
-        <label>天氣</label>
-        <select id="f-weather">
-          <option value="晴">晴</option><option value="陰">陰</option>
-          <option value="雨">雨</option><option value="豪雨">豪雨</option>
-        </select>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        <div class="sidebar-section-title" id="form-title">新增工項</div>
+        <div class="field-row">
+          <div class="field"><label>施工日期</label><input type="date" id="f-date"></div>
+          <div class="field"><label>天氣</label>
+            <select id="f-weather">
+              <option value="☀️ 晴">☀️ 晴</option><option value="⛅ 陰">⛅ 陰</option>
+              <option value="🌧 雨">🌧 雨</option><option value="⛈ 豪雨">⛈ 豪雨</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>狀態</label>
+          <select id="f-status">
+            <option value="normal">正常施工</option>
+            <option value="milestone">里程碑／進展</option>
+            <option value="warn">待注意</option>
+            <option value="pending">待決議</option>
+            <option value="issue">異常／已開單</option>
+          </select>
+        </div>
+        <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
+        <div class="field"><label>出工人數</label><input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）"></div>
+        <div class="field"><label>異常／備注（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
+        <div class="field" id="f-defect-wrap" style="display:none">
+          <label>連結缺失單（選填）</label>
+          <input type="text" id="f-defect-no" placeholder="例：10490817_0001">
+        </div>
+        <button class="btn-primary" id="btn-submit" onclick="submitEntry()">新增到時間軸</button>
+        <button class="btn-secondary" id="btn-cancel" onclick="cancelEdit()" style="display:none">取消編輯</button>
       </div>
-      <div class="field">
-        <label>狀態</label>
-        <select id="f-status">
-          <option value="normal">正常施工</option>
-          <option value="milestone">里程碑／進展</option>
-          <option value="warn">待注意</option>
-          <option value="pending">待決議</option>
-          <option value="issue">異常／已開單</option>
-        </select>
-      </div>
-      <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
-      <div class="field"><label>出工人數</label><input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）"></div>
-      <div class="field"><label>異常／備注（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
-      <button class="btn-primary" id="btn-submit" onclick="submitEntry()">新增到時間軸</button>
-      <button class="btn-secondary" id="btn-cancel" onclick="cancelEdit()" style="display:none">取消編輯</button>
     </div>
 
+    <!-- Main -->
     <div class="main">
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>里程碑／進展</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div>正常施工</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#EF9F27"></div>待注意／待決議</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#E24B4A"></div>異常／已開單</div>
+
+      <!-- Print header (visible only in print) -->
+      <div class="print-header">
+        <h2 style="font-size:18px;font-weight:700;">施工及監造工作回報 — 台中電廠</h2>
+        <p style="font-size:12px;color:#888;margin-top:4px;">列印時間：<span id="print-time"></span></p>
       </div>
-      <div id="banner-area"></div>
-      <div id="timeline"></div>
+
+      <!-- Dashboard Panel -->
+      <div class="tab-panel active" id="panel-dashboard">
+        <div class="stat-grid" id="stat-grid"></div>
+        <div class="dash-row">
+          <div class="dash-box">
+            <h3>工項狀態分布</h3>
+            <div id="bar-chart"></div>
+          </div>
+          <div class="dash-box">
+            <h3>未結案缺失 / 待決議</h3>
+            <div class="open-issues-list" id="open-issues-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline Panel -->
+      <div class="tab-panel" id="panel-timeline">
+        <div id="alert-banner-area"></div>
+        <div id="banner-area"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-green)"></div>里程碑</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-blue)"></div>正常施工</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-amber)"></div>待注意／待決議</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-red)"></div>異常／已開單</div>
+        </div>
+        <div class="filter-bar">
+          <input type="search" id="search-input" placeholder="搜尋工項說明…" oninput="render()">
+          <select class="filter-select" id="filter-status" onchange="render()">
+            <option value="">全部狀態</option>
+            <option value="normal">正常施工</option>
+            <option value="milestone">里程碑</option>
+            <option value="warn">待注意</option>
+            <option value="pending">待決議</option>
+            <option value="issue">異常</option>
+          </select>
+          <select class="filter-select" id="filter-month" onchange="render()">
+            <option value="">全部月份</option>
+          </select>
+          <span class="filter-count" id="filter-count"></span>
+        </div>
+        <div id="timeline"></div>
+      </div>
+
+      <!-- Defects Panel -->
+      <div class="tab-panel" id="panel-defects">
+        <div class="defect-header">
+          <h2>缺失單追蹤</h2>
+          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增缺失單</button>
+        </div>
+        <div class="defects-list" id="defects-list"></div>
+      </div>
+
+      <!-- Export Panel -->
+      <div class="tab-panel" id="panel-export">
+        <div class="export-section">
+          <h3>📄 匯出 CSV</h3>
+          <p>將施工時間軸資料匯出為 CSV 格式，可直接用 Excel 或 Google Sheets 開啟。</p>
+          <div class="export-options">
+            <label class="export-opt"><input type="checkbox" id="exp-all" checked> 全部記錄</label>
+            <label class="export-opt"><input type="checkbox" id="exp-issues"> 僅異常記錄</label>
+          </div>
+          <button class="btn-export csv" onclick="exportCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下載 CSV
+          </button>
+        </div>
+        <div class="export-section">
+          <h3>🖨 列印 / 匯出 PDF</h3>
+          <p>點擊下方按鈕將開啟列印視窗，可選擇「另存為 PDF」來儲存監造月報。列印時僅顯示時間軸內容。</p>
+          <button class="btn-export print" onclick="printReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            列印 / PDF
+          </button>
+        </div>
+        <div class="export-section">
+          <h3>📋 缺失單 CSV</h3>
+          <p>匯出所有缺失單記錄，包含狀態與追蹤備注。</p>
+          <button class="btn-export csv" onclick="exportDefectsCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下載缺失單 CSV
+          </button>
+        </div>
+      </div>
+
+    </div><!-- main -->
+  </div><!-- layout -->
+
+  <!-- Add Defect Modal -->
+  <div class="modal-overlay" id="defect-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>新增缺失單</h3>
+        <button class="modal-close" onclick="closeDefectModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>缺失單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
+        <div class="field"><label>缺失說明</label><textarea id="dm-title" placeholder="簡述缺失內容"></textarea></div>
+        <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
+        <div class="field"><label>追蹤備注（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
+        <div class="field"><label>初始狀態</label>
+          <select id="dm-status">
+            <option value="open">未結案</option>
+            <option value="replied">承商已回覆</option>
+            <option value="closed">已結案</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal" onclick="closeDefectModal()">取消</button>
+        <button class="btn-modal primary" onclick="saveDefect()">儲存缺失單</button>
+      </div>
     </div>
   </div>
-</div>
+
+</div><!-- app -->
 
 <script>
-// ══════════════════════════════════
-// ① 密碼（可自行修改）
+// ══════════════════════════
 const PASSWORD = 'dnvccs2026';
-// ② 設定好 Google Apps Script 後把網址貼這裡
-//    還沒設定就留空 ''，會自動使用本機儲存
-const API_URL = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
-// ══════════════════════════════════
+const API_URL  = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
+// ══════════════════════════
 
 const BADGE = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
-const LOCAL_KEY = 'construction_tl_v2';
-let entries = [];
-let editingId = null;
+const LOCAL_KEY  = 'construction_tl_v3';
+const DEFECT_KEY = 'construction_defects_v1';
+let entries = [], defects = [], editingId = null;
 const useCloud = () => !!API_URL;
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function setSync(msg, cls) { const b = document.getElementById('sync-badge'); b.textContent = msg; b.className = 'sync-badge ' + cls; }
 
+// ── AUTH ──
 function checkPw() {
   const val = document.getElementById('pw-input').value;
   const inp = document.getElementById('pw-input');
@@ -192,11 +517,13 @@ function lockApp() {
   document.getElementById('lock-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('pw-input').value = '';
-  document.getElementById('pw-err').textContent = '';
 }
 
-function localSave() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(entries)); } catch(e) {} }
-function localLoad() { try { const r = localStorage.getItem(LOCAL_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+// ── STORAGE ──
+function localSave()  { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(entries)); } catch(e){} }
+function localLoad()  { try { const r = localStorage.getItem(LOCAL_KEY);  return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+function defectSave() { try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); } catch(e){} }
+function defectLoad() { try { const r = localStorage.getItem(DEFECT_KEY); return r ? JSON.parse(r) : []; } catch(e){ return []; } }
 
 async function apiCall(params) {
   const url = API_URL + '?' + new URLSearchParams(params).toString();
@@ -207,8 +534,9 @@ async function apiCall(params) {
 }
 
 async function init() {
+  defects = defectLoad();
   if (useCloud()) {
-    setSync('載入中...', 'sync-busy');
+    setSync('載入中…', 'sync-busy');
     try {
       const data = await apiCall({ action:'getAll' });
       entries = data.entries || [];
@@ -221,17 +549,49 @@ async function init() {
   } else {
     setSync('本機模式', 'sync-local');
     const saved = localLoad();
-    if (saved) {
-      entries = saved;
-    } else {
-      entries = getDefaultData();
-      localSave();
-    }
+    entries = saved || getDefaultData();
+    if (!saved) localSave();
     document.getElementById('banner-area').innerHTML =
       `<div class="info-banner">目前使用<strong>本機模式</strong>，資料只存在這台裝置。設定 Google Apps Script 後即可跨裝置同步。</div>`;
   }
+  populateMonthFilter();
+  renderDashboard();
   render();
+  renderDefects();
+  updateOpenCount();
 }
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    const tabs = ['dashboard','timeline','defects','export'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'timeline') { render(); }
+  if (tab === 'defects')  { renderDefects(); }
+  if (tab === 'dashboard'){ renderDashboard(); }
+  closeSidebar();
+}
+
+// ── SIDEBAR MOBILE ──
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ob = document.getElementById('overlay-bg');
+  sb.classList.toggle('open');
+  ob.classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay-bg').classList.remove('show');
+}
+
+// ── FORM ──
+document.getElementById('f-status').addEventListener('change', function() {
+  document.getElementById('f-defect-wrap').style.display =
+    (this.value === 'issue' || this.value === 'warn') ? 'flex' : 'none';
+});
 
 async function submitEntry() {
   const date    = document.getElementById('f-date').value;
@@ -240,43 +600,49 @@ async function submitEntry() {
   const title   = document.getElementById('f-title').value.trim();
   const sub     = document.getElementById('f-sub').value.trim();
   const alertTx = document.getElementById('f-alert').value.trim();
+  const defectNo= document.getElementById('f-defect-no').value.trim();
   if (!date || !title) { alert('請填寫日期和工項說明'); return; }
   const btn = document.getElementById('btn-submit');
   btn.disabled = true;
   if (useCloud()) {
-    setSync('儲存中...', 'sync-busy');
+    setSync('儲存中…', 'sync-busy');
     try {
       if (editingId) {
-        await apiCall({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx });
+        await apiCall({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo });
       } else {
-        await apiCall({ action:'add', date, weather, status, title, sub, alert:alertTx });
+        await apiCall({ action:'add', date, weather, status, title, sub, alert:alertTx, defectNo });
       }
       const data = await apiCall({ action:'getAll' });
       entries = data.entries || [];
       localSave();
       setSync('已同步 ✓', 'sync-ok');
-    } catch(e) { setSync('儲存失敗', 'sync-err'); alert('儲存失敗：' + e.message); btn.disabled = false; return; }
+    } catch(e) { setSync('儲存失敗', 'sync-err'); alert('儲存失敗：' + e.message); btn.disabled=false; return; }
   } else {
     if (editingId) {
       const idx = entries.findIndex(e => e.id === editingId);
-      if (idx !== -1) entries[idx] = { id:editingId, date, weather, status, title, sub, alert:alertTx };
+      if (idx !== -1) entries[idx] = { id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo };
     } else {
-      entries.push({ id:uid(), date, weather, status, title, sub, alert:alertTx });
+      entries.push({ id:uid(), date, weather, status, title, sub, alert:alertTx, defectNo });
     }
     localSave();
   }
   btn.disabled = false;
   resetFormState();
+  populateMonthFilter();
+  renderDashboard();
   render();
+  updateOpenCount();
+  closeSidebar();
 }
 
 function resetFormState() {
   editingId = null;
-  ['f-date','f-title','f-sub','f-alert'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-status').value = 'normal';
-  document.getElementById('f-weather').value = '晴';
-  document.getElementById('form-title').textContent = '＋ 新增工項';
-  document.getElementById('btn-submit').textContent = '新增到時間軸';
+  ['f-date','f-title','f-sub','f-alert','f-defect-no'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value  = 'normal';
+  document.getElementById('f-weather').value = '☀️ 晴';
+  document.getElementById('f-defect-wrap').style.display = 'none';
+  document.getElementById('form-title').textContent  = '新增工項';
+  document.getElementById('btn-submit').textContent  = '新增到時間軸';
   document.getElementById('btn-cancel').style.display = 'none';
 }
 
@@ -285,16 +651,21 @@ function editEntry(id) {
   if (!e) return;
   editingId = id;
   document.getElementById('f-date').value    = e.date;
-  document.getElementById('f-weather').value = e.weather || '晴';
+  document.getElementById('f-weather').value = e.weather || '☀️ 晴';
   document.getElementById('f-status').value  = e.status;
   document.getElementById('f-title').value   = e.title;
   document.getElementById('f-sub').value     = e.sub || '';
   document.getElementById('f-alert').value   = e.alert || '';
-  document.getElementById('form-title').textContent = '✏️ 編輯工項';
-  document.getElementById('btn-submit').textContent = '儲存變更';
+  document.getElementById('f-defect-no').value = e.defectNo || '';
+  document.getElementById('f-defect-wrap').style.display = (e.status==='issue'||e.status==='warn') ? 'flex':'none';
+  document.getElementById('form-title').textContent  = '✏️ 編輯工項';
+  document.getElementById('btn-submit').textContent  = '儲存變更';
   document.getElementById('btn-cancel').style.display = 'block';
-  render();
+  switchTab('timeline');
   document.querySelector('.sidebar').scrollTop = 0;
+  // open sidebar on mobile
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay-bg').classList.add('show');
 }
 
 function cancelEdit() { resetFormState(); render(); }
@@ -302,7 +673,7 @@ function cancelEdit() { resetFormState(); render(); }
 async function deleteEntry(id) {
   if (!confirm('確定要刪除這筆記錄嗎？')) return;
   if (useCloud()) {
-    setSync('刪除中...', 'sync-busy');
+    setSync('刪除中…', 'sync-busy');
     try {
       await apiCall({ action:'delete', id });
       entries = entries.filter(e => e.id !== id);
@@ -314,34 +685,79 @@ async function deleteEntry(id) {
     localSave();
   }
   if (editingId === id) resetFormState();
+  populateMonthFilter();
+  renderDashboard();
   render();
 }
 
+// ── FILTER & MONTH ──
+function populateMonthFilter() {
+  const months = [...new Set(entries.map(e => e.date.slice(0,7)))].sort();
+  const sel = document.getElementById('filter-month');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部月份</option>' +
+    months.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年') + '月'}</option>`).join('');
+}
+
+function getFiltered() {
+  const q  = (document.getElementById('search-input')?.value||'').trim().toLowerCase();
+  const st = document.getElementById('filter-status')?.value || '';
+  const mo = document.getElementById('filter-month')?.value  || '';
+  return entries.filter(e =>
+    (!q  || e.title.toLowerCase().includes(q) || (e.alert||'').toLowerCase().includes(q)) &&
+    (!st || e.status === st) &&
+    (!mo || e.date.startsWith(mo))
+  );
+}
+
+// ── RENDER TIMELINE ──
 function formatDate(d) {
   if (!d) return '';
   const [y,m,day] = d.split('-');
-  return y + '/' + m.replace(/^0/,'') + '/' + day.replace(/^0/,'');
+  return m.replace(/^0/,'') + '/' + day.replace(/^0/,'') + '\n' + y;
 }
 
 function render() {
-  const sorted = [...entries].sort((a,b) => a.date.localeCompare(b.date));
+  const filtered = getFiltered().sort((a,b) => b.date.localeCompare(a.date)); // newest first
+  const count = document.getElementById('filter-count');
+  if (count) count.textContent = `共 ${filtered.length} 筆`;
+
+  // alert banner
+  const openIssues = entries.filter(e => e.status==='issue'||e.status==='pending');
+  const ba = document.getElementById('alert-banner-area');
+  if (ba) {
+    if (openIssues.length > 0) {
+      const issCount = entries.filter(e=>e.status==='issue').length;
+      const penCount = entries.filter(e=>e.status==='pending').length;
+      let msg = [];
+      if (issCount) msg.push(`<strong>${issCount} 筆異常</strong>`);
+      if (penCount) msg.push(`<strong>${penCount} 筆待決議</strong>`);
+      ba.innerHTML = `<div class="alert-banner">⚠️ 目前有 ${msg.join('、')} 項目需要關注。<a onclick="switchTab('defects')">查看缺失追蹤 →</a></div>`;
+    } else { ba.innerHTML = ''; }
+  }
+
   const tl = document.getElementById('timeline');
-  if (!sorted.length) { tl.innerHTML = '<div class="empty">還沒有任何工項，從左側新增第一筆吧！</div>'; return; }
-  tl.innerHTML = sorted.map((e,i) => {
-    const alertCls = e.status === 'issue' ? 'alert-issue' : 'alert-warn';
-    return `<div class="tl-item">
+  if (!filtered.length) { tl.innerHTML = '<div class="empty">沒有符合條件的記錄</div>'; return; }
+  tl.innerHTML = filtered.map((e,i) => {
+    const alertCls = e.status==='issue' ? 'alert-issue' : 'alert-warn';
+    const defect = e.defectNo ? defects.find(d => d.no === e.defectNo) : null;
+    const defectTag = defect
+      ? `<span class="defect-tag iss-${defect.status}" onclick="switchTab('defects')" title="缺失單 ${defect.no}">📋 ${defect.no} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||defect.status}</span>`
+      : (e.defectNo ? `<span class="defect-tag iss-open" onclick="switchTab('defects')">📋 ${e.defectNo}</span>` : '');
+    return `<div class="tl-item" style="animation-delay:${Math.min(i*0.03,0.3)}s">
       <div class="tl-left">
-        <div class="tl-date">${formatDate(e.date)}</div>
+        <div class="tl-date">${formatDate(e.date).replace('\n','<br>')}</div>
         <div class="tl-weather">${e.weather||''}</div>
       </div>
       <div class="tl-spine">
         <div class="tl-line${i===0?' hidden':''}"></div>
         <div class="tl-dot dot-${e.status}"></div>
-        <div class="tl-line${i===sorted.length-1?' hidden':''}"></div>
+        <div class="tl-line${i===filtered.length-1?' hidden':''}"></div>
       </div>
       <div class="tl-card${e.id===editingId?' editing':''}">
         <div class="card-top">
           <span class="badge s-${e.status}">${BADGE[e.status]||e.status}</span>
+          ${defectTag}
           <div class="card-actions">
             <button class="btn-sm edit" onclick="editEntry('${e.id}')">編輯</button>
             <button class="btn-sm del"  onclick="deleteEntry('${e.id}')">刪除</button>
@@ -355,23 +771,168 @@ function render() {
   }).join('');
 }
 
+// ── DASHBOARD ──
+function renderDashboard() {
+  const total   = entries.length;
+  const issues  = entries.filter(e=>e.status==='issue').length;
+  const pending = entries.filter(e=>e.status==='pending').length;
+  const openDef = defects.filter(d=>d.status!=='closed').length;
+  const workerDays = entries.reduce((acc,e) => {
+    const m = (e.sub||'').match(/出工\s*(\d+)/);
+    return acc + (m ? parseInt(m[1]) : 0);
+  }, 0);
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">總記錄天數</div><div class="stat-value">${total}</div><div class="stat-sub">筆施工記錄</div></div>
+    <div class="stat-card red"><div class="stat-label">異常記錄</div><div class="stat-value">${issues}</div><div class="stat-sub">已開單</div></div>
+    <div class="stat-card amber"><div class="stat-label">待決議</div><div class="stat-value">${pending}</div><div class="stat-sub">待處理</div></div>
+    <div class="stat-card amber"><div class="stat-label">未結案缺失</div><div class="stat-value">${openDef}</div><div class="stat-sub">缺失單</div></div>
+    <div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">${workerDays}</div><div class="stat-sub">人次</div></div>
+    <div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">${entries.filter(e=>e.status==='milestone').length}</div><div class="stat-sub">個進展</div></div>
+  `;
+
+  const counts = { normal:0, milestone:0, warn:0, pending:0, issue:0 };
+  entries.forEach(e => { if (counts[e.status]!==undefined) counts[e.status]++; });
+  const max = Math.max(...Object.values(counts), 1);
+  const colors = { normal:'var(--c-blue)', milestone:'var(--c-green)', warn:'var(--c-amber)', pending:'var(--c-purple)', issue:'var(--c-red)' };
+  const labels = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
+  document.getElementById('bar-chart').innerHTML = Object.entries(counts).map(([k,v]) =>
+    `<div class="bar-row">
+      <div class="bar-label">${labels[k]}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/max*100}%;background:${colors[k]}"></div></div>
+      <div class="bar-count">${v}</div>
+    </div>`).join('');
+
+  const openItems = entries.filter(e=>e.status==='issue'||e.status==='pending').sort((a,b)=>b.date.localeCompare(a.date));
+  const statusLabel = { issue:'異常', pending:'待決議' };
+  document.getElementById('open-issues-list').innerHTML = openItems.length
+    ? openItems.map(e => `<div class="mini-issue ${e.status==='issue'?'open':'pending'}">
+        <div class="mini-issue-date">${e.date}</div>
+        <div class="mini-issue-title">${e.title.split('\n')[0]}</div>
+        ${e.alert ? `<div style="margin-top:3px;font-size:11px;opacity:.8">${e.alert.slice(0,60)}${e.alert.length>60?'…':''}</div>` : ''}
+        <span class="mini-issue-status ${e.status==='issue'?'iss-open':'iss-pending'}">${statusLabel[e.status]}</span>
+      </div>`).join('')
+    : '<div style="font-size:13px;color:var(--text-muted);padding:12px 0;text-align:center">✅ 目前沒有未結案項目</div>';
+}
+
+// ── DEFECTS ──
+function updateOpenCount() {
+  const n = defects.filter(d=>d.status!=='closed').length;
+  document.getElementById('open-count').textContent = n;
+  document.getElementById('open-count').style.display = n ? 'inline-flex' : 'none';
+}
+
+function renderDefects() {
+  const list = document.getElementById('defects-list');
+  if (!defects.length) {
+    list.innerHTML = '<div class="empty">目前沒有缺失單記錄。點擊「新增缺失單」來建立。</div>';
+    return;
+  }
+  const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
+  list.innerHTML = defects.sort((a,b)=>b.date.localeCompare(a.date)).map(d => `
+    <div class="defect-card" id="dc-${d.id}">
+      <div class="defect-card-top">
+        <span class="defect-no"># ${d.no||d.id.slice(-6)}</span>
+        <div class="defect-title">${d.title}</div>
+        <span class="badge iss-${d.status}" style="flex-shrink:0">${statusMap[d.status]||d.status}</span>
+      </div>
+      <div class="defect-body">${(d.notes||'（無追蹤備注）').replace(/\n/g,'<br>')}</div>
+      <div class="defect-meta">
+        <span>📅 ${d.date||'—'}</span>
+      </div>
+      <div class="defect-actions">
+        <button class="btn-status${d.status==='open'?' active-open':''}" onclick="setDefectStatus('${d.id}','open')">未結案</button>
+        <button class="btn-status${d.status==='replied'?' active-replied':''}" onclick="setDefectStatus('${d.id}','replied')">承商已回覆</button>
+        <button class="btn-status${d.status==='closed'?' active-closed':''}" onclick="setDefectStatus('${d.id}','closed')">已結案</button>
+        <button class="btn-sm del" style="margin-left:auto" onclick="deleteDefect('${d.id}')">刪除</button>
+      </div>
+      <div class="defect-notes">
+        <textarea placeholder="追蹤備注（回覆內容、複驗結果等）" onblur="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
+      </div>
+    </div>`).join('');
+}
+
+function setDefectStatus(id, status) {
+  const d = defects.find(x=>x.id===id);
+  if (d) { d.status = status; defectSave(); renderDefects(); updateOpenCount(); renderDashboard(); }
+}
+function saveDefectNotes(id, val) {
+  const d = defects.find(x=>x.id===id);
+  if (d) { d.notes = val; defectSave(); }
+}
+function deleteDefect(id) {
+  if (!confirm('確定刪除此缺失單？')) return;
+  defects = defects.filter(d=>d.id!==id);
+  defectSave(); renderDefects(); updateOpenCount(); renderDashboard();
+}
+
+function openAddDefectModal() { document.getElementById('defect-modal').style.display='flex'; }
+function closeDefectModal()   { document.getElementById('defect-modal').style.display='none'; }
+function saveDefect() {
+  const no    = document.getElementById('dm-no').value.trim();
+  const title = document.getElementById('dm-title').value.trim();
+  const date  = document.getElementById('dm-date').value;
+  const notes = document.getElementById('dm-notes').value.trim();
+  const status= document.getElementById('dm-status').value;
+  if (!title) { alert('請填寫缺失說明'); return; }
+  defects.push({ id:uid(), no, title, date, notes, status });
+  defectSave();
+  closeDefectModal();
+  ['dm-no','dm-title','dm-date','dm-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dm-status').value='open';
+  renderDefects(); updateOpenCount(); renderDashboard();
+}
+
+// ── EXPORT ──
+function exportCSV() {
+  const onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
+  const data = onlyIssues ? entries.filter(e=>e.status==='issue') : entries;
+  const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
+  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備注','缺失單號']];
+  const BADGE2 = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
+  sorted.forEach(e => rows.push([e.date, e.weather||'', BADGE2[e.status]||e.status, e.title, e.sub||'', e.alert||'', e.defectNo||'']));
+  downloadCSV(rows, '施工時間軸_' + new Date().toISOString().slice(0,10) + '.csv');
+}
+function exportDefectsCSV() {
+  const rows = [['缺失單號','缺失說明','相關日期','狀態','追蹤備注']];
+  const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
+  defects.sort((a,b)=>b.date.localeCompare(a.date)).forEach(d =>
+    rows.push([d.no||'', d.title, d.date||'', statusMap[d.status]||d.status, d.notes||'']));
+  downloadCSV(rows, '缺失單追蹤_' + new Date().toISOString().slice(0,10) + '.csv');
+}
+function downloadCSV(rows, filename) {
+  const csv = '\uFEFF' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+function printReport() {
+  document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
+  switchTab('timeline');
+  setTimeout(() => window.print(), 200);
+}
+
+// ── DEFAULT DATA ──
 function getDefaultData() {
   return [
-    { id:uid(), date:'2026-02-11', weather:'晴', status:'milestone', title:'洗車台材料進場自檢', sub:'出工 7人（施工 3、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-02', weather:'晴', status:'issue', title:'圍籬施工／門柱基礎灌漿完成', sub:'出工 8人（施工 4、管理 4）', alert:'灌漿作業未依核定計畫執行材料進場檢驗程序。出工人數與 TBM-KY 簽到記錄不符。' },
-    { id:uid(), date:'2026-03-05', weather:'陰', status:'normal', title:'大門片安裝及施工組裝', sub:'出工 11人（施工 7、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-06', weather:'雨', status:'warn', title:'轉角圍籬組裝及既有人行道、地坪打除', sub:'出工 12人（施工 8、管理 4）', alert:'轉角圍籬鋼板高度及網狀透空部分高度不足，與假設工程分項施工計畫圖 6-4 不符。' },
-    { id:uid(), date:'2026-03-09', weather:'陰', status:'normal', title:'人行道開挖及洗車台整地', sub:'出工 8人（施工 4、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-10', weather:'陰', status:'warn', title:'沉砂池區域既有地坪及人行道挖除及整地', sub:'出工 11人（施工 7、管理 4）', alert:'貨櫃屋既有管線與沉砂池預定位置重疊，需等改管後施作。' },
-    { id:uid(), date:'2026-03-11', weather:'晴', status:'milestone', title:'人行道開挖／測量定位／洗車台整地／圍籬防溢座灌漿', sub:'140 kgf/cm²，約 120m，約 6m³　抽查：放樣、防溢座尺寸　出工 17人（施工 13、管理 4）', alert:'' },
-    { id:uid(), date:'2026-03-12', weather:'晴', status:'issue', title:'既有人行道／地坪拆除／部分區域整地', sub:'出工 14人（施工 10、管理 4）', alert:'承商未依核定土方暫置區暫置，且未設置汙染防制措施。開立改善事項通知單 10490817_0001。' },
-    { id:uid(), date:'2026-03-13', weather:'晴', status:'warn', title:'防溢座灌漿／沉砂池開挖', sub:'抽查：防溢座 140 kg/cm² 混凝土　出工 13人（施工 9、管理 4）', alert:'開挖沉砂池發現兩條既有管線，已立即通知甲方及電廠，預計下週邀集電廠進行會勘。' },
-    { id:uid(), date:'2026-03-16', weather:'晴', status:'pending', title:'沉砂池開挖／防溢座施作', sub:'出工 12人（施工 8、管理 4）', alert:'會同電廠勘查：一條初判為雨水管，另一條用途待確認。處置方案提請會議討論，本日無決議。' },
-    { id:uid(), date:'2026-03-17', weather:'晴', status:'issue', title:'沉砂池開挖／灌木區整地／防溢座施作', sub:'混凝土取樣送驗（監造會同）　出工 11人（施工 7、管理 4）', alert:'承商疑以「辦理會客」方式使未辦工作證人員入廠施工，查證後依電廠門禁規定於相關人員開始工作前驅離。' },
-    { id:uid(), date:'2026-03-18', weather:'晴', status:'milestone', title:'沉砂池開挖並拆除既有埋管／灌木區整地／施工地坪清理', sub:'出工 13人（施工 9、管理 4）', alert:'' },
+    { id:uid(), date:'2026-02-11', weather:'☀️ 晴', status:'milestone', title:'洗車台材料進場自檢', sub:'出工 7人（施工 3、管理 4）', alert:'', defectNo:'' },
+    { id:uid(), date:'2026-03-02', weather:'☀️ 晴', status:'issue', title:'圍籬施工／門柱基礎灌漿完成', sub:'出工 8人（施工 4、管理 4）', alert:'灌漿作業未依核定計畫執行材料進場檢驗程序。出工人數與 TBM-KY 簽到記錄不符。', defectNo:'10490302_0001' },
+    { id:uid(), date:'2026-03-05', weather:'⛅ 陰', status:'normal', title:'大門片安裝及施工組裝', sub:'出工 11人（施工 7、管理 4）', alert:'', defectNo:'' },
+    { id:uid(), date:'2026-03-06', weather:'🌧 雨', status:'warn', title:'轉角圍籬組裝及既有人行道、地坪打除', sub:'出工 12人（施工 8、管理 4）', alert:'轉角圍籬鋼板高度及網狀透空部分高度不足，與假設工程分項施工計畫圖 6-4 不符。', defectNo:'' },
+    { id:uid(), date:'2026-03-09', weather:'⛅ 陰', status:'normal', title:'人行道開挖及洗車台整地', sub:'出工 8人（施工 4、管理 4）', alert:'', defectNo:'' },
+    { id:uid(), date:'2026-03-10', weather:'⛅ 陰', status:'warn', title:'沉砂池區域既有地坪及人行道挖除及整地', sub:'出工 11人（施工 7、管理 4）', alert:'貨櫃屋既有管線與沉砂池預定位置重疊，需等改管後施作。', defectNo:'' },
+    { id:uid(), date:'2026-03-11', weather:'☀️ 晴', status:'milestone', title:'人行道開挖／測量定位／洗車台整地／圍籬防溢座灌漿', sub:'140 kgf/cm²，約 120m，約 6m³　抽查：放樣、防溢座尺寸　出工 17人（施工 13、管理 4）', alert:'', defectNo:'' },
+    { id:uid(), date:'2026-03-12', weather:'☀️ 晴', status:'issue', title:'既有人行道／地坪拆除／部分區域整地', sub:'出工 14人（施工 10、管理 4）', alert:'承商未依核定土方暫置區暫置，且未設置汙染防制措施。開立改善事項通知單 10490817_0001。', defectNo:'10490817_0001' },
+    { id:uid(), date:'2026-03-13', weather:'☀️ 晴', status:'warn', title:'防溢座灌漿／沉砂池開挖', sub:'抽查：防溢座 140 kg/cm² 混凝土　出工 13人（施工 9、管理 4）', alert:'開挖沉砂池發現兩條既有管線，已立即通知甲方及電廠，預計下週邀集電廠進行會勘。', defectNo:'' },
+    { id:uid(), date:'2026-03-16', weather:'☀️ 晴', status:'pending', title:'沉砂池開挖／防溢座施作', sub:'出工 12人（施工 8、管理 4）', alert:'會同電廠勘查：一條初判為雨水管，另一條用途待確認。處置方案提請會議討論，本日無決議。', defectNo:'' },
+    { id:uid(), date:'2026-03-17', weather:'☀️ 晴', status:'issue', title:'沉砂池開挖／灌木區整地／防溢座施作', sub:'混凝土取樣送驗（監造會同）　出工 11人（施工 7、管理 4）', alert:'承商疑以「辦理會客」方式使未辦工作證人員入廠施工，查證後依電廠門禁規定於相關人員開始工作前驅離。', defectNo:'' },
+    { id:uid(), date:'2026-03-18', weather:'☀️ 晴', status:'milestone', title:'沉砂池開挖並拆除既有埋管／灌木區整地／施工地坪清理', sub:'出工 13人（施工 9、管理 4）', alert:'', defectNo:'' },
   ];
 }
 
+// ── BOOT ──
 if (sessionStorage.getItem('tl_auth') === '1') {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
