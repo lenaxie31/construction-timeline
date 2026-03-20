@@ -348,7 +348,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         </div>
         <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
         <div class="field"><label>出工人數</label><input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）"></div>
-        <div class="field"><label>異常／備注（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
+        <div class="field"><label>異常／備註（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
         <div class="field" id="f-defect-wrap" style="display:none">
           <label>連結缺失單（選填）</label>
           <input type="text" id="f-defect-no" placeholder="例：10490817_0001">
@@ -443,7 +443,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         </div>
         <div class="export-section">
           <h3>📋 缺失單 CSV</h3>
-          <p>匯出所有缺失單記錄，包含狀態與追蹤備注。</p>
+          <p>匯出所有缺失單記錄，包含狀態與追蹤備註。</p>
           <button class="btn-export csv" onclick="exportDefectsCSV()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             下載缺失單 CSV
@@ -465,7 +465,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         <div class="field"><label>缺失單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
         <div class="field"><label>缺失說明</label><textarea id="dm-title" placeholder="簡述缺失內容"></textarea></div>
         <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
-        <div class="field"><label>追蹤備注（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
+        <div class="field"><label>追蹤備註（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
         <div class="field"><label>初始狀態</label>
           <select id="dm-status">
             <option value="open">未結案</option>
@@ -983,7 +983,7 @@ function renderDefects() {
         <div class="defect-title">${d.title}</div>
         <span class="badge iss-${d.status}" style="flex-shrink:0">${statusMap[d.status]||d.status}</span>
       </div>
-      <div class="defect-body">${(d.notes||'（無追蹤備注）').replace(/\n/g,'<br>')}</div>
+      <div class="defect-body">${(d.notes||'（無追蹤備註）').replace(/\n/g,'<br>')}</div>
       <div class="defect-meta">
         <span>📅 ${d.date||'—'}</span>
       </div>
@@ -994,7 +994,7 @@ function renderDefects() {
         <button class="btn-sm del" style="margin-left:auto" onclick="deleteDefect('${d.id}')">刪除</button>
       </div>
       <div class="defect-notes">
-        <textarea placeholder="追蹤備注（回覆內容、複驗結果等）" onblur="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
+        <textarea placeholder="追蹤備註（回覆內容、複驗結果等）" onblur="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
       </div>
     </div>`).join('');
 }
@@ -1035,13 +1035,13 @@ function exportCSV() {
   const onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
   const data = onlyIssues ? entries.filter(e=>e.status==='issue') : entries;
   const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
-  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備注','缺失單號']];
+  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
   const BADGE2 = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
   sorted.forEach(e => rows.push([e.date, e.weather||'', BADGE2[e.status]||e.status, e.title, e.sub||'', e.alert||'', e.defectNo||'']));
   downloadCSV(rows, '施工時間軸_' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function exportDefectsCSV() {
-  const rows = [['缺失單號','缺失說明','相關日期','狀態','追蹤備注']];
+  const rows = [['缺失單號','缺失說明','相關日期','狀態','追蹤備註']];
   const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
   defects.sort((a,b)=>b.date.localeCompare(a.date)).forEach(d =>
     rows.push([d.no||'', d.title, d.date||'', statusMap[d.status]||d.status, d.notes||'']));
