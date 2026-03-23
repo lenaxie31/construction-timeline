@@ -4,6 +4,54 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>施工及監造工作回報 — 減碳A標</title>
+  /* ── DOCUMENT REVIEW ── */
+.doc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.doc-header h2 { font-size: 14px; font-weight: 700; }
+.doc-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.doc-list { display: flex; flex-direction: column; gap: 12px; }
+.doc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.doc-card-header { padding: 13px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; transition: background .12s; }
+.doc-card-header:hover { background: var(--bg); }
+.doc-type-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; border: 1px solid; flex-shrink: 0; }
+.doc-name { font-size: 14px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-meta-inline { font-size: 11px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+.doc-overdue { font-size: 10px; font-weight: 700; color: var(--c-red); background: var(--c-red-bg); border: 1px solid var(--c-red-border); padding: 2px 7px; border-radius: 8px; flex-shrink: 0; }
+.doc-expand-icon { color: var(--text-muted); font-size: 11px; transition: transform .2s; flex-shrink: 0; }
+.doc-card.open .doc-expand-icon { transform: rotate(180deg); }
+.doc-card-body { display: none; border-top: 1px solid var(--border-light); }
+.doc-card.open .doc-card-body { display: block; }
+.doc-card-body-inner { padding: 14px 16px; }
+.ver-list { display: flex; flex-direction: column; position: relative; padding-left: 28px; }
+.ver-list::before { content:''; position:absolute; left:6px; top:10px; bottom:10px; width:2px; background:var(--border-light); }
+.ver-row { position: relative; padding: 8px 0; }
+.ver-dot { position: absolute; left: -28px; top: 13px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 2px var(--border); background: var(--text-muted); z-index: 1; }
+.ver-dot.approved { background: var(--c-green); box-shadow: 0 0 0 2px var(--c-green-border); }
+.ver-dot.rejected  { background: var(--c-red);   box-shadow: 0 0 0 2px var(--c-red-border); }
+.ver-dot.pending   { background: var(--c-amber);  box-shadow: 0 0 0 2px var(--c-amber-border); }
+.ver-dot.reviewing { background: var(--c-blue);   box-shadow: 0 0 0 2px var(--c-blue-border); }
+.ver-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.ver-no   { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.ver-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-secondary); }
+.ver-deadline { font-size: 11px; }
+.ver-deadline.overdue { color: var(--c-red); font-weight: 600; }
+.ver-deadline.ok { color: var(--text-muted); }
+.ver-result { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; border: 1px solid; }
+.ver-result.approved { background: var(--c-green-bg); color: var(--c-green); border-color: var(--c-green-border); }
+.ver-result.rejected  { background: var(--c-red-bg);   color: var(--c-red);   border-color: var(--c-red-border); }
+.ver-result.pending   { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
+.ver-result.reviewing { background: var(--c-blue-bg);   color: var(--c-blue);   border-color: var(--c-blue-border); }
+.ver-comment { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-top: 3px; }
+.ver-link { font-size: 11px; color: var(--c-blue); text-decoration: none; margin-top: 3px; display: inline-block; }
+.ver-link:hover { text-decoration: underline; }
+.ver-actions { display: flex; gap: 4px; margin-top: 6px; }
+.doc-add-ver-btn { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dtype-plan     { background:#EFF6FF; color:#1d4ed8; border-color:#bfdbfe; }
+.dtype-quality  { background:#F0FDF4; color:#15803d; border-color:#bbf7d0; }
+.dtype-drawing  { background:#F5F3FF; color:#6d28d9; border-color:#ddd6fe; }
+.dtype-material { background:#FFFBEB; color:#b45309; border-color:#fde68a; }
+.dtype-test     { background:#FFF7ED; color:#c2410c; border-color:#fed7aa; }
+.dtype-other    { background:#F1F5F9; color:#475569; border-color:#cbd5e1; }
+.stat-card.purple .stat-value { color: var(--c-purple); }
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
@@ -317,6 +365,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
     <button class="tab-btn active" onclick="switchTab('dashboard')">📊 儀表板</button>
     <button class="tab-btn" onclick="switchTab('timeline')">📋 時間軸</button>
     <button class="tab-btn" onclick="switchTab('defects')" id="tab-defects">🔴 缺失追蹤 <span class="tab-badge" id="open-count">0</span></button>
+    <button class="tab-btn" onclick="switchTab('docs')">📁 文件送審 <span class="tab-badge" id="doc-pending-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出</button>
   </div>
 
@@ -418,7 +467,36 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         </div>
         <div class="defects-list" id="defects-list"></div>
       </div>
-
+<!-- Documents Panel -->
+<div class="tab-panel" id="panel-docs">
+  <div class="doc-header">
+    <h2>文件送審管理</h2>
+    <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDocModal()">＋ 新增文件</button>
+  </div>
+  <div class="doc-filter-bar">
+    <select class="filter-select" id="doc-filter-type" onchange="renderDocs()">
+      <option value="">全部類型</option>
+      <option value="plan">施工計畫書</option>
+      <option value="quality">品質計畫</option>
+      <option value="drawing">送審圖說</option>
+      <option value="material">材料送審單</option>
+      <option value="test">測試／檢驗報告</option>
+      <option value="other">其他</option>
+    </select>
+    <select class="filter-select" id="doc-filter-status" onchange="renderDocs()">
+      <option value="">全部狀態</option>
+      <option value="pending">待審</option>
+      <option value="reviewing">審查中</option>
+      <option value="rejected">退件</option>
+      <option value="approved">已核定</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);cursor:pointer;">
+      <input type="checkbox" id="doc-filter-overdue" onchange="renderDocs()" style="accent-color:var(--c-red)"> 僅顯示逾期
+    </label>
+    <span class="filter-count" id="doc-count"></span>
+  </div>
+  <div class="doc-list" id="doc-list"></div>
+</div>
       <!-- Export Panel -->
       <div class="tab-panel" id="panel-export">
         <div class="export-section">
@@ -481,6 +559,68 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
     </div>
   </div>
 
+<!-- Add Document Modal -->
+<div class="modal-overlay" id="doc-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="doc-modal-title">新增文件</h3>
+      <button class="modal-close" onclick="closeDocModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>文件名稱</label><input type="text" id="doc-name" placeholder="例：假設工程分項施工計畫書"></div>
+      <div class="field-row">
+        <div class="field"><label>文件類型</label>
+          <select id="doc-type">
+            <option value="plan">施工計畫書</option>
+            <option value="quality">品質計畫</option>
+            <option value="drawing">送審圖說</option>
+            <option value="material">材料送審單</option>
+            <option value="test">測試／檢驗報告</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="field"><label>審查天數（合約）</label><input type="number" id="doc-review-days" value="14" min="1"></div>
+      </div>
+      <div class="field"><label>備註（選填）</label><textarea id="doc-note" placeholder="合約條款、特殊規定等" style="min-height:48px;"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal" onclick="closeDocModal()">取消</button>
+      <button class="btn-modal primary" onclick="saveDoc()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Version Modal -->
+<div class="modal-overlay" id="ver-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="ver-modal-title">新增送審版次</h3>
+      <button class="modal-close" onclick="closeVerModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ver-doc-id">
+      <input type="hidden" id="ver-edit-idx" value="-1">
+      <div class="field-row">
+        <div class="field"><label>送審日期</label><input type="date" id="ver-date"></div>
+        <div class="field"><label>審查結果</label>
+          <select id="ver-result">
+            <option value="reviewing">審查中</option>
+            <option value="pending">待審</option>
+            <option value="approved">核定</option>
+            <option value="rejected">退件修正</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>實際回覆日期（選填）</label><input type="date" id="ver-reply-date"></div>
+      <div class="field"><label>審查意見／備註</label><textarea id="ver-comment" placeholder="退件原因、核定條件、補件要求…"></textarea></div>
+      <div class="field"><label>附件連結（選填）</label><input type="text" id="ver-link" placeholder="https://drive.google.com/…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal" onclick="closeVerModal()">取消</button>
+      <button class="btn-modal primary" onclick="saveVersion()">儲存版次</button>
+    </div>
+  </div>
+</div>
 </div><!-- app -->
 
 <script>
@@ -1030,7 +1170,139 @@ function saveDefect() {
   renderDefects(); updateOpenCount(); renderDashboard();
 }
 
-// ── EXPORT ──
+// ── DOCUMENTS ──
+const DOCS_KEY = 'construction_docs_v1';
+if (typeof docs === 'undefined') var docs = [];
+const DOC_TYPE_LABEL = { plan:'施工計畫書', quality:'品質計畫', drawing:'送審圖說', material:'材料送審單', test:'測試／檢驗報告', other:'其他' };
+const DOC_TYPE_CLS   = { plan:'dtype-plan', quality:'dtype-quality', drawing:'dtype-drawing', material:'dtype-material', test:'dtype-test', other:'dtype-other' };
+const VER_RESULT_LABEL = { approved:'核定', rejected:'退件修正', pending:'待審', reviewing:'審查中' };
+
+function docsSave() { try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {} }
+function docsLoad() { try { const r = localStorage.getItem(DOCS_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
+function addDays(dateStr, days) { const d = new Date(dateStr); d.setDate(d.getDate() + parseInt(days)); return d.toISOString().slice(0,10); }
+function daysDiff(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function docLatestVersion(doc) { return (doc.versions && doc.versions.length) ? doc.versions[doc.versions.length-1] : null; }
+function docOverallStatus(doc) { const v = docLatestVersion(doc); return v ? v.result : 'pending'; }
+function isDocOverdue(doc) {
+  const v = docLatestVersion(doc); if (!v) return false; if (v.result === 'approved') return false;
+  return todayStr() > addDays(v.date, doc.reviewDays||14) && !v.replyDate;
+}
+function updateDocPendingCount() {
+  const n = docs.filter(d => docOverallStatus(d) !== 'approved' || isDocOverdue(d)).length;
+  const el = document.getElementById('doc-pending-count');
+  if (el) { el.textContent = n; el.style.display = n ? 'inline-flex' : 'none'; }
+}
+function renderDocs() {
+  const typeF   = document.getElementById('doc-filter-type')?.value || '';
+  const statusF = document.getElementById('doc-filter-status')?.value || '';
+  const overdueF = document.getElementById('doc-filter-overdue')?.checked || false;
+  const filtered = docs.filter(d => {
+    if (typeF   && d.type !== typeF) return false;
+    if (statusF && docOverallStatus(d) !== statusF) return false;
+    if (overdueF && !isDocOverdue(d)) return false;
+    return true;
+  });
+  const countEl = document.getElementById('doc-count');
+  if (countEl) countEl.textContent = `共 ${filtered.length} 份文件`;
+  const list = document.getElementById('doc-list');
+  if (!list) return;
+  if (!filtered.length) { list.innerHTML = '<div class="empty">目前沒有文件記錄。點擊「新增文件」來建立。</div>'; return; }
+  const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  list.innerHTML = filtered.map(doc => {
+    const status  = docOverallStatus(doc), overdue = isDocOverdue(doc);
+    const verCount = (doc.versions||[]).length;
+    const versionsHtml = (doc.versions||[]).map((v,vi) => {
+      const deadline = addDays(v.date, doc.reviewDays||14);
+      const isOver   = !v.replyDate && v.result !== 'approved' && todayStr() > deadline;
+      const dlLabel  = isOver ? `⚠️ 應審完 ${deadline}（逾期 ${daysDiff(deadline,todayStr())} 天）` : `應審完 ${deadline}${v.replyDate?'　實際回覆 '+v.replyDate:''}`;
+      return `<div class="ver-row">
+        <div class="ver-dot ${v.result}"></div>
+        <div class="ver-top"><span class="ver-no">第 ${vi+1} 次</span><span class="ver-date">送審 ${v.date}</span><span class="ver-deadline ${isOver?'overdue':'ok'}">${dlLabel}</span><span class="ver-result ${v.result}">${VER_RESULT_LABEL[v.result]||v.result}</span></div>
+        ${v.comment?`<div class="ver-comment">💬 ${escH(v.comment).replace(/\n/g,'<br>')}</div>`:''}
+        ${v.link?`<a class="ver-link" href="${escH(v.link)}" target="_blank" rel="noopener">📎 附件連結</a>`:''}
+        <div class="ver-actions"><button class="btn-sm edit" onclick="editVersion('${doc.id}',${vi})">編輯</button><button class="btn-sm del" onclick="deleteVersion('${doc.id}',${vi})">刪除版次</button></div>
+      </div>`;
+    }).join('');
+    return `<div class="doc-card" id="doccard-${doc.id}">
+      <div class="doc-card-header" onclick="toggleDocCard('${doc.id}')">
+        <span class="doc-type-badge ${DOC_TYPE_CLS[doc.type]||'dtype-other'}">${DOC_TYPE_LABEL[doc.type]||doc.type}</span>
+        <span class="doc-name">${escH(doc.name)}</span>
+        <span class="doc-meta-inline">${verCount} 次　${doc.reviewDays||14} 天審查</span>
+        ${overdue?`<span class="doc-overdue">⚠️ 逾期</span>`:''}
+        <span class="ver-result ${status}" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;border:1px solid;flex-shrink:0;">${VER_RESULT_LABEL[status]||status}</span>
+        <span class="doc-expand-icon">▼</span>
+      </div>
+      <div class="doc-card-body"><div class="doc-card-body-inner">
+        ${doc.note?`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;padding:8px 10px;background:var(--bg);border-radius:6px;">📝 ${escH(doc.note)}</div>`:''}
+        <div class="ver-list">${versionsHtml||'<div style="font-size:13px;color:var(--text-muted);padding:4px 0 8px;">尚未有送審記錄</div>'}</div>
+        <div class="doc-add-ver-btn">
+          <button class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;" onclick="openAddVerModal('${doc.id}')">＋ 新增送審版次</button>
+          <button class="btn-sm edit" onclick="editDoc('${doc.id}')">編輯文件</button>
+          <button class="btn-sm del" onclick="deleteDoc('${doc.id}')">刪除文件</button>
+        </div>
+      </div></div>
+    </div>`;
+  }).join('');
+}
+function toggleDocCard(id) { const el = document.getElementById('doccard-'+id); if(el) el.classList.toggle('open'); }
+let editingDocId = null;
+function openAddDocModal() {
+  editingDocId = null; document.getElementById('doc-modal-title').textContent = '新增文件';
+  ['doc-name','doc-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('doc-type').value='plan'; document.getElementById('doc-review-days').value='14';
+  document.getElementById('doc-modal').style.display='flex';
+}
+function editDoc(id) {
+  const d = docs.find(x=>x.id===id); if(!d) return;
+  editingDocId = id; document.getElementById('doc-modal-title').textContent = '編輯文件';
+  document.getElementById('doc-name').value=d.name; document.getElementById('doc-type').value=d.type;
+  document.getElementById('doc-review-days').value=d.reviewDays||14; document.getElementById('doc-note').value=d.note||'';
+  document.getElementById('doc-modal').style.display='flex';
+}
+function closeDocModal() { document.getElementById('doc-modal').style.display='none'; }
+function saveDoc() {
+  const name = document.getElementById('doc-name').value.trim(); if(!name){alert('請填寫文件名稱');return;}
+  const payload = { name, type:document.getElementById('doc-type').value, reviewDays:parseInt(document.getElementById('doc-review-days').value)||14, note:document.getElementById('doc-note').value.trim() };
+  if(editingDocId){ const idx=docs.findIndex(d=>d.id===editingDocId); if(idx!==-1) docs[idx]={...docs[idx],...payload}; }
+  else { docs.push({id:uid(),versions:[],...payload}); }
+  docsSave(); closeDocModal(); renderDocs(); updateDocPendingCount();
+}
+function deleteDoc(id) {
+  if(!confirm('確定刪除此文件及所有送審記錄？')) return;
+  docs=docs.filter(d=>d.id!==id); docsSave(); renderDocs(); updateDocPendingCount();
+}
+function openAddVerModal(docId) {
+  document.getElementById('ver-modal-title').textContent='新增送審版次';
+  document.getElementById('ver-doc-id').value=docId; document.getElementById('ver-edit-idx').value='-1';
+  document.getElementById('ver-date').value=todayStr(); document.getElementById('ver-reply-date').value='';
+  document.getElementById('ver-result').value='reviewing'; document.getElementById('ver-comment').value=''; document.getElementById('ver-link').value='';
+  document.getElementById('ver-modal').style.display='flex';
+}
+function editVersion(docId, idx) {
+  const doc=docs.find(d=>d.id===docId); if(!doc) return; const v=doc.versions[idx];
+  document.getElementById('ver-modal-title').textContent='編輯送審版次';
+  document.getElementById('ver-doc-id').value=docId; document.getElementById('ver-edit-idx').value=idx;
+  document.getElementById('ver-date').value=v.date||''; document.getElementById('ver-reply-date').value=v.replyDate||'';
+  document.getElementById('ver-result').value=v.result||'reviewing'; document.getElementById('ver-comment').value=v.comment||''; document.getElementById('ver-link').value=v.link||'';
+  document.getElementById('ver-modal').style.display='flex';
+}
+function closeVerModal() { document.getElementById('ver-modal').style.display='none'; }
+function saveVersion() {
+  const docId=document.getElementById('ver-doc-id').value, editIdx=parseInt(document.getElementById('ver-edit-idx').value);
+  const date=document.getElementById('ver-date').value; if(!date){alert('請填寫送審日期');return;}
+  const doc=docs.find(d=>d.id===docId); if(!doc) return;
+  const ver={date,replyDate:document.getElementById('ver-reply-date').value||'',result:document.getElementById('ver-result').value,comment:document.getElementById('ver-comment').value.trim(),link:document.getElementById('ver-link').value.trim()};
+  if(editIdx>=0){doc.versions[editIdx]=ver;}else{doc.versions.push(ver);}
+  docsSave(); closeVerModal(); renderDocs(); updateDocPendingCount();
+  const card=document.getElementById('doccard-'+docId); if(card&&!card.classList.contains('open')) card.classList.add('open');
+}
+function deleteVersion(docId, idx) {
+  if(!confirm('確定刪除此送審版次？')) return;
+  const doc=docs.find(d=>d.id===docId); if(!doc) return;
+  doc.versions.splice(idx,1); docsSave(); renderDocs(); updateDocPendingCount();
+}
+  // ── EXPORT ──
 function exportCSV() {
   const onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
   const data = onlyIssues ? entries.filter(e=>e.status==='issue') : entries;
@@ -1057,7 +1329,7 @@ function downloadCSV(rows, filename) {
 }
 function printReport() {
   document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
-  switchTab('timeline');
+  switchTab('timeline'if (tab === 'docs') { renderDocs(); });
   setTimeout(() => window.print(), 200);
 }
 
@@ -1083,7 +1355,7 @@ function getDefaultData() {
 if (sessionStorage.getItem('tl_auth') === '1') {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  init();
+  init(docs = docsLoad();renderDocs(); updateDocPendingCount(););
 }
 </script>
 </body>
