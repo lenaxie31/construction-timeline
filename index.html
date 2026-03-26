@@ -425,7 +425,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
             <div id="bar-chart"></div>
           </div>
           <div class="dash-box">
-            <h3>未結案缺失 / 待決議</h3>
+            <h3>未結案改善事項 / 待決議</h3>
             <div class="open-issues-list" id="open-issues-list"></div>
           </div>
         </div>
@@ -500,7 +500,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       <!-- Export Panel -->
       <div class="tab-panel" id="panel-export">
         <div class="export-section">
-          <h3>📄 匯出 CSV</h3>
+          <h3>匯出 CSV</h3>
           <p>將施工時間軸資料匯出為 CSV 格式，可直接用 Excel 或 Google Sheets 開啟。</p>
           <div class="export-options">
             <label class="export-opt"><input type="checkbox" id="exp-all" checked> 全部記錄</label>
@@ -512,7 +512,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
           </button>
         </div>
         <div class="export-section">
-          <h3>🖨 列印 / 匯出 PDF</h3>
+          <h3>列印 / 匯出 PDF</h3>
           <p>點擊下方按鈕將開啟列印視窗，可選擇「另存為 PDF」來儲存監造月報。列印時僅顯示時間軸內容。</p>
           <button class="btn-export print" onclick="printReport()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -520,7 +520,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
           </button>
         </div>
         <div class="export-section">
-          <h3>📋 改善事項通知單 CSV</h3>
+          <h3>改善事項通知單 CSV</h3>
           <p>匯出所有改善事項通知單記錄，包含狀態與追蹤備註。</p>
           <button class="btn-export csv" onclick="exportDefectsCSV()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -541,7 +541,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       </div>
       <div class="modal-body">
         <div class="field"><label>改善事項通知單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
-        <div class="field"><label>改善事項說明</label><textarea id="dm-title" placeholder="簡述缺失內容"></textarea></div>
+        <div class="field"><label>改善事項說明</label><textarea id="dm-title" placeholder="簡述改善內容"></textarea></div>
         <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
         <div class="field"><label>追蹤備註（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
         <div class="field"><label>初始狀態</label>
@@ -940,7 +940,7 @@ function editEntry(id) {
   document.getElementById('f-alert').value   = e.alert || '';
   document.getElementById('f-defect-no').value = e.defectNo || '';
   document.getElementById('f-defect-wrap').style.display = (e.status==='issue'||e.status==='warn') ? 'flex':'none';
-  document.getElementById('form-title').textContent  = '✏️ 編輯工項';
+  document.getElementById('form-title').textContent  = '編輯工項';
   document.getElementById('btn-submit').textContent  = '儲存變更';
   document.getElementById('btn-cancel').style.display = 'block';
   switchTab('timeline');
@@ -1116,7 +1116,7 @@ function updateOpenCount() {
 function renderDefects() {
   const list = document.getElementById('defects-list');
   if (!defects.length) {
-    list.innerHTML = '<div class="empty">目前沒有改善事項通知單記錄。點擊「新增表單」來建立。</div>';
+    list.innerHTML = '<div class="empty">目前沒有改善事項通知單記錄。點擊「新增改善事項通知單」來建立。</div>';
     return;
   }
   const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
