@@ -330,7 +330,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
     <h2>施工及監造回報</h2>
-    <p>台中電廠　請輸入密碼以繼續</p>
+    <p>減碳A標　請輸入密碼以繼續</p>
     <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
     <button class="lock-btn" onclick="checkPw()">進入</button>
     <div class="lock-err" id="pw-err"></div>
@@ -347,7 +347,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
     </div>
     <div class="header-title">
       <h1>施工及監造工作回報</h1>
-      <p>台中電廠</p>
+      <p>減碳A標</p>
     </div>
     <div class="header-actions">
       <span class="sync-badge sync-local" id="sync-badge">本機模式</span>
@@ -362,10 +362,10 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('dashboard')">📊 儀表板</button>
-    <button class="tab-btn" onclick="switchTab('timeline')">📋 時間軸</button>
-    <button class="tab-btn" onclick="switchTab('defects')" id="tab-defects">🔴 缺失追蹤 <span class="tab-badge" id="open-count">0</span></button>
-    <button class="tab-btn" onclick="switchTab('docs')">📁 文件送審 <span class="tab-badge" id="doc-pending-count" style="display:none">0</span></button>
+    <button class="tab-btn active" onclick="switchTab('dashboard')">儀表板</button>
+    <button class="tab-btn" onclick="switchTab('timeline')">時間軸</button>
+    <button class="tab-btn" onclick="switchTab('defects')" id="tab-defects">🔴缺失追蹤 <span class="tab-badge" id="open-count">0</span></button>
+    <button class="tab-btn" onclick="switchTab('docs')">文件送審 <span class="tab-badge" id="doc-pending-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出</button>
   </div>
 
@@ -392,14 +392,14 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
             <option value="milestone">里程碑／進展</option>
             <option value="warn">待注意</option>
             <option value="pending">待決議</option>
-            <option value="issue">異常／已開單</option>
+            <option value="issue">異常</option>
           </select>
         </div>
         <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
         <div class="field"><label>出工人數</label><input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）"></div>
         <div class="field"><label>異常／備註（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
         <div class="field" id="f-defect-wrap" style="display:none">
-          <label>連結缺失單（選填）</label>
+          <label>連結改善事項通知單（選填）</label>
           <input type="text" id="f-defect-no" placeholder="例：10490817_0001">
         </div>
         <button class="btn-primary" id="btn-submit" onclick="submitEntry()">新增到時間軸</button>
@@ -412,7 +412,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
 
       <!-- Print header (visible only in print) -->
       <div class="print-header">
-        <h2 style="font-size:18px;font-weight:700;">施工及監造工作回報 — 台中電廠</h2>
+        <h2 style="font-size:18px;font-weight:700;">施工及監造工作回報 — 減碳A標</h2>
         <p style="font-size:12px;color:#888;margin-top:4px;">列印時間：<span id="print-time"></span></p>
       </div>
 
@@ -439,7 +439,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-green)"></div>里程碑</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-blue)"></div>正常施工</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-amber)"></div>待注意／待決議</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--c-red)"></div>異常／已開單</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c-red)"></div>異常</div>
         </div>
         <div class="filter-bar">
           <input type="search" id="search-input" placeholder="搜尋工項說明…" oninput="render()">
@@ -462,8 +462,8 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       <!-- Defects Panel -->
       <div class="tab-panel" id="panel-defects">
         <div class="defect-header">
-          <h2>缺失單追蹤</h2>
-          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增缺失單</button>
+          <h2>改善事項通知單追蹤</h2>
+          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增改善事項通知單</button>
         </div>
         <div class="defects-list" id="defects-list"></div>
       </div>
@@ -479,7 +479,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       <option value="plan">施工計畫書</option>
       <option value="quality">品質計畫</option>
       <option value="drawing">送審圖說</option>
-      <option value="material">材料送審單</option>
+      <option value="material">材料送審</option>
       <option value="test">測試／檢驗報告</option>
       <option value="other">其他</option>
     </select>
@@ -520,11 +520,11 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
           </button>
         </div>
         <div class="export-section">
-          <h3>📋 缺失單 CSV</h3>
-          <p>匯出所有缺失單記錄，包含狀態與追蹤備註。</p>
+          <h3>📋 改善事項通知單 CSV</h3>
+          <p>匯出所有改善事項通知單記錄，包含狀態與追蹤備註。</p>
           <button class="btn-export csv" onclick="exportDefectsCSV()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            下載缺失單 CSV
+            下載改善事項通知單 CSV
           </button>
         </div>
       </div>
@@ -536,12 +536,12 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   <div class="modal-overlay" id="defect-modal" style="display:none">
     <div class="modal">
       <div class="modal-header">
-        <h3>新增缺失單</h3>
+        <h3>新增改善事項通知單</h3>
         <button class="modal-close" onclick="closeDefectModal()">×</button>
       </div>
       <div class="modal-body">
-        <div class="field"><label>缺失單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
-        <div class="field"><label>缺失說明</label><textarea id="dm-title" placeholder="簡述缺失內容"></textarea></div>
+        <div class="field"><label>改善事項通知單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
+        <div class="field"><label>改善事項說明</label><textarea id="dm-title" placeholder="簡述缺失內容"></textarea></div>
         <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
         <div class="field"><label>追蹤備註（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
         <div class="field"><label>初始狀態</label>
@@ -554,7 +554,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       </div>
       <div class="modal-footer">
         <button class="btn-modal" onclick="closeDefectModal()">取消</button>
-        <button class="btn-modal primary" onclick="saveDefect()">儲存缺失單</button>
+        <button class="btn-modal primary" onclick="saveDefect()">儲存表單</button>
       </div>
     </div>
   </div>
@@ -574,7 +574,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
             <option value="plan">施工計畫書</option>
             <option value="quality">品質計畫</option>
             <option value="drawing">送審圖說</option>
-            <option value="material">材料送審單</option>
+            <option value="material">材料送審</option>
             <option value="test">測試／檢驗報告</option>
             <option value="other">其他</option>
           </select>
@@ -1018,7 +1018,7 @@ function render() {
       let msg = [];
       if (issCount) msg.push(`<strong>${issCount} 筆異常</strong>`);
       if (penCount) msg.push(`<strong>${penCount} 筆待決議</strong>`);
-      ba.innerHTML = `<div class="alert-banner">⚠️ 目前有 ${msg.join('、')} 項目需要關注。<a onclick="switchTab('defects')">查看缺失追蹤 →</a></div>`;
+      ba.innerHTML = `<div class="alert-banner">⚠️ 目前有 ${msg.join('、')} 項目需要關注。<a onclick="switchTab('defects')">查看改善事項追蹤 →</a></div>`;
     } else { ba.innerHTML = ''; }
   }
 
@@ -1029,7 +1029,7 @@ function render() {
     const alertCls = e.status==='issue' ? 'alert-issue' : 'alert-warn';
     const defect = e.defectNo ? defects.find(d => d.no === e.defectNo) : null;
     const defectTag = defect
-      ? `<span class="defect-tag iss-${esc(defect.status)}" onclick="switchTab('defects')" title="缺失單 ${esc(defect.no)}">📋 ${esc(defect.no)} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||esc(defect.status)}</span>`
+      ? `<span class="defect-tag iss-${esc(defect.status)}" onclick="switchTab('defects')" title="改善事項通知單 ${esc(defect.no)}">📋 ${esc(defect.no)} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||esc(defect.status)}</span>`
       : (e.defectNo ? `<span class="defect-tag iss-open" onclick="switchTab('defects')">📋 ${esc(e.defectNo)}</span>` : '');
     return `<div class="tl-item" style="animation-delay:${Math.min(i*0.03,0.3)}s">
       <div class="tl-left">
@@ -1077,7 +1077,7 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-label">總記錄天數</div><div class="stat-value">${total}</div><div class="stat-sub">筆施工記錄</div></div>
     <div class="stat-card red"><div class="stat-label">異常記錄</div><div class="stat-value">${issues}</div><div class="stat-sub">已開單</div></div>
     <div class="stat-card amber"><div class="stat-label">待決議</div><div class="stat-value">${pending}</div><div class="stat-sub">待處理</div></div>
-    <div class="stat-card amber"><div class="stat-label">未結案缺失</div><div class="stat-value">${openDef}</div><div class="stat-sub">缺失單</div></div>
+    <div class="stat-card amber"><div class="stat-label">未結案改善事項</div><div class="stat-value">${openDef}</div><div class="stat-sub">改善事項通知單</div></div>
     <div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">${workerDays}</div><div class="stat-sub">人次</div></div>
     <div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">${entries.filter(e=>e.status==='milestone').length}</div><div class="stat-sub">個進展</div></div>
   `;
@@ -1116,7 +1116,7 @@ function updateOpenCount() {
 function renderDefects() {
   const list = document.getElementById('defects-list');
   if (!defects.length) {
-    list.innerHTML = '<div class="empty">目前沒有缺失單記錄。點擊「新增缺失單」來建立。</div>';
+    list.innerHTML = '<div class="empty">目前沒有改善事項通知單記錄。點擊「新增表單」來建立。</div>';
     return;
   }
   const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
@@ -1152,7 +1152,7 @@ function saveDefectNotes(id, val) {
   if (d) { d.notes = val; defectSave(); }
 }
 function deleteDefect(id) {
-  if (!confirm('確定刪除此缺失單？')) return;
+  if (!confirm('確定刪除此表單？')) return;
   defects = defects.filter(d=>d.id!==id);
   defectSave(); renderDefects(); updateOpenCount(); renderDashboard();
 }
@@ -1165,7 +1165,7 @@ function saveDefect() {
   const date  = document.getElementById('dm-date').value;
   const notes = document.getElementById('dm-notes').value.trim();
   const status= document.getElementById('dm-status').value;
-  if (!title) { alert('請填寫缺失說明'); return; }
+  if (!title) { alert('請填寫改善事項說明'); return; }
   defects.push({ id:uid(), no, title, date, notes, status });
   defectSave();
   closeDefectModal();
@@ -1177,7 +1177,7 @@ function saveDefect() {
 // ── DOCUMENTS ──
 const DOCS_KEY = 'construction_docs_v1';
 if (typeof docs === 'undefined') var docs = [];
-const DOC_TYPE_LABEL = { plan:'施工計畫書', quality:'品質計畫', drawing:'送審圖說', material:'材料送審單', test:'測試／檢驗報告', other:'其他' };
+const DOC_TYPE_LABEL = { plan:'施工計畫書', quality:'品質計畫', drawing:'送審圖說', material:'材料送審', test:'測試／檢驗報告', other:'其他' };
 const DOC_TYPE_CLS   = { plan:'dtype-plan', quality:'dtype-quality', drawing:'dtype-drawing', material:'dtype-material', test:'dtype-test', other:'dtype-other' };
 const VER_RESULT_LABEL = { approved:'核定', rejected:'退件修正', pending:'待審', reviewing:'審查中' };
 
@@ -1311,17 +1311,17 @@ function exportCSV() {
   const onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
   const data = onlyIssues ? entries.filter(e=>e.status==='issue') : entries;
   const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
-  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
+  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','改善事項通知單號']];
   const BADGE2 = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
   sorted.forEach(e => rows.push([e.date, e.weather||'', BADGE2[e.status]||e.status, e.title, e.sub||'', e.alert||'', e.defectNo||'']));
   downloadCSV(rows, '施工時間軸_' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function exportDefectsCSV() {
-  const rows = [['缺失單號','缺失說明','相關日期','狀態','追蹤備註']];
+  const rows = [['改善事項通知單號','改善事項說明','相關日期','狀態','追蹤備註']];
   const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
   defects.sort((a,b)=>b.date.localeCompare(a.date)).forEach(d =>
     rows.push([d.no||'', d.title, d.date||'', statusMap[d.status]||d.status, d.notes||'']));
-  downloadCSV(rows, '缺失單追蹤_' + new Date().toISOString().slice(0,10) + '.csv');
+  downloadCSV(rows, '改善事項通知單追蹤_' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function downloadCSV(rows, filename) {
   const csv = '\uFEFF' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
