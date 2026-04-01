@@ -319,24 +319,6 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   .print-header { display: block !important; padding: 0 0 16px; border-bottom: 2px solid #000; margin-bottom: 20px; }
 }
 .print-header { display: none; }
-
-/* ── QUALITY INSPECTION ── */
-.qi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-.qi-header h2 { font-size: 14px; font-weight: 700; }
-.qi-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
-.qi-list { display: flex; flex-direction: column; gap: 10px; }
-.qi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
-.qi-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-.qi-item-name { font-size: 14px; font-weight: 600; flex: 1; min-width: 0; }
-.qi-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-top: 4px; }
-.qi-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-.qi-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-light); }
-.qi-result-pass    { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green-border); }
-.qi-result-fail    { background: var(--c-red-bg);    color: var(--c-red);    border: 1px solid var(--c-red-border); }
-.qi-result-recheck { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber-border); }
-.stat-card.teal .stat-value { color: #0d9488; }
-.qi-month-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
-.qi-month-stat h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -382,9 +364,8 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('dashboard')">📊 儀表板</button>
     <button class="tab-btn" onclick="switchTab('timeline')">📋 時間軸</button>
-    <button class="tab-btn" onclick="switchTab('defects')" id="tab-defects">🔴 缺失追蹤 <span class="tab-badge" id="open-count">0</span></button>
+    <button class="tab-btn" onclick="switchTab('defects')" id="tab-defects">🔴 改善事項通知單追蹤 <span class="tab-badge" id="open-count">0</span></button>
     <button class="tab-btn" onclick="switchTab('docs')">📁 文件送審 <span class="tab-badge" id="doc-pending-count" style="display:none">0</span></button>
-    <button class="tab-btn" onclick="switchTab('quality')">🔬 品質抽驗 <span class="tab-badge" id="qi-fail-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出</button>
   </div>
 
@@ -418,7 +399,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         <div class="field"><label>出工人數</label><input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）"></div>
         <div class="field"><label>異常／備註（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
         <div class="field" id="f-defect-wrap" style="display:none">
-          <label>連結缺失單（選填）</label>
+          <label>連結改善事項通知單（選填）</label>
           <input type="text" id="f-defect-no" placeholder="例：10490817_0001">
         </div>
         <button class="btn-primary" id="btn-submit" onclick="submitEntry()">新增到時間軸</button>
@@ -444,7 +425,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
             <div id="bar-chart"></div>
           </div>
           <div class="dash-box">
-            <h3>未結案缺失 / 待決議</h3>
+            <h3>未結案改善事項 / 待決議</h3>
             <div class="open-issues-list" id="open-issues-list"></div>
           </div>
         </div>
@@ -481,8 +462,8 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       <!-- Defects Panel -->
       <div class="tab-panel" id="panel-defects">
         <div class="defect-header">
-          <h2>缺失單追蹤</h2>
-          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增缺失單</button>
+          <h2>改善事項通知單追蹤</h2>
+          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增改善事項通知單</button>
         </div>
         <div class="defects-list" id="defects-list"></div>
       </div>
@@ -516,32 +497,6 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   </div>
   <div class="doc-list" id="doc-list"></div>
 </div>
-      <!-- Quality Inspection Panel -->
-      <div class="tab-panel" id="panel-quality">
-        <div class="qi-header">
-          <h2>品質抽驗記錄</h2>
-          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增抽驗記錄</button>
-        </div>
-        <div class="qi-filter-bar">
-          <select class="filter-select" id="qi-filter-result" onchange="renderQi()">
-            <option value="">全部結果</option>
-            <option value="pass">合格</option>
-            <option value="fail">不合格</option>
-            <option value="recheck">待複驗</option>
-          </select>
-          <select class="filter-select" id="qi-filter-month" onchange="renderQi()">
-            <option value="">全部月份</option>
-          </select>
-          <span class="filter-count" id="qi-count"></span>
-        </div>
-        <div class="stat-grid" id="qi-stat-grid" style="margin-bottom:20px;"></div>
-        <div class="qi-month-stat">
-          <h3>本月抽驗摘要</h3>
-          <div id="qi-month-summary" style="font-size:13px;color:var(--text-muted);">載入中…</div>
-        </div>
-        <div class="qi-list" id="qi-list"></div>
-      </div>
-
       <!-- Export Panel -->
       <div class="tab-panel" id="panel-export">
         <div class="export-section">
@@ -565,23 +520,15 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
           </button>
         </div>
         <div class="export-section">
-          <h3>📋 缺失單 CSV</h3>
-          <p>匯出所有缺失單記錄，包含狀態與追蹤備註。</p>
+          <h3>📋 改善事項通知單 CSV</h3>
+          <p>匯出所有改善事項通知單記錄，包含狀態與追蹤備註。</p>
           <button class="btn-export csv" onclick="exportDefectsCSV()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            下載缺失單 CSV
+            下載改善事項通知單 CSV
           </button>
         </div>
       </div>
 
-        <div class="export-section">
-          <h3>🔬 品質抽驗記錄 CSV</h3>
-          <p>匯出所有品質抽驗記錄，包含工項、規範、結果及備註。</p>
-          <button class="btn-export csv" onclick="exportQiCSV()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            下載品質抽驗 CSV
-          </button>
-        </div>
     </div><!-- main -->
   </div><!-- layout -->
 
@@ -589,12 +536,12 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   <div class="modal-overlay" id="defect-modal" style="display:none">
     <div class="modal">
       <div class="modal-header">
-        <h3>新增缺失單</h3>
+        <h3>新增改善事項通知單</h3>
         <button class="modal-close" onclick="closeDefectModal()">×</button>
       </div>
       <div class="modal-body">
-        <div class="field"><label>缺失單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
-        <div class="field"><label>缺失說明</label><textarea id="dm-title" placeholder="簡述缺失內容"></textarea></div>
+        <div class="field"><label>改善事項通知單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
+        <div class="field"><label>改善事項說明</label><textarea id="dm-title" placeholder="簡述改善事項內容"></textarea></div>
         <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
         <div class="field"><label>追蹤備註（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
         <div class="field"><label>初始狀態</label>
@@ -607,7 +554,7 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       </div>
       <div class="modal-footer">
         <button class="btn-modal" onclick="closeDefectModal()">取消</button>
-        <button class="btn-modal primary" onclick="saveDefect()">儲存缺失單</button>
+        <button class="btn-modal primary" onclick="saveDefect()">儲存改善事項通知單</button>
       </div>
     </div>
   </div>
@@ -674,38 +621,6 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
     </div>
   </div>
 </div>
-
-  <!-- Quality Inspection Modal -->
-  <div class="modal-overlay" id="qi-modal" style="display:none">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="qi-modal-title">新增抽驗記錄</h3>
-        <button class="modal-close" onclick="closeQiModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="field-row">
-          <div class="field"><label>抽驗日期</label><input type="date" id="qi-date"></div>
-          <div class="field"><label>抽驗結果</label>
-            <select id="qi-result">
-              <option value="pass">合格</option>
-              <option value="fail">不合格</option>
-              <option value="recheck">待複驗</option>
-            </select>
-          </div>
-        </div>
-        <div class="field"><label>工項／部位</label><input type="text" id="qi-item" placeholder="例：防溢座混凝土、圍籬基礎"></div>
-        <div class="field"><label>檢驗規範／標準</label><input type="text" id="qi-standard" placeholder="例：140 kgf/cm²、圖說 6-4"></div>
-        <div class="field"><label>抽驗人員</label><input type="text" id="qi-inspector" placeholder="例：監造工程師 王○○"></div>
-        <div class="field"><label>備註／不合格說明</label><textarea id="qi-notes" placeholder="不合格原因、改善要求、複驗結果…"></textarea></div>
-        <div class="field"><label>照片連結（選填）</label><input type="text" id="qi-link" placeholder="https://drive.google.com/…"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-modal" onclick="closeQiModal()">取消</button>
-        <button class="btn-modal primary" onclick="saveQi()">儲存</button>
-      </div>
-    </div>
-  </div>
-
 </div><!-- app -->
 
 <script>
@@ -880,8 +795,6 @@ function sanitizeEntry(raw) {
 async function init() {
   try {
     defects = defectLoad();
-    docs = docsLoad();
-    qualityItems = qiLoad();
     if (useCloud()) {
       setSync('載入中…', 'sync-busy');
       try {
@@ -909,11 +822,6 @@ async function init() {
     render();
     renderDefects();
     updateOpenCount();
-    renderDocs();
-    updateDocPendingCount();
-    populateQiMonthFilter();
-    renderQi();
-    updateQiFailCount();
   } catch(e) {
     console.error('init failed:', e);
     showErrorBanner('初始化失敗，嘗試使用預設資料復原中…');
@@ -934,7 +842,7 @@ async function init() {
 // ── TABS ──
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    const tabs = ['dashboard','timeline','defects','docs','quality','export'];
+    const tabs = ['dashboard','timeline','defects','export'];
     b.classList.toggle('active', tabs[i] === tab);
   });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -942,8 +850,6 @@ function switchTab(tab) {
   if (tab === 'timeline') { render(); }
   if (tab === 'defects')  { renderDefects(); }
   if (tab === 'dashboard'){ renderDashboard(); }
-  if (tab === 'docs')      { renderDocs(); }
-  if (tab === 'quality')  { renderQi(); }
   closeSidebar();
 }
 
@@ -1108,7 +1014,7 @@ function render() {
       let msg = [];
       if (issCount) msg.push(`<strong>${issCount} 筆異常</strong>`);
       if (penCount) msg.push(`<strong>${penCount} 筆待決議</strong>`);
-      ba.innerHTML = `<div class="alert-banner">⚠️ 目前有 ${msg.join('、')} 項目需要關注。<a onclick="switchTab('defects')">查看缺失追蹤 →</a></div>`;
+      ba.innerHTML = `<div class="alert-banner">⚠️ 目前有 ${msg.join('、')} 項目需要關注。<a onclick="switchTab('defects')">查看改善事項通知單追蹤 →</a></div>`;
     } else { ba.innerHTML = ''; }
   }
 
@@ -1119,10 +1025,8 @@ function render() {
     const alertCls = e.status==='issue' ? 'alert-issue' : 'alert-warn';
     const defect = e.defectNo ? defects.find(d => d.no === e.defectNo) : null;
     const defectTag = defect
-      ? `<span class="defect-tag iss-${esc(defect.status)}" onclick="switchTab('defects')" title="缺失單 ${esc(defect.no)}">📋 ${esc(defect.no)} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||esc(defect.status)}</span>`
+      ? `<span class="defect-tag iss-${esc(defect.status)}" onclick="switchTab('defects')" title="改善事項通知單 ${esc(defect.no)}">📋 ${esc(defect.no)} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||esc(defect.status)}</span>`
       : (e.defectNo ? `<span class="defect-tag iss-open" onclick="switchTab('defects')">📋 ${esc(e.defectNo)}</span>` : '');
-    const qiOnDate = qualityItems.filter(q=>q.date===e.date);
-    const qiTag = qiOnDate.length ? `<span class="badge" style="background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;cursor:pointer;" onclick="switchTab('quality')">🔬 抽驗 ${qiOnDate.length} 筆</span>` : '';
     return `<div class="tl-item" style="animation-delay:${Math.min(i*0.03,0.3)}s">
       <div class="tl-left">
         <div class="tl-date">${formatDate(e.date).replace('\n','<br>')}</div>
@@ -1136,7 +1040,7 @@ function render() {
       <div class="tl-card${e.id===editingId?' editing':''}">
         <div class="card-top">
           <span class="badge s-${e.status}">${BADGE[e.status]||esc(e.status)}</span>
-          ${defectTag}${qiTag}
+          ${defectTag}
           <div class="card-actions">
             <button class="btn-sm edit" onclick="editEntry('${e.id}')">編輯</button>
             <button class="btn-sm del"  onclick="deleteEntry('${e.id}')">刪除</button>
@@ -1169,10 +1073,9 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-label">總記錄天數</div><div class="stat-value">${total}</div><div class="stat-sub">筆施工記錄</div></div>
     <div class="stat-card red"><div class="stat-label">異常記錄</div><div class="stat-value">${issues}</div><div class="stat-sub">已開單</div></div>
     <div class="stat-card amber"><div class="stat-label">待決議</div><div class="stat-value">${pending}</div><div class="stat-sub">待處理</div></div>
-    <div class="stat-card amber"><div class="stat-label">未結案缺失</div><div class="stat-value">${openDef}</div><div class="stat-sub">缺失單</div></div>
+    <div class="stat-card amber"><div class="stat-label">未結案改善事項</div><div class="stat-value">${openDef}</div><div class="stat-sub">改善事項通知單</div></div>
     <div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">${workerDays}</div><div class="stat-sub">人次</div></div>
     <div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">${entries.filter(e=>e.status==='milestone').length}</div><div class="stat-sub">個進展</div></div>
-    <div class="stat-card teal"><div class="stat-label">品質合格率</div><div class="stat-value">${qualityItems.length ? Math.round(qualityItems.filter(q=>q.result==='pass').length/qualityItems.length*100)+'%' : '—'}</div><div class="stat-sub">${qualityItems.filter(q=>q.result==='fail'||q.result==='recheck').length} 筆待追蹤</div></div>
   `;
 
   const counts = { normal:0, milestone:0, warn:0, pending:0, issue:0 };
@@ -1209,7 +1112,7 @@ function updateOpenCount() {
 function renderDefects() {
   const list = document.getElementById('defects-list');
   if (!defects.length) {
-    list.innerHTML = '<div class="empty">目前沒有缺失單記錄。點擊「新增缺失單」來建立。</div>';
+    list.innerHTML = '<div class="empty">目前沒有改善事項通知單記錄。點擊「新增改善事項通知單」來建立。</div>';
     return;
   }
   const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
@@ -1245,7 +1148,7 @@ function saveDefectNotes(id, val) {
   if (d) { d.notes = val; defectSave(); }
 }
 function deleteDefect(id) {
-  if (!confirm('確定刪除此缺失單？')) return;
+  if (!confirm('確定刪除此改善事項通知單？')) return;
   defects = defects.filter(d=>d.id!==id);
   defectSave(); renderDefects(); updateOpenCount(); renderDashboard();
 }
@@ -1258,7 +1161,7 @@ function saveDefect() {
   const date  = document.getElementById('dm-date').value;
   const notes = document.getElementById('dm-notes').value.trim();
   const status= document.getElementById('dm-status').value;
-  if (!title) { alert('請填寫缺失說明'); return; }
+  if (!title) { alert('請填寫改善事項說明'); return; }
   defects.push({ id:uid(), no, title, date, notes, status });
   defectSave();
   closeDefectModal();
@@ -1399,187 +1302,22 @@ function deleteVersion(docId, idx) {
   const doc=docs.find(d=>d.id===docId); if(!doc) return;
   doc.versions.splice(idx,1); docsSave(); renderDocs(); updateDocPendingCount();
 }
-// ── QUALITY INSPECTION ──
-const QI_KEY = 'construction_qi_v1';
-var qualityItems = [];
-
-function qiSave() { try { localStorage.setItem(QI_KEY, JSON.stringify(qualityItems)); } catch(e) {} }
-function qiLoad()  { try { const r = localStorage.getItem(QI_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
-
-function updateQiFailCount() {
-  const n = qualityItems.filter(q => q.result === 'fail' || q.result === 'recheck').length;
-  const el = document.getElementById('qi-fail-count');
-  if (el) { el.textContent = n; el.style.display = n ? 'inline-flex' : 'none'; }
-}
-
-function populateQiMonthFilter() {
-  const months = [...new Set(qualityItems.map(q => (q.date||'').slice(0,7)).filter(Boolean))].sort();
-  const sel = document.getElementById('qi-filter-month');
-  if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">全部月份</option>' +
-    months.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年')}月</option>`).join('');
-}
-
-function renderQiStats() {
-  const total   = qualityItems.length;
-  const pass    = qualityItems.filter(q=>q.result==='pass').length;
-  const fail    = qualityItems.filter(q=>q.result==='fail').length;
-  const recheck = qualityItems.filter(q=>q.result==='recheck').length;
-  const rate    = total ? Math.round(pass/total*100) : 0;
-  const el = document.getElementById('qi-stat-grid');
-  if (!el) return;
-  el.innerHTML = `
-    <div class="stat-card"><div class="stat-label">總抽驗次數</div><div class="stat-value">${total}</div><div class="stat-sub">筆記錄</div></div>
-    <div class="stat-card teal"><div class="stat-label">合格率</div><div class="stat-value">${total ? rate+'%' : '—'}</div><div class="stat-sub">${pass} 筆合格</div></div>
-    <div class="stat-card red"><div class="stat-label">不合格</div><div class="stat-value">${fail}</div><div class="stat-sub">需改善</div></div>
-    <div class="stat-card amber"><div class="stat-label">待複驗</div><div class="stat-value">${recheck}</div><div class="stat-sub">待追蹤</div></div>
-  `;
-}
-
-function renderQiMonthSummary() {
-  const mo = new Date().toISOString().slice(0,7);
-  const thisMonth = qualityItems.filter(q => (q.date||'').startsWith(mo));
-  const el = document.getElementById('qi-month-summary');
-  if (!el) return;
-  if (!thisMonth.length) { el.innerHTML = '本月尚無抽驗記錄'; return; }
-  const mPass    = thisMonth.filter(q=>q.result==='pass').length;
-  const mFail    = thisMonth.filter(q=>q.result==='fail').length;
-  const mRecheck = thisMonth.filter(q=>q.result==='recheck').length;
-  const mRate    = Math.round(mPass/thisMonth.length*100);
-  el.innerHTML = `
-    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
-      <span>共 <strong>${thisMonth.length}</strong> 次抽驗</span>
-      <span style="color:var(--c-green)">✅ 合格 <strong>${mPass}</strong> 筆</span>
-      ${mFail    ? `<span style="color:var(--c-red)">❌ 不合格 <strong>${mFail}</strong> 筆</span>` : ''}
-      ${mRecheck ? `<span style="color:var(--c-amber)">⏳ 待複驗 <strong>${mRecheck}</strong> 筆</span>` : ''}
-      <span style="font-family:'DM Mono',monospace;font-weight:600;color:#0d9488;">合格率 ${mRate}%</span>
-    </div>`;
-}
-
-function renderQi() {
-  const resultF = document.getElementById('qi-filter-result')?.value || '';
-  const monthF  = document.getElementById('qi-filter-month')?.value  || '';
-  const filtered = qualityItems.filter(q =>
-    (!resultF || q.result === resultF) &&
-    (!monthF  || (q.date||'').startsWith(monthF))
-  ).sort((a,b) => (b.date||'').localeCompare(a.date||''));
-
-  const countEl = document.getElementById('qi-count');
-  if (countEl) countEl.textContent = `共 ${filtered.length} 筆`;
-
-  renderQiStats();
-  renderQiMonthSummary();
-
-  const list = document.getElementById('qi-list');
-  if (!list) return;
-  if (!filtered.length) { list.innerHTML = '<div class="empty">目前沒有抽驗記錄。點擊「新增抽驗記錄」來建立。</div>'; return; }
-
-  const resultLabel = { pass:'合格', fail:'不合格', recheck:'待複驗' };
-  const resultCls   = { pass:'qi-result-pass', fail:'qi-result-fail', recheck:'qi-result-recheck' };
-  const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-  list.innerHTML = filtered.map(q => `
-    <div class="qi-card">
-      <div class="qi-card-top">
-        <span class="badge ${resultCls[q.result]||''}">${resultLabel[q.result]||q.result}</span>
-        <div class="qi-item-name">${escH(q.item)}</div>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);flex-shrink:0">${q.date||'—'}</span>
-      </div>
-      ${q.standard ? `<div class="qi-body">📐 規範：${escH(q.standard)}</div>` : ''}
-      <div class="qi-meta">
-        ${q.inspector ? `<span>👤 ${escH(q.inspector)}</span>` : ''}
-      </div>
-      ${q.notes ? `<div class="card-alert ${q.result==='fail'?'alert-issue':'alert-warn'}" style="margin-top:8px;">${escH(q.notes).replace(/\n/g,'<br>')}</div>` : ''}
-      ${q.link  ? `<div style="margin-top:6px;"><a href="${escH(q.link)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--c-blue);text-decoration:none;">📎 照片連結</a></div>` : ''}
-      <div class="qi-actions">
-        <button class="btn-sm edit" onclick="editQi('${q.id}')">編輯</button>
-        <button class="btn-sm del"  onclick="deleteQi('${q.id}')">刪除</button>
-      </div>
-    </div>`).join('');
-}
-
-let editingQiId = null;
-function openAddQiModal() {
-  editingQiId = null;
-  document.getElementById('qi-modal-title').textContent = '新增抽驗記錄';
-  ['qi-item','qi-standard','qi-inspector','qi-notes','qi-link'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('qi-date').value = todayStr();
-  document.getElementById('qi-result').value = 'pass';
-  document.getElementById('qi-modal').style.display = 'flex';
-}
-function editQi(id) {
-  const q = qualityItems.find(x=>x.id===id); if (!q) return;
-  editingQiId = id;
-  document.getElementById('qi-modal-title').textContent = '編輯抽驗記錄';
-  document.getElementById('qi-date').value      = q.date || '';
-  document.getElementById('qi-result').value    = q.result || 'pass';
-  document.getElementById('qi-item').value      = q.item || '';
-  document.getElementById('qi-standard').value  = q.standard || '';
-  document.getElementById('qi-inspector').value = q.inspector || '';
-  document.getElementById('qi-notes').value     = q.notes || '';
-  document.getElementById('qi-link').value      = q.link || '';
-  document.getElementById('qi-modal').style.display = 'flex';
-}
-function closeQiModal() { document.getElementById('qi-modal').style.display = 'none'; }
-function saveQi() {
-  const item = document.getElementById('qi-item').value.trim();
-  if (!item) { alert('請填寫工項／部位'); return; }
-  const payload = {
-    date:      document.getElementById('qi-date').value,
-    result:    document.getElementById('qi-result').value,
-    item,
-    standard:  document.getElementById('qi-standard').value.trim(),
-    inspector: document.getElementById('qi-inspector').value.trim(),
-    notes:     document.getElementById('qi-notes').value.trim(),
-    link:      document.getElementById('qi-link').value.trim(),
-  };
-  if (editingQiId) {
-    const idx = qualityItems.findIndex(q=>q.id===editingQiId);
-    if (idx !== -1) qualityItems[idx] = { ...qualityItems[idx], ...payload };
-  } else {
-    qualityItems.push({ id: uid(), ...payload });
-  }
-  qiSave();
-  closeQiModal();
-  populateQiMonthFilter();
-  renderQi();
-  updateQiFailCount();
-  renderDashboard();
-}
-function deleteQi(id) {
-  if (!confirm('確定刪除此抽驗記錄？')) return;
-  qualityItems = qualityItems.filter(q=>q.id!==id);
-  qiSave();
-  populateQiMonthFilter();
-  renderQi();
-  updateQiFailCount();
-  renderDashboard();
-}
-function exportQiCSV() {
-  const rows = [['抽驗日期','工項／部位','檢驗規範／標準','抽驗人員','抽驗結果','備註','照片連結']];
-  const rl = { pass:'合格', fail:'不合格', recheck:'待複驗' };
-  qualityItems.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(q =>
-    rows.push([q.date||'', q.item||'', q.standard||'', q.inspector||'', rl[q.result]||q.result, q.notes||'', q.link||'']));
-  downloadCSV(rows, '品質抽驗記錄_' + new Date().toISOString().slice(0,10) + '.csv');
-}
-
   // ── EXPORT ──
 function exportCSV() {
   const onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
   const data = onlyIssues ? entries.filter(e=>e.status==='issue') : entries;
   const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
-  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
+  const rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','改善事項通知單號']];
   const BADGE2 = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
   sorted.forEach(e => rows.push([e.date, e.weather||'', BADGE2[e.status]||e.status, e.title, e.sub||'', e.alert||'', e.defectNo||'']));
   downloadCSV(rows, '施工時間軸_' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function exportDefectsCSV() {
-  const rows = [['缺失單號','缺失說明','相關日期','狀態','追蹤備註']];
+  const rows = [['改善事項通知單號','改善事項說明','相關日期','狀態','追蹤備註']];
   const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
   defects.sort((a,b)=>b.date.localeCompare(a.date)).forEach(d =>
     rows.push([d.no||'', d.title, d.date||'', statusMap[d.status]||d.status, d.notes||'']));
-  downloadCSV(rows, '缺失單追蹤_' + new Date().toISOString().slice(0,10) + '.csv');
+  downloadCSV(rows, '改善事項通知單追蹤_' + new Date().toISOString().slice(0,10) + '.csv');
 }
 function downloadCSV(rows, filename) {
   const csv = '\uFEFF' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
@@ -1591,7 +1329,7 @@ function downloadCSV(rows, filename) {
 }
 function printReport() {
   document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
-  switchTab('timeline');
+  switchTab('timeline'if (tab === 'docs') { renderDocs(); });
   setTimeout(() => window.print(), 200);
 }
 
