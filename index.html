@@ -1112,10 +1112,27 @@ async function apiCall(params) {
 function normalizeDate(raw) {
   if (!raw) return '';
   const s = String(raw).trim();
+  // 已是 YYYY-MM-DD，直接回傳，不經過 Date 物件（避免時區位移）
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // YYYY/M/D 或 YYYY-M-D（月日可能無補零）
   const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
   if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
-  try { const d = new Date(s); if (!isNaN(d)) return d.toISOString().slice(0,10); } catch(_) {}
+  // 民國年：113/4/7 → 2024-04-07
+  const roc = s.match(/^(\d{2,3})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (roc) {
+    const y = parseInt(roc[1]) + 1911;
+    return `${y}-${roc[2].padStart(2,'0')}-${roc[3].padStart(2,'0')}`;
+  }
+  // 最後手段：用 Date 解析，但強制以本地時間取年月日，不用 toISOString()
+  try {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      const y  = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const dy = String(d.getDate()).padStart(2, '0');
+      return `${y}-${mo}-${dy}`;
+    }
+  } catch(_) {}
   return s;
 }
 const VALID_STATUS = new Set(['normal','milestone','warn','pending','issue']);
