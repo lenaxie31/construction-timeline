@@ -581,6 +581,68 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   .qi-rate-grid { flex-direction: column; }
 }
 
+
+/* ── TOAST CONFIRM (Fix 5) ── */
+.toast-confirm {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text-primary);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-md);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast-confirm.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+.toast-confirm-msg { flex: 1; }
+.toast-confirm-btns { display: flex; gap: 8px; }
+.toast-btn-cancel { font-family: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: rgba(255,255,255,0.8); cursor: pointer; }
+.toast-btn-cancel:hover { background: rgba(255,255,255,0.1); }
+.toast-btn-ok { font-family: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: none; background: var(--c-red); color: #fff; cursor: pointer; }
+.toast-btn-ok:hover { opacity: .85; }
+
+/* ── TODAY BADGE (Fix 6) ── */
+.tl-today-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--c-green);
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: .3px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+/* ── DASHBOARD TREND (Fix 7) ── */
+.stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.stat-trend.up   { background: var(--c-green-bg); color: var(--c-green); }
+.stat-trend.down { background: var(--c-red-bg);   color: var(--c-red); }
+.stat-trend.same { background: var(--bg);          color: var(--text-muted); }
+
 /* ── PRINT ── */
 @media print {
   .header, .tabs, .sidebar, .sidebar-toggle, .card-actions, .filter-bar, .btn-export, .export-section, .tab-panel:not(#panel-timeline), .project-progress-card { display: none !important; }
@@ -670,7 +732,19 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
           </select>
         </div>
         <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
-        <div class="field"><label>出工人數</label><input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）"></div>
+        <div class="field">
+          <label>出工人數</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）" style="flex:1;">
+          </div>
+          <!-- ★ Fix 8: 快速人數輸入器 -->
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;" id="workers-quick">
+            <span style="font-size:10px;color:var(--text-muted);align-self:center;">快速填入：施</span>
+            <input type="number" id="wk-labor" min="0" placeholder="0" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;" oninput="fillWorkers()">
+            <span style="font-size:10px;color:var(--text-muted);align-self:center;">管</span>
+            <input type="number" id="wk-mgmt" min="0" placeholder="0" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;" oninput="fillWorkers()">
+          </div>
+        </div>
         <div class="field"><label>異常／備註（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
         <div class="field" id="f-defect-wrap" style="display:none">
           <label>連結缺失單（選填）</label>
@@ -1014,6 +1088,15 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
     </div>
   </div>
 
+  <!-- Toast Confirm (Fix 5) -->
+  <div class="toast-confirm" id="toast-confirm">
+    <span class="toast-confirm-msg" id="toast-confirm-msg">確定要刪除？</span>
+    <div class="toast-confirm-btns">
+      <button class="toast-btn-cancel" onclick="toastConfirmResolve(false)">取消</button>
+      <button class="toast-btn-ok" onclick="toastConfirmResolve(true)">刪除</button>
+    </div>
+  </div>
+
 </div><!-- app -->
 
 <script>
@@ -1051,7 +1134,7 @@ const BADGE = { normal:'正常施工', milestone:'里程碑', warn:'待注意', 
 const LOCAL_KEY   = 'construction_tl_v3';
 const DEFECT_KEY  = 'construction_defects_v1';
 const PROGRESS_KEY = 'construction_progress_v1';
-let entries = [], defects = [], editingId = null;
+let entries = [], defects = [], docs = [], editingId = null; // ★ Fix 9: docs 統一宣告
 const useCloud = () => !!API_URL;
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function setSync(msg, cls) { const b = document.getElementById('sync-badge'); b.textContent = msg; b.className = 'sync-badge ' + cls; }
@@ -1173,6 +1256,9 @@ async function init() {
     // 載入進度條數值
     const savedPct = progressLoad();
     updateProgress(savedPct, false);
+    // ★ Fix 2: 初始化時設定今天日期
+    const fDate = document.getElementById('f-date');
+    if (fDate && !fDate.value) fDate.value = todayStr();
 
     populateMonthFilter();
     renderDashboard();
@@ -1341,11 +1427,50 @@ function renderQiRateGrid() {
   `;
 }
 
+
+// ══════════════════════════════════════
+
+// ★ Fix 8: 快速人數填入
+function fillWorkers() {
+  const labor = parseInt(document.getElementById('wk-labor').value)||0;
+  const mgmt  = parseInt(document.getElementById('wk-mgmt').value)||0;
+  const total = labor + mgmt;
+  if (total > 0) {
+    let txt = `出工 ${total}人`;
+    if (labor > 0 && mgmt > 0) txt += `（施工 ${labor}、管理 ${mgmt}）`;
+    else if (labor > 0) txt += `（施工 ${labor}）`;
+    else txt += `（管理 ${mgmt}）`;
+    document.getElementById('f-sub').value = txt;
+  } else {
+    document.getElementById('f-sub').value = '';
+  }
+}
+
+// ★ Fix 5: Toast Confirm — 取代瀏覽器原生 confirm()
+// ══════════════════════════════════════
+let _toastResolve = null;
+function toastConfirm(msg = '確定要刪除？', okLabel = '刪除') {
+  return new Promise(resolve => {
+    _toastResolve = resolve;
+    const tc = document.getElementById('toast-confirm');
+    const tm = document.getElementById('toast-confirm-msg');
+    const okBtn = tc.querySelector('.toast-btn-ok');
+    if (tm) tm.textContent = msg;
+    if (okBtn) okBtn.textContent = okLabel;
+    tc.classList.add('show');
+  });
+}
+function toastConfirmResolve(result) {
+  document.getElementById('toast-confirm').classList.remove('show');
+  if (_toastResolve) { _toastResolve(result); _toastResolve = null; }
+}
+
 // ── TABS ──
+// ★ Fix 10: tabs 陣列移到函式外，避免每次切換都重新建立
+const TAB_IDS = ['dashboard','timeline','defects','docs','quality','export'];
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    const tabs = ['dashboard','timeline','defects','docs','quality','export'];
-    b.classList.toggle('active', tabs[i] === tab);
+    b.classList.toggle('active', TAB_IDS[i] === tab);
   });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
@@ -1411,10 +1536,20 @@ async function submitEntry() {
 
 function resetFormState() {
   editingId = null;
-  ['f-date','f-title','f-sub','f-alert','f-defect-no'].forEach(id => document.getElementById(id).value = '');
+  // ★ Fix 2: 自動帶入今天日期，不再讓使用者每次手動選
+  document.getElementById('f-date').value    = todayStr();
+  document.getElementById('f-title').value   = '';
+  document.getElementById('f-sub').value     = '';
+  document.getElementById('f-alert').value   = '';
+  document.getElementById('f-defect-no').value = '';
   document.getElementById('f-status').value  = 'normal';
   document.getElementById('f-weather').value = '☀️ 晴';
   document.getElementById('f-defect-wrap').style.display = 'none';
+  // ★ Fix 8: 清除快速人數輸入
+  const wkL = document.getElementById('wk-labor');
+  const wkM = document.getElementById('wk-mgmt');
+  if (wkL) wkL.value = '';
+  if (wkM) wkM.value = '';
   document.getElementById('form-title').textContent  = '新增工項';
   document.getElementById('btn-submit').textContent  = '新增到時間軸';
   document.getElementById('btn-cancel').style.display = 'none';
@@ -1443,7 +1578,7 @@ function editEntry(id) {
 function cancelEdit() { resetFormState(); render(); }
 
 async function deleteEntry(id) {
-  if (!confirm('確定要刪除這筆記錄嗎？')) return;
+  if (!await toastConfirm('確定要刪除這筆施工記錄？')) return; // ★ Fix 5
   if (useCloud()) {
     setSync('刪除中…', 'sync-busy');
     try { await apiCall({ action:'delete', id }); entries = entries.filter(e => e.id !== id); localSave(); setSync('已同步 ✓', 'sync-ok'); }
@@ -1504,8 +1639,13 @@ function render() {
         : (e.defectNo ? `<span class="defect-tag iss-open" onclick="switchTab('defects')">📋 ${esc(e.defectNo)}</span>` : '');
       const qiOnDate = qualityItems ? qualityItems.filter(q=>q.date===e.date) : [];
       const qiTag = qiOnDate.length ? `<span class="badge" style="background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;cursor:pointer;" onclick="switchTab('quality')">🔬 抽驗 ${qiOnDate.length} 筆</span>` : '';
+      const isToday = e.date === todayStr();
       return `<div class="tl-item" style="animation-delay:${Math.min(i*0.03,0.3)}s">
-        <div class="tl-left"><div class="tl-date">${formatDate(e.date).replace('\n','<br>')}</div><div class="tl-weather">${esc(e.weather)}</div></div>
+        <div class="tl-left">
+          <div class="tl-date">${formatDate(e.date).replace('\n','<br>')}</div>
+          ${isToday ? '<div class="tl-today-badge">今天</div>' : ''}
+          <div class="tl-weather">${esc(e.weather)}</div>
+        </div>
         <div class="tl-spine">
           <div class="tl-line${i===0?' hidden':''}"></div>
           <div class="tl-dot dot-${e.status}"></div>
@@ -1531,24 +1671,57 @@ function render() {
 
 // ── DASHBOARD ──
 function renderDashboard() {
-  const total   = entries.length;
-  const issues  = entries.filter(e=>e.status==='issue').length;
-  const pending = entries.filter(e=>e.status==='pending').length;
+  // ★ Fix 7 & 11: 一次 reduce 計算所有統計，避免多次 filter 重複遍歷
+  const thisMonth = todayStr().slice(0,7);
+  const lastMonth = (() => {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  })();
+
+  const stats = entries.reduce((acc, e) => {
+    acc.total++;
+    if (e.status === 'issue')     acc.issues++;
+    if (e.status === 'pending')   acc.pending++;
+    if (e.status === 'milestone') acc.milestones++;
+    if (e.status === 'issue' || e.status === 'pending') acc.openItems++;
+    const m = (e.sub||'').match(/出工\s*(\d+)/);
+    if (m) acc.workers += parseInt(m[1]);
+    if (e.date.startsWith(thisMonth)) {
+      acc.thisMonthCount++;
+      if (e.status === 'issue') acc.thisMonthIssues++;
+    }
+    if (e.date.startsWith(lastMonth)) { acc.lastMonthCount++; }
+    acc.counts[e.status] = (acc.counts[e.status]||0) + 1;
+    return acc;
+  }, { total:0, issues:0, pending:0, milestones:0, workers:0, openItems:0, thisMonthCount:0, thisMonthIssues:0, lastMonthCount:0, counts:{} });
+
   const openDef = defects.filter(d=>d.status!=='closed').length;
-  const workerDays = entries.reduce((acc,e) => { const m=(e.sub||'').match(/出工\s*(\d+)/); return acc+(m?parseInt(m[1]):0); }, 0);
+  const qiPass  = qualityItems.filter(q=>q.result==='pass').length;
+  const qiPending = qualityItems.filter(q=>q.result==='fail'||q.result==='recheck').length;
+  const qiRate  = qualityItems.length ? Math.round(qiPass/qualityItems.length*100)+'%' : '—';
+
+  // 本月 vs 上月趨勢
+  const trendHtml = (cur, prev, label) => {
+    if (!prev) return '';
+    const diff = cur - prev;
+    if (diff > 0) return `<div class="stat-trend up">↑ +${diff} vs 上月</div>`;
+    if (diff < 0) return `<div class="stat-trend down">↓ ${diff} vs 上月</div>`;
+    return `<div class="stat-trend same">→ 與上月持平</div>`;
+  };
 
   document.getElementById('stat-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-label">總記錄天數</div><div class="stat-value">${total}</div><div class="stat-sub">筆施工記錄</div></div>
-    <div class="stat-card red"><div class="stat-label">異常記錄</div><div class="stat-value">${issues}</div><div class="stat-sub">已開單</div></div>
-    <div class="stat-card amber"><div class="stat-label">待決議</div><div class="stat-value">${pending}</div><div class="stat-sub">待處理</div></div>
+    <div class="stat-card"><div class="stat-label">總記錄天數</div><div class="stat-value">${stats.total}</div><div class="stat-sub">筆施工記錄</div>${trendHtml(stats.thisMonthCount, stats.lastMonthCount, '本月記錄')}</div>
+    <div class="stat-card red"><div class="stat-label">異常記錄</div><div class="stat-value">${stats.issues}</div><div class="stat-sub">已開單</div></div>
+    <div class="stat-card amber"><div class="stat-label">待決議</div><div class="stat-value">${stats.pending}</div><div class="stat-sub">待處理</div></div>
     <div class="stat-card amber"><div class="stat-label">未結案缺失</div><div class="stat-value">${openDef}</div><div class="stat-sub">缺失單</div></div>
-    <div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">${workerDays}</div><div class="stat-sub">人次</div></div>
-    <div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">${entries.filter(e=>e.status==='milestone').length}</div><div class="stat-sub">個進展</div></div>
-    <div class="stat-card teal"><div class="stat-label">品質合格率</div><div class="stat-value">${qualityItems.length ? Math.round(qualityItems.filter(q=>q.result==='pass').length/qualityItems.length*100)+'%' : '—'}</div><div class="stat-sub">${qualityItems.filter(q=>q.result==='fail'||q.result==='recheck').length} 筆待追蹤</div></div>
+    <div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">${stats.workers}</div><div class="stat-sub">人次</div></div>
+    <div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">${stats.milestones}</div><div class="stat-sub">個進展</div></div>
+    <div class="stat-card teal"><div class="stat-label">品質合格率</div><div class="stat-value">${qiRate}</div><div class="stat-sub">${qiPending} 筆待追蹤</div></div>
   `;
 
+  // ★ Fix 11: 直接用 stats.counts，不再重複遍歷
   const counts = { normal:0, milestone:0, warn:0, pending:0, issue:0 };
-  entries.forEach(e => { if (counts[e.status]!==undefined) counts[e.status]++; });
+  Object.entries(stats.counts).forEach(([k,v]) => { if (k in counts) counts[k] = v; });
   const max = Math.max(...Object.values(counts), 1);
   const colors = { normal:'var(--c-blue)', milestone:'var(--c-green)', warn:'var(--c-amber)', pending:'var(--c-purple)', issue:'var(--c-red)' };
   const labels = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
@@ -1565,7 +1738,7 @@ function renderDashboard() {
   // 更新多段進度條（資料變更時重繪）
   renderMultiProgress();
 
-  const openItems = entries.filter(e=>e.status==='issue'||e.status==='pending').sort((a,b)=>b.date.localeCompare(a.date));
+  const openItems = entries.filter(e=>e.status==='issue'||e.status==='pending').sort((a,b)=>b.date.localeCompare(a.date)); // already computed above
   const statusLabel = { issue:'異常', pending:'待決議' };
   document.getElementById('open-issues-list').innerHTML = openItems.length
     ? openItems.map(e => `<div class="mini-issue ${e.status==='issue'?'open':'pending'}">
@@ -1602,14 +1775,27 @@ function renderDefects() {
         <button class="btn-status${d.status==='closed'?' active-closed':''}" onclick="setDefectStatus('${d.id}','closed')">已結案</button>
         <button class="btn-sm del" style="margin-left:auto" onclick="deleteDefect('${d.id}')">刪除</button>
       </div>
-      <div class="defect-notes">
-        <textarea placeholder="追蹤備註" onblur="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
+      <div class="defect-notes" style="position:relative;">
+        <textarea placeholder="追蹤備註（即時自動儲存）" oninput="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
+        <span class="notes-saved-hint" id="hint-${d.id}" style="display:none;position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--c-green);font-weight:600;pointer-events:none;">已儲存 ✓</span>
       </div>
     </div>`).join('');
 }
 function setDefectStatus(id, status) { const d=defects.find(x=>x.id===id); if(d){d.status=status;defectSave();renderDefects();updateOpenCount();renderDashboard();} }
-function saveDefectNotes(id, val)    { const d=defects.find(x=>x.id===id); if(d){d.notes=val;defectSave();} }
-function deleteDefect(id) { if(!confirm('確定刪除？'))return; defects=defects.filter(d=>d.id!==id); defectSave();renderDefects();updateOpenCount();renderDashboard(); }
+function saveDefectNotes(id, val) {
+  // ★ Fix 4: 即時儲存並顯示提示
+  const d = defects.find(x=>x.id===id);
+  if (!d) return;
+  d.notes = val;
+  defectSave();
+  const hint = document.getElementById('hint-'+id);
+  if (hint) {
+    hint.style.display = 'block';
+    clearTimeout(hint._t);
+    hint._t = setTimeout(() => { hint.style.display = 'none'; }, 1500);
+  }
+}
+async function deleteDefect(id) { if(!await toastConfirm('確定要刪除此缺失單？'))return; // ★ Fix 5 defects=defects.filter(d=>d.id!==id); defectSave();renderDefects();updateOpenCount();renderDashboard(); }
 function openAddDefectModal() { document.getElementById('defect-modal').style.display='flex'; }
 function closeDefectModal()   { document.getElementById('defect-modal').style.display='none'; }
 function saveDefect() {
@@ -1626,16 +1812,24 @@ function saveDefect() {
 
 // ── DOCUMENTS ──
 const DOCS_KEY = 'construction_docs_v1';
-if (typeof docs === 'undefined') var docs = [];
+// ★ Fix 9: docs 已在頂部統一宣告，移除舊式 var 宣告
 const DOC_TYPE_LABEL = { plan:'施工計畫書', quality:'品質計畫', drawing:'送審圖說', material:'材料送審單', test:'測試／檢驗報告', other:'其他' };
 const DOC_TYPE_CLS   = { plan:'dtype-plan', quality:'dtype-quality', drawing:'dtype-drawing', material:'dtype-material', test:'dtype-test', other:'dtype-other' };
 const VER_RESULT_LABEL = { approved:'核定', rejected:'退件修正', pending:'待審', reviewing:'審查中' };
 
 function docsSave() { try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {} }
 function docsLoad() { try { const r=localStorage.getItem(DOCS_KEY); return r?JSON.parse(r):[]; } catch(e) { return []; } }
-function addDays(dateStr, days) { const d=new Date(dateStr); d.setDate(d.getDate()+parseInt(days)); return d.toISOString().slice(0,10); }
+// ★ Fix 1: addDays/todayStr 改用本地時間，避免 UTC 時區位移
+function addDays(dateStr, days) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m-1, d + parseInt(days));
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
 function daysDiff(a, b) { return Math.round((new Date(b)-new Date(a))/86400000); }
-function todayStr() { return new Date().toISOString().slice(0,10); }
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function docLatestVersion(doc) { return (doc.versions&&doc.versions.length)?doc.versions[doc.versions.length-1]:null; }
 function docOverallStatus(doc) { const v=docLatestVersion(doc); return v?v.result:'pending'; }
 function isDocOverdue(doc) {
@@ -1643,7 +1837,13 @@ function isDocOverdue(doc) {
   return todayStr()>addDays(v.date,doc.reviewDays||14)&&!v.replyDate;
 }
 function updateDocPendingCount() {
-  const n=docs.filter(d=>docOverallStatus(d)!=='approved'||isDocOverdue(d)).length;
+  // ★ Fix 3: 修正邏輯——badge 只計「未核定」+ 「真正逾期（未核定且超時）」
+  // 「已核定且逾期」在邏輯上不存在（isDocOverdue 已排除 approved），舊條件會重複計算
+  const n = docs.filter(d => {
+    const s = docOverallStatus(d);
+    if (s !== 'approved') return true;   // 未核定者全算
+    return false;                        // 已核定一律不算
+  }).length;
   const el=document.getElementById('doc-pending-count');
   if(el){el.textContent=n;el.style.display=n?'inline-flex':'none';}
 }
@@ -1712,7 +1912,7 @@ function saveDoc(){
   else{docs.push({id:uid(),versions:[],...payload});}
   docsSave();closeDocModal();renderDocs();updateDocPendingCount();
 }
-function deleteDoc(id){if(!confirm('確定刪除？'))return;docs=docs.filter(d=>d.id!==id);docsSave();renderDocs();updateDocPendingCount();}
+async function deleteDoc(id){if(!await toastConfirm('確定要刪除此文件及所有送審記錄？'))return; // ★ Fix 5docs=docs.filter(d=>d.id!==id);docsSave();renderDocs();updateDocPendingCount();}
 function openAddVerModal(docId){
   document.getElementById('ver-modal-title').textContent='新增送審版次';
   document.getElementById('ver-doc-id').value=docId;document.getElementById('ver-edit-idx').value='-1';
@@ -1738,8 +1938,8 @@ function saveVersion(){
   docsSave();closeVerModal();renderDocs();updateDocPendingCount();
   const card=document.getElementById('doccard-'+docId);if(card&&!card.classList.contains('open'))card.classList.add('open');
 }
-function deleteVersion(docId,idx){
-  if(!confirm('確定刪除？'))return;
+async function deleteVersion(docId,idx){
+  if(!await toastConfirm('確定要刪除此送審版次？'))return; // ★ Fix 5
   const doc=docs.find(d=>d.id===docId);if(!doc)return;
   doc.versions.splice(idx,1);docsSave();renderDocs();updateDocPendingCount();
 }
@@ -1772,7 +1972,7 @@ function renderQiStats(){
   `;
 }
 function renderQiMonthSummary(){
-  const mo=new Date().toISOString().slice(0,7);
+  const mo=todayStr().slice(0,7); // ★ Fix 1: 用本地時間
   const thisMonth=qualityItems.filter(q=>(q.date||'').startsWith(mo));
   const el=document.getElementById('qi-month-summary');if(!el)return;
   if(!thisMonth.length){el.innerHTML='本月尚無抽驗記錄';return;}
@@ -1828,7 +2028,7 @@ function saveQi(){
   else{qualityItems.push({id:uid(),...payload});}
   qiSave();closeQiModal();populateQiMonthFilter();renderQi();updateQiFailCount();renderDashboard();
 }
-function deleteQi(id){if(!confirm('確定刪除？'))return;qualityItems=qualityItems.filter(q=>q.id!==id);qiSave();populateQiMonthFilter();renderQi();updateQiFailCount();renderDashboard();}
+async function deleteQi(id){if(!await toastConfirm('確定要刪除此抽驗記錄？'))return; // ★ Fix 5qualityItems=qualityItems.filter(q=>q.id!==id);qiSave();populateQiMonthFilter();renderQi();updateQiFailCount();renderDashboard();}
 
 // ── EXPORT ──
 function exportCSV(){
@@ -1838,7 +2038,7 @@ function exportCSV(){
   const rows=[['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
   const B2={normal:'正常施工',milestone:'里程碑',warn:'待注意',pending:'待決議',issue:'異常'};
   sorted.forEach(e=>rows.push([e.date,e.weather||'',B2[e.status]||e.status,e.title,e.sub||'',e.alert||'',e.defectNo||'']));
-  downloadCSV(rows,'施工時間軸_'+new Date().toISOString().slice(0,10)+'.csv');
+  downloadCSV(rows,'施工時間軸_'+todayStr()+'.csv'); // ★ Fix 1
 }
 function exportDefectsCSV(){
   const rows=[['改善事項通知單號','缺失說明','相關日期','狀態','追蹤備註']];
