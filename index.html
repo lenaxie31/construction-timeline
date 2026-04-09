@@ -15,655 +15,375 @@
   --text-primary: #1C1B18;
   --text-secondary: #6B6860;
   --text-muted: #9C9A93;
-  --accent: #1C1B18;
-
   --c-blue: #2563EB;   --c-blue-bg: #EFF6FF;   --c-blue-border: #BFDBFE;
   --c-green: #16A34A;  --c-green-bg: #F0FDF4;  --c-green-border: #BBF7D0;
   --c-amber: #D97706;  --c-amber-bg: #FFFBEB;  --c-amber-border: #FDE68A;
   --c-red: #DC2626;    --c-red-bg: #FEF2F2;    --c-red-border: #FECACA;
   --c-purple: #7C3AED; --c-purple-bg: #F5F3FF; --c-purple-border: #DDD6FE;
   --c-teal: #0d9488;   --c-teal-bg: #f0fdfa;   --c-teal-border: #99f6e4;
-
-  --radius: 10px;
-  --radius-sm: 6px;
+  --radius: 10px; --radius-sm: 6px;
   --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 15px; }
-body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:15px;}
+body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;-webkit-font-smoothing:antialiased;}
 
-/* ── LOCK ── */
-#lock-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; }
-.lock-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px 32px; width: 340px; text-align: center; box-shadow: var(--shadow-md); }
-.lock-logo { width: 48px; height: 48px; background: var(--text-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
-.lock-logo svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.lock-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-.lock-card p  { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
-.lock-card input { width: 100%; padding: 11px 14px; font-family: 'DM Mono', monospace; font-size: 16px; letter-spacing: 4px; border: 1px solid var(--border); border-radius: var(--radius); outline: none; text-align: center; background: var(--bg); transition: border-color .15s, background .15s; }
-.lock-card input:focus { border-color: var(--text-primary); background: #fff; }
-.lock-card input.error { border-color: var(--c-red); background: var(--c-red-bg); animation: shake .3s; }
-.lock-btn { width: 100%; margin-top: 12px; padding: 12px; font-family: inherit; font-size: 14px; font-weight: 600; background: var(--text-primary); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; transition: opacity .15s; }
-.lock-btn:hover { opacity: .85; }
-.lock-err { font-size: 12px; color: var(--c-red); margin-top: 10px; min-height: 18px; }
-@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+/* LOCK */
+#lock-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;}
+.lock-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 32px;width:340px;text-align:center;box-shadow:var(--shadow-md);}
+.lock-logo{width:48px;height:48px;background:var(--text-primary);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.lock-logo svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.lock-card h2{font-size:18px;font-weight:700;margin-bottom:4px;}
+.lock-card p{font-size:13px;color:var(--text-secondary);margin-bottom:24px;}
+.lock-card input{width:100%;padding:11px 14px;font-family:'DM Mono',monospace;font-size:16px;letter-spacing:4px;border:1px solid var(--border);border-radius:var(--radius);outline:none;text-align:center;background:var(--bg);transition:border-color .15s,background .15s;}
+.lock-card input:focus{border-color:var(--text-primary);background:#fff;}
+.lock-card input.error{border-color:var(--c-red);background:var(--c-red-bg);animation:shake .3s;}
+.lock-btn{width:100%;margin-top:12px;padding:12px;font-family:inherit;font-size:14px;font-weight:600;background:var(--text-primary);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;}
+.lock-btn:hover{opacity:.85;}
+.lock-err{font-size:12px;color:var(--c-red);margin-top:10px;min-height:18px;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-/* ── APP ── */
-#app { display: none; }
+#app{display:none;}
 
-/* ── HEADER ── */
-.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
-.header-logo { width: 34px; height: 34px; background: var(--text-primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.header-logo svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
-.header-title { flex: 1; min-width: 0; }
-.header-title h1 { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.header-title p { font-size: 12px; color: var(--text-muted); }
-.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.sync-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: .3px; }
-.sync-ok    { background: var(--c-green-bg); color: var(--c-green); border: 1px solid var(--c-green-border); }
-.sync-busy  { background: var(--c-amber-bg); color: var(--c-amber); border: 1px solid var(--c-amber-border); }
-.sync-err   { background: var(--c-red-bg);   color: var(--c-red);   border: 1px solid var(--c-red-border); }
-.sync-local { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
-.btn-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; transition: background .15s; }
-.btn-icon:hover { background: var(--border-light); }
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
+.header-logo{width:34px;height:34px;background:var(--text-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.header-logo svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;}
+.header-title{flex:1;min-width:0;}
+.header-title h1{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-title p{font-size:12px;color:var(--text-muted);}
+.header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sync-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.3px;}
+.sync-ok{background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border);}
+.sync-busy{background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);}
+.sync-err{background:var(--c-red-bg);color:var(--c-red);border:1px solid var(--c-red-border);}
+.sync-local{background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);}
+.btn-icon{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:background .15s;}
+.btn-icon:hover{background:var(--border-light);}
 
-/* ── TABS ── */
-.tabs { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 0; overflow-x: auto; }
-.tab-btn { padding: 12px 18px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: color .15s, border-color .15s; }
-.tab-btn.active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
-.tab-btn:hover:not(.active) { color: var(--text-primary); }
-.tab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700; margin-left: 6px; background: var(--c-red-bg); color: var(--c-red); }
+/* TABS */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px;overflow-x:auto;}
+.tab-btn{padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text-secondary);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s;}
+.tab-btn.active{color:var(--text-primary);border-bottom-color:var(--text-primary);}
+.tab-btn:hover:not(.active){color:var(--text-primary);}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:10px;font-weight:700;margin-left:6px;background:var(--c-red-bg);color:var(--c-red);}
 
-/* ── LAYOUT ── */
-.layout { display: flex; min-height: calc(100vh - 105px); }
-.sidebar { width: 280px; min-width: 280px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; transition: transform .25s; }
-.sidebar-inner { padding: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
-.sidebar-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
-.field input, .field select, .field textarea { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-primary); outline: none; transition: border-color .15s, background .15s; width: 100%; }
-.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--text-primary); background: #fff; }
-.field textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.btn-primary { padding: 10px 16px; font-family: inherit; font-size: 13px; font-weight: 600; background: var(--text-primary); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: opacity .15s; width: 100%; }
-.btn-primary:hover { opacity: .85; }
-.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-.btn-secondary { padding: 9px 16px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: background .15s; width: 100%; }
-.btn-secondary:hover { background: var(--border-light); }
+/* LAYOUT */
+.layout{display:flex;min-height:calc(100vh - 105px);}
+.sidebar{width:280px;min-width:280px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;transition:transform .25s;}
+.sidebar-inner{padding:16px;display:flex;flex-direction:column;gap:14px;flex:1;}
+.sidebar-section-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding-bottom:10px;border-bottom:1px solid var(--border-light);}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:600;color:var(--text-secondary);}
+.field input,.field select,.field textarea{font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary);outline:none;transition:border-color .15s,background .15s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--text-primary);background:#fff;}
+.field textarea{resize:vertical;min-height:64px;line-height:1.5;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn-primary{padding:10px 16px;font-family:inherit;font-size:13px;font-weight:600;background:var(--text-primary);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:opacity .15s;width:100%;}
+.btn-primary:hover{opacity:.85;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-secondary{padding:9px 16px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:background .15s;width:100%;}
+.btn-secondary:hover{background:var(--border-light);}
+.main{flex:1;min-width:0;overflow-y:auto;}
+.tab-panel{display:none;padding:20px 24px;}
+.tab-panel.active{display:block;}
 
-/* ── MAIN ── */
-.main { flex: 1; min-width: 0; overflow-y: auto; }
+/* PROGRESS BAR SYSTEM */
+.project-progress-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.project-progress-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--c-green),var(--c-blue),var(--c-amber));}
+.progress-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.progress-header-left h3{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:2px;}
+.progress-header-left p{font-size:11px;color:var(--text-muted);}
+.progress-pct-display{font-family:'DM Mono',monospace;font-size:32px;font-weight:500;line-height:1;}
+.progress-track{height:12px;background:var(--border-light);border-radius:6px;overflow:hidden;margin-bottom:10px;}
+.progress-fill{height:100%;border-radius:6px;transition:width 1s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden;}
+.progress-fill::after{content:'';position:absolute;top:0;left:-100%;right:-100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);animation:shimmer 2s infinite;}
+@keyframes shimmer{0%{transform:translateX(-50%)}100%{transform:translateX(50%)}}
+.progress-fill.green{background:linear-gradient(90deg,#16a34a,#4ade80);}
+.progress-fill.amber{background:linear-gradient(90deg,#d97706,#fbbf24);}
+.progress-fill.blue{background:linear-gradient(90deg,#2563eb,#60a5fa);}
+.progress-fill.teal{background:linear-gradient(90deg,#0d9488,#2dd4bf);}
+.progress-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:14px;}
+.progress-controls{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--border-light);flex-wrap:wrap;}
+.progress-controls label{font-size:11px;font-weight:600;color:var(--text-secondary);white-space:nowrap;}
+.progress-slider{flex:1;min-width:120px;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;}
+.progress-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--text-primary);cursor:pointer;border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform .1s;}
+.progress-slider::-webkit-slider-thumb:hover{transform:scale(1.15);}
+.progress-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--text-primary);cursor:pointer;border:2px solid var(--surface);}
+.progress-pct-input{width:56px;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);text-align:center;outline:none;}
+.progress-pct-input:focus{border-color:var(--text-primary);background:#fff;}
+.multi-progress-track{height:10px;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;background:var(--border-light);}
+.multi-seg{height:100%;transition:width .8s cubic-bezier(0.4,0,0.2,1);}
+.multi-seg:not(:last-child){border-right:1.5px solid rgba(255,255,255,0.5);}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px;}
+.bar-label{width:72px;color:var(--text-secondary);flex-shrink:0;}
+.bar-track{flex:1;height:8px;background:var(--border-light);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(0.4,0,0.2,1);}
+.bar-count{width:28px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);}
+.bar-pct{width:36px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);}
+.doc-progress-summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;box-shadow:var(--shadow);}
+.doc-progress-summary h3{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;}
+.doc-progress-segments{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
+.doc-seg-label{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary);}
+.doc-seg-dot{width:8px;height:8px;border-radius:2px;}
+.qi-rate-grid{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.qi-rate-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;flex:1;min-width:140px;box-shadow:var(--shadow);}
+.qi-rate-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.qi-rate-bar-wrap{display:flex;align-items:center;gap:10px;}
+.qi-rate-value{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;min-width:52px;}
+.qi-rate-bar-track{flex:1;height:6px;background:var(--border-light);border-radius:3px;overflow:hidden;}
+.qi-rate-bar-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(0.4,0,0.2,1);}
 
-/* ── TAB PANELS ── */
-.tab-panel { display: none; padding: 20px 24px; }
-.tab-panel.active { display: block; }
+/* DASHBOARD */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.stat-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.stat-value{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1;}
+.stat-sub{font-size:11px;color:var(--text-muted);margin-top:4px;}
+.stat-card.red .stat-value{color:var(--c-red);}
+.stat-card.amber .stat-value{color:var(--c-amber);}
+.stat-card.green .stat-value{color:var(--c-green);}
+.stat-card.blue .stat-value{color:var(--c-blue);}
+.stat-card.teal .stat-value{color:var(--c-teal);}
+.stat-card.purple .stat-value{color:var(--c-purple);}
+/* Fix 7: trend badge */
+.stat-trend{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:600;margin-top:5px;padding:2px 6px;border-radius:4px;}
+.stat-trend.up{background:var(--c-green-bg);color:var(--c-green);}
+.stat-trend.down{background:var(--c-red-bg);color:var(--c-red);}
+.stat-trend.same{background:var(--bg);color:var(--text-muted);}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.dash-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.dash-box h3{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+.open-issues-list{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;}
+.mini-issue{padding:10px 12px;border-radius:var(--radius-sm);border-left:3px solid;font-size:12px;line-height:1.5;}
+.mini-issue.open{background:var(--c-red-bg);border-color:var(--c-red);color:#7f1d1d;}
+.mini-issue.pending{background:var(--c-amber-bg);border-color:var(--c-amber);color:#78350f;}
+.mini-issue-date{font-family:'DM Mono',monospace;font-size:10px;opacity:.7;margin-bottom:2px;}
+.mini-issue-title{font-weight:600;}
+.mini-issue-status{display:inline-block;margin-top:4px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;}
+.iss-open{background:var(--c-red-bg);color:var(--c-red);}
+.iss-replied{background:var(--c-amber-bg);color:var(--c-amber);}
+.iss-closed{background:var(--c-green-bg);color:var(--c-green);}
+.iss-pending{background:var(--c-purple-bg);color:var(--c-purple);}
 
-/* ══════════════════════════════════════════
-   ── PROGRESS BAR SYSTEM ──
-══════════════════════════════════════════ */
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+.filter-bar input[type=search]{font-family:inherit;font-size:13px;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;width:200px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239C9A93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center;transition:border-color .15s;}
+.filter-bar input[type=search]:focus{border-color:var(--text-primary);}
+.filter-select{font-family:inherit;font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-secondary);outline:none;cursor:pointer;}
+.filter-select:focus{border-color:var(--text-primary);}
+.filter-count{font-size:12px;color:var(--text-muted);margin-left:auto;white-space:nowrap;}
 
-/* 整體工程進度區塊 */
-.project-progress-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-  position: relative;
-  overflow: hidden;
-}
-.project-progress-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--c-green), var(--c-blue), var(--c-amber));
-}
-.progress-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.progress-header-left h3 {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-.progress-header-left p {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.progress-pct-display {
-  font-family: 'DM Mono', monospace;
-  font-size: 32px;
-  font-weight: 500;
-  color: var(--c-green);
-  line-height: 1;
-}
-.progress-pct-display.amber { color: var(--c-amber); }
-.progress-pct-display.red   { color: var(--c-red); }
+/* TIMELINE */
+.alert-banner{background:var(--c-red-bg);border:1px solid var(--c-red-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px;}
+.alert-banner a{color:var(--c-red);font-weight:600;cursor:pointer;text-decoration:underline;}
+.info-banner{background:var(--c-blue-bg);border:1px solid var(--c-blue-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:13px;color:#1e3a8a;}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);}
+.legend-dot{width:8px;height:8px;border-radius:50%;}
+.tl-item{display:flex;margin-bottom:12px;animation:fadeUp .25s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.tl-left{width:88px;min-width:88px;padding-right:10px;padding-top:12px;text-align:right;}
+.tl-date{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--text-primary);line-height:1.4;}
+/* Fix 6: today badge */
+.tl-today-badge{font-size:9px;font-weight:700;background:var(--c-green);color:#fff;padding:1px 5px;border-radius:4px;letter-spacing:.3px;display:inline-block;margin-top:2px;}
+.tl-weather{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.tl-spine{display:flex;flex-direction:column;align-items:center;width:20px;min-width:20px;}
+.tl-line{width:2px;flex:1;min-height:12px;background:var(--border);}
+.tl-line.hidden{opacity:0;}
+.tl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2.5px solid var(--bg);box-shadow:0 0 0 1px rgba(0,0,0,.12);}
+.tl-card{flex:1;margin:4px 0 4px 12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s;}
+.tl-card:hover{border-color:#B5B2A8;box-shadow:var(--shadow-md);}
+.tl-card.editing{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+.card-top{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap;}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;letter-spacing:.2px;}
+.card-actions{margin-left:auto;display:flex;gap:4px;}
+.tl-card .card-actions{opacity:0;transition:opacity .15s;}
+.tl-card:hover .card-actions{opacity:1;}
+@media(hover:none){.tl-card .card-actions{opacity:1;}}
+.btn-sm{font-size:11px;padding:3px 9px;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);transition:background .12s,color .12s;}
+.btn-sm.edit:hover{background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);}
+.btn-sm.del:hover{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
+.card-title{font-size:14px;font-weight:600;color:var(--text-primary);line-height:1.5;margin-bottom:3px;}
+.card-sub{font-size:12px;color:var(--text-secondary);line-height:1.6;}
+.card-alert{margin-top:8px;padding:7px 10px 7px 12px;font-size:12px;line-height:1.6;border-radius:var(--radius-sm);}
+.alert-warn{background:var(--c-amber-bg);color:#78350f;border-left:3px solid var(--c-amber);}
+.alert-issue{background:var(--c-red-bg);color:#7f1d1d;border-left:3px solid var(--c-red);}
+.defect-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;border:1px solid;cursor:pointer;transition:opacity .12s;}
+.defect-tag:hover{opacity:.75;}
+.defect-tag.iss-open{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
+.defect-tag.iss-replied{background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
+.defect-tag.iss-closed{background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border);}
+.s-normal{background:var(--c-blue-bg);color:var(--c-blue);border:1px solid var(--c-blue-border);}
+.s-milestone{background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border);}
+.s-warn{background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);}
+.s-pending{background:var(--c-purple-bg);color:var(--c-purple);border:1px solid var(--c-purple-border);}
+.s-issue{background:var(--c-red-bg);color:var(--c-red);border:1px solid var(--c-red-border);}
+.dot-normal{background:var(--c-blue);}
+.dot-milestone{background:var(--c-green);}
+.dot-warn{background:var(--c-amber);}
+.dot-pending{background:var(--c-purple);}
+.dot-issue{background:var(--c-red);}
+.empty{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:14px;}
 
-/* 大進度條 */
-.progress-track {
-  height: 12px;
-  background: var(--border-light);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 10px;
-  position: relative;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-.progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%; right: -100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
-  animation: shimmer 2s infinite;
-}
-@keyframes shimmer {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(50%); }
-}
-.progress-fill.green { background: linear-gradient(90deg, #16a34a, #4ade80); }
-.progress-fill.amber { background: linear-gradient(90deg, #d97706, #fbbf24); }
-.progress-fill.blue  { background: linear-gradient(90deg, #2563eb, #60a5fa); }
-.progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
-.progress-fill.teal  { background: linear-gradient(90deg, #0d9488, #2dd4bf); }
+/* DEFECTS */
+.defect-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.defect-header h2{font-size:14px;font-weight:700;}
+.defects-list{display:flex;flex-direction:column;gap:10px;}
+.defect-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+.defect-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.defect-no{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--text-muted);}
+.defect-title{font-size:14px;font-weight:600;flex:1;}
+.defect-body{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px;}
+.defect-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);}
+.defect-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light);}
+.btn-status{font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s;}
+.btn-status:hover{background:var(--border-light);}
+.btn-status.active-open{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
+.btn-status.active-replied{background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
+.btn-status.active-closed{background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border);}
+.defect-notes{margin-top:8px;position:relative;}
+.defect-notes textarea{width:100%;font-family:inherit;font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);resize:vertical;min-height:52px;outline:none;color:var(--text-primary);}
+.defect-notes textarea:focus{border-color:var(--text-primary);background:#fff;}
+/* Fix 4: autosave hint */
+.notes-saved-hint{position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--c-green);font-weight:600;pointer-events:none;display:none;}
 
-.progress-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
+/* EXPORT */
+.export-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.export-section h3{font-size:13px;font-weight:700;margin-bottom:4px;}
+.export-section p{font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;}
+.export-options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.export-opt{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;}
+.export-opt input{accent-color:var(--text-primary);}
+.btn-export{font-family:inherit;font-size:13px;font-weight:600;padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:7px;}
+.btn-export:hover{opacity:.85;}
+.btn-export.csv{background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border);}
+.btn-export.print{background:var(--text-primary);color:#fff;}
 
-/* 進度控制區 */
-.progress-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light);
-  flex-wrap: wrap;
-}
-.progress-controls label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.progress-slider {
-  flex: 1;
-  min-width: 120px;
-  -webkit-appearance: none;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border);
-  outline: none;
-  cursor: pointer;
-}
-.progress-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--text-primary);
-  cursor: pointer;
-  border: 2px solid var(--surface);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  transition: transform .1s;
-}
-.progress-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
-.progress-slider::-moz-range-thumb {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: var(--text-primary);
-  cursor: pointer;
-  border: 2px solid var(--surface);
-  box-shadow: 0 1px 3px rgba(0,0,0,.2);
-}
-.progress-pct-input {
-  width: 56px;
-  font-family: 'DM Mono', monospace;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 5px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  text-align: center;
-  outline: none;
-}
-.progress-pct-input:focus { border-color: var(--text-primary); background: #fff; }
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px;}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:480px;box-shadow:var(--shadow-md);overflow:hidden;}
+.modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-header h3{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);line-height:1;}
+.modal-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.btn-modal{font-family:inherit;font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);transition:background .12s;}
+.btn-modal.primary{background:var(--text-primary);color:#fff;border-color:transparent;}
+.btn-modal:hover:not(.primary){background:var(--border-light);}
+.btn-modal.primary:hover{opacity:.85;}
 
-/* 多段式進度條 — 各工項狀態 */
-.multi-progress-track {
-  height: 10px;
-  border-radius: 5px;
-  overflow: hidden;
-  display: flex;
-  margin-bottom: 8px;
-  background: var(--border-light);
-}
-.multi-seg {
-  height: 100%;
-  transition: width .8s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-.multi-seg:not(:last-child) {
-  border-right: 1.5px solid rgba(255,255,255,0.5);
-}
+/* DOCUMENTS */
+.doc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.doc-header h2{font-size:14px;font-weight:700;}
+.doc-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.doc-list{display:flex;flex-direction:column;gap:12px;}
+.doc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.doc-card-header{padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;transition:background .12s;}
+.doc-card-header:hover{background:var(--bg);}
+.doc-type-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;border:1px solid;flex-shrink:0;}
+.doc-name{font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.doc-meta-inline{font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;}
+.doc-overdue{font-size:10px;font-weight:700;color:var(--c-red);background:var(--c-red-bg);border:1px solid var(--c-red-border);padding:2px 7px;border-radius:8px;flex-shrink:0;}
+.doc-expand-icon{color:var(--text-muted);font-size:11px;transition:transform .2s;flex-shrink:0;}
+.doc-card.open .doc-expand-icon{transform:rotate(180deg);}
+.doc-card-body{display:none;border-top:1px solid var(--border-light);}
+.doc-card.open .doc-card-body{display:block;}
+.doc-card-body-inner{padding:14px 16px;}
+.ver-list{display:flex;flex-direction:column;position:relative;padding-left:28px;}
+.ver-list::before{content:'';position:absolute;left:6px;top:10px;bottom:10px;width:2px;background:var(--border-light);}
+.ver-row{position:relative;padding:8px 0;}
+.ver-dot{position:absolute;left:-28px;top:13px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 2px var(--border);background:var(--text-muted);z-index:1;}
+.ver-dot.approved{background:var(--c-green);box-shadow:0 0 0 2px var(--c-green-border);}
+.ver-dot.rejected{background:var(--c-red);box-shadow:0 0 0 2px var(--c-red-border);}
+.ver-dot.pending{background:var(--c-amber);box-shadow:0 0 0 2px var(--c-amber-border);}
+.ver-dot.reviewing{background:var(--c-blue);box-shadow:0 0 0 2px var(--c-blue-border);}
+.ver-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
+.ver-no{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:var(--text-muted);}
+.ver-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);}
+.ver-deadline{font-size:11px;}
+.ver-deadline.overdue{color:var(--c-red);font-weight:600;}
+.ver-deadline.ok{color:var(--text-muted);}
+.ver-result{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;border:1px solid;}
+.ver-result.approved{background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border);}
+.ver-result.rejected{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
+.ver-result.pending{background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
+.ver-result.reviewing{background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);}
+.ver-comment{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:3px;}
+.ver-link{font-size:11px;color:var(--c-blue);text-decoration:none;margin-top:3px;display:inline-block;}
+.ver-link:hover{text-decoration:underline;}
+.ver-actions{display:flex;gap:4px;margin-top:6px;}
+.doc-add-ver-btn{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.dtype-plan{background:#EFF6FF;color:#1d4ed8;border-color:#bfdbfe;}
+.dtype-quality{background:#F0FDF4;color:#15803d;border-color:#bbf7d0;}
+.dtype-drawing{background:#F5F3FF;color:#6d28d9;border-color:#ddd6fe;}
+.dtype-material{background:#FFFBEB;color:#b45309;border-color:#fde68a;}
+.dtype-test{background:#FFF7ED;color:#c2410c;border-color:#fed7aa;}
+.dtype-other{background:#F1F5F9;color:#475569;border-color:#cbd5e1;}
 
-/* 細進度條 — 用於 bar chart */
-.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
-.bar-label { width: 72px; color: var(--text-secondary); flex-shrink: 0; font-size: 12px; }
-.bar-track { flex: 1; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(0.4, 0, 0.2, 1); }
-.bar-count { width: 28px; text-align: right; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-secondary); }
-.bar-pct { width: 36px; text-align: right; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); }
+/* QUALITY */
+.qi-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.qi-header h2{font-size:14px;font-weight:700;}
+.qi-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.qi-list{display:flex;flex-direction:column;gap:10px;}
+.qi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+.qi-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.qi-item-name{font-size:14px;font-weight:600;flex:1;min-width:0;}
+.qi-body{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:4px;}
+.qi-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);margin-top:6px;}
+.qi-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light);}
+.qi-result-pass{background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border);}
+.qi-result-fail{background:var(--c-red-bg);color:var(--c-red);border:1px solid var(--c-red-border);}
+.qi-result-recheck{background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);}
+.qi-month-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;}
+.qi-month-box h3{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
 
-/* 文件送審進度 */
-.doc-progress-summary {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow);
-}
-.doc-progress-summary h3 {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .6px;
-  margin-bottom: 12px;
-}
-.doc-progress-segments {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.doc-seg-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-.doc-seg-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-}
+/* Fix 5: TOAST CONFIRM */
+.toast-confirm{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text-primary);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-md);z-index:9999;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;}
+.toast-confirm.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+.toast-btn-cancel{font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.3);background:transparent;color:rgba(255,255,255,0.8);cursor:pointer;}
+.toast-btn-cancel:hover{background:rgba(255,255,255,0.1);}
+.toast-btn-ok{font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;border:none;background:var(--c-red);color:#fff;cursor:pointer;}
+.toast-btn-ok:hover{opacity:.85;}
 
-/* 品質合格率進度環 */
-.qi-rate-grid {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-.qi-rate-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  flex: 1;
-  min-width: 140px;
-  box-shadow: var(--shadow);
-}
-.qi-rate-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  margin-bottom: 10px;
-}
-.qi-rate-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.qi-rate-value {
-  font-family: 'DM Mono', monospace;
-  font-size: 22px;
-  font-weight: 500;
-  min-width: 52px;
-}
-.qi-rate-bar-track {
-  flex: 1;
-  height: 6px;
-  background: var(--border-light);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.qi-rate-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ── DASHBOARD ── */
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-.stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
-.stat-value { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; }
-.stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-.stat-card.red .stat-value { color: var(--c-red); }
-.stat-card.amber .stat-value { color: var(--c-amber); }
-.stat-card.green .stat-value { color: var(--c-green); }
-.stat-card.blue .stat-value { color: var(--c-blue); }
-.stat-card.teal .stat-value { color: var(--c-teal); }
-.stat-card.purple .stat-value { color: var(--c-purple); }
-
-.dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-.dash-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-.dash-box h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
-
-.open-issues-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
-.mini-issue { padding: 10px 12px; border-radius: var(--radius-sm); border-left: 3px solid; font-size: 12px; line-height: 1.5; }
-.mini-issue.open  { background: var(--c-red-bg);    border-color: var(--c-red);   color: #7f1d1d; }
-.mini-issue.pending { background: var(--c-amber-bg); border-color: var(--c-amber); color: #78350f; }
-.mini-issue-date { font-family: 'DM Mono', monospace; font-size: 10px; opacity: .7; margin-bottom: 2px; }
-.mini-issue-title { font-weight: 600; }
-.mini-issue-status { display: inline-block; margin-top: 4px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
-.iss-open    { background: var(--c-red-bg);    color: var(--c-red); }
-.iss-replied { background: var(--c-amber-bg);  color: var(--c-amber); }
-.iss-closed  { background: var(--c-green-bg);  color: var(--c-green); }
-.iss-pending { background: var(--c-purple-bg); color: var(--c-purple); }
-
-/* ── FILTER BAR ── */
-.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
-.filter-bar input[type=search] { font-family: inherit; font-size: 13px; padding: 8px 12px 8px 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); outline: none; width: 200px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239C9A93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 10px center; transition: border-color .15s; }
-.filter-bar input[type=search]:focus { border-color: var(--text-primary); }
-.filter-select { font-family: inherit; font-size: 12px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-secondary); outline: none; cursor: pointer; }
-.filter-select:focus { border-color: var(--text-primary); }
-.filter-count { font-size: 12px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
-
-/* ── TIMELINE ── */
-.alert-banner { background: var(--c-red-bg); border: 1px solid var(--c-red-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #7f1d1d; display: flex; align-items: center; gap: 8px; }
-.alert-banner a { color: var(--c-red); font-weight: 600; cursor: pointer; text-decoration: underline; }
-.info-banner { background: var(--c-blue-bg); border: 1px solid var(--c-blue-border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #1e3a8a; }
-
-.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-.tl-item { display: flex; margin-bottom: 12px; animation: fadeUp .25s ease both; }
-@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
-.tl-left { width: 88px; min-width: 88px; padding-right: 10px; padding-top: 12px; text-align: right; }
-.tl-date    { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.4; }
-.tl-weather { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.tl-spine   { display: flex; flex-direction: column; align-items: center; width: 20px; min-width: 20px; }
-.tl-line    { width: 2px; flex: 1; min-height: 12px; background: var(--border); }
-.tl-line.hidden { opacity: 0; }
-.tl-dot     { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 2.5px solid var(--bg); box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
-.tl-card    { flex: 1; margin: 4px 0 4px 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s; }
-.tl-card:hover { border-color: #B5B2A8; box-shadow: var(--shadow-md); }
-.tl-card.editing { border-color: var(--c-blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-.card-top   { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; flex-wrap: wrap; }
-.badge      { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; letter-spacing: .2px; }
-.card-actions { margin-left: auto; display: flex; gap: 4px; }
-.tl-card .card-actions { opacity: 0; transition: opacity .15s; }
-.tl-card:hover .card-actions { opacity: 1; }
-@media (hover: none) { .tl-card .card-actions { opacity: 1; } }
-.btn-sm { font-size: 11px; padding: 3px 9px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); transition: background .12s, color .12s; }
-.btn-sm.edit:hover { background: var(--c-blue-bg); color: var(--c-blue); border-color: var(--c-blue-border); }
-.btn-sm.del:hover  { background: var(--c-red-bg);  color: var(--c-red);  border-color: var(--c-red-border); }
-.card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.5; margin-bottom: 3px; }
-.card-sub   { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
-.card-alert { margin-top: 8px; padding: 7px 10px 7px 12px; font-size: 12px; line-height: 1.6; border-radius: var(--radius-sm); }
-.alert-warn  { background: var(--c-amber-bg); color: #78350f; border-left: 3px solid var(--c-amber); }
-.alert-issue { background: var(--c-red-bg);   color: #7f1d1d; border-left: 3px solid var(--c-red); }
-
-.defect-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; border: 1px solid; cursor: pointer; transition: opacity .12s; }
-.defect-tag:hover { opacity: .75; }
-.defect-tag.iss-open    { background: var(--c-red-bg);    color: var(--c-red);    border-color: var(--c-red-border); }
-.defect-tag.iss-replied { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
-.defect-tag.iss-closed  { background: var(--c-green-bg);  color: var(--c-green);  border-color: var(--c-green-border); }
-
-.s-normal    { background: var(--c-blue-bg);   color: var(--c-blue);   border: 1px solid var(--c-blue-border); }
-.s-milestone { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green-border); }
-.s-warn      { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber-border); }
-.s-pending   { background: var(--c-purple-bg); color: var(--c-purple); border: 1px solid var(--c-purple-border); }
-.s-issue     { background: var(--c-red-bg);    color: var(--c-red);    border: 1px solid var(--c-red-border); }
-.dot-normal    { background: var(--c-blue); }
-.dot-milestone { background: var(--c-green); }
-.dot-warn      { background: var(--c-amber); }
-.dot-pending   { background: var(--c-purple); }
-.dot-issue     { background: var(--c-red); }
-.empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
-
-/* ── DEFECTS ── */
-.defect-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.defect-header h2 { font-size: 14px; font-weight: 700; }
-.defects-list { display: flex; flex-direction: column; gap: 10px; }
-.defect-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
-.defect-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.defect-no { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: var(--text-muted); }
-.defect-title { font-size: 14px; font-weight: 600; flex: 1; }
-.defect-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
-.defect-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); }
-.defect-meta span { display: flex; align-items: center; gap: 4px; }
-.defect-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-light); }
-.btn-status { font-family: inherit; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); cursor: pointer; transition: background .12s; }
-.btn-status:hover { background: var(--border-light); }
-.btn-status.active-open    { background: var(--c-red-bg);    color: var(--c-red);    border-color: var(--c-red-border); }
-.btn-status.active-replied { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
-.btn-status.active-closed  { background: var(--c-green-bg);  color: var(--c-green);  border-color: var(--c-green-border); }
-.defect-notes { margin-top: 8px; }
-.defect-notes textarea { width: 100%; font-family: inherit; font-size: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); resize: vertical; min-height: 52px; outline: none; color: var(--text-primary); }
-.defect-notes textarea:focus { border-color: var(--text-primary); background: #fff; }
-
-/* ── EXPORT ── */
-.export-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-.export-section h3 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-.export-section p { font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.6; }
-.export-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-.export-opt { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
-.export-opt input { accent-color: var(--text-primary); }
-.btn-export { font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: opacity .15s; display: inline-flex; align-items: center; gap: 7px; }
-.btn-export:hover { opacity: .85; }
-.btn-export.csv  { background: var(--c-green-bg); color: var(--c-green); border: 1px solid var(--c-green-border); }
-.btn-export.print { background: var(--text-primary); color: #fff; }
-
-/* ── MODAL ── */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
-.modal { background: var(--surface); border-radius: 14px; width: 100%; max-width: 480px; box-shadow: var(--shadow-md); overflow: hidden; }
-.modal-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.modal-header h3 { font-size: 15px; font-weight: 700; }
-.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; }
-.modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
-.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
-.btn-modal { font-family: inherit; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-secondary); transition: background .12s; }
-.btn-modal.primary { background: var(--text-primary); color: #fff; border-color: transparent; }
-.btn-modal:hover:not(.primary) { background: var(--border-light); }
-.btn-modal.primary:hover { opacity: .85; }
-
-/* ── DOCUMENT REVIEW ── */
-.doc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-.doc-header h2 { font-size: 14px; font-weight: 700; }
-.doc-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
-.doc-list { display: flex; flex-direction: column; gap: 12px; }
-.doc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.doc-card-header { padding: 13px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; transition: background .12s; }
-.doc-card-header:hover { background: var(--bg); }
-.doc-type-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; border: 1px solid; flex-shrink: 0; }
-.doc-name { font-size: 14px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.doc-meta-inline { font-size: 11px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
-.doc-overdue { font-size: 10px; font-weight: 700; color: var(--c-red); background: var(--c-red-bg); border: 1px solid var(--c-red-border); padding: 2px 7px; border-radius: 8px; flex-shrink: 0; }
-.doc-expand-icon { color: var(--text-muted); font-size: 11px; transition: transform .2s; flex-shrink: 0; }
-.doc-card.open .doc-expand-icon { transform: rotate(180deg); }
-.doc-card-body { display: none; border-top: 1px solid var(--border-light); }
-.doc-card.open .doc-card-body { display: block; }
-.doc-card-body-inner { padding: 14px 16px; }
-.ver-list { display: flex; flex-direction: column; position: relative; padding-left: 28px; }
-.ver-list::before { content:''; position:absolute; left:6px; top:10px; bottom:10px; width:2px; background:var(--border-light); }
-.ver-row { position: relative; padding: 8px 0; }
-.ver-dot { position: absolute; left: -28px; top: 13px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 2px var(--border); background: var(--text-muted); z-index: 1; }
-.ver-dot.approved { background: var(--c-green); box-shadow: 0 0 0 2px var(--c-green-border); }
-.ver-dot.rejected  { background: var(--c-red);   box-shadow: 0 0 0 2px var(--c-red-border); }
-.ver-dot.pending   { background: var(--c-amber);  box-shadow: 0 0 0 2px var(--c-amber-border); }
-.ver-dot.reviewing { background: var(--c-blue);   box-shadow: 0 0 0 2px var(--c-blue-border); }
-.ver-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
-.ver-no   { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text-muted); }
-.ver-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-secondary); }
-.ver-deadline { font-size: 11px; }
-.ver-deadline.overdue { color: var(--c-red); font-weight: 600; }
-.ver-deadline.ok { color: var(--text-muted); }
-.ver-result { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; border: 1px solid; }
-.ver-result.approved { background: var(--c-green-bg); color: var(--c-green); border-color: var(--c-green-border); }
-.ver-result.rejected  { background: var(--c-red-bg);   color: var(--c-red);   border-color: var(--c-red-border); }
-.ver-result.pending   { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
-.ver-result.reviewing { background: var(--c-blue-bg);   color: var(--c-blue);   border-color: var(--c-blue-border); }
-.ver-comment { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-top: 3px; }
-.ver-link { font-size: 11px; color: var(--c-blue); text-decoration: none; margin-top: 3px; display: inline-block; }
-.ver-link:hover { text-decoration: underline; }
-.ver-actions { display: flex; gap: 4px; margin-top: 6px; }
-.doc-add-ver-btn { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.dtype-plan     { background:#EFF6FF; color:#1d4ed8; border-color:#bfdbfe; }
-.dtype-quality  { background:#F0FDF4; color:#15803d; border-color:#bbf7d0; }
-.dtype-drawing  { background:#F5F3FF; color:#6d28d9; border-color:#ddd6fe; }
-.dtype-material { background:#FFFBEB; color:#b45309; border-color:#fde68a; }
-.dtype-test     { background:#FFF7ED; color:#c2410c; border-color:#fed7aa; }
-.dtype-other    { background:#F1F5F9; color:#475569; border-color:#cbd5e1; }
-
-/* ── QUALITY INSPECTION ── */
-.qi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-.qi-header h2 { font-size: 14px; font-weight: 700; }
-.qi-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
-.qi-list { display: flex; flex-direction: column; gap: 10px; }
-.qi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
-.qi-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-.qi-item-name { font-size: 14px; font-weight: 600; flex: 1; min-width: 0; }
-.qi-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-top: 4px; }
-.qi-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-.qi-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-light); }
-.qi-result-pass    { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green-border); }
-.qi-result-fail    { background: var(--c-red-bg);    color: var(--c-red);    border: 1px solid var(--c-red-border); }
-.qi-result-recheck { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber-border); }
-.qi-month-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
-.qi-month-box h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
-
-/* ── MOBILE ── */
-.sidebar-toggle { display: none; }
-@media (max-width: 720px) {
-  .sidebar { position: fixed; top: 105px; left: 0; bottom: 0; z-index: 200; transform: translateX(-100%); width: 280px; }
-  .sidebar.open { transform: none; box-shadow: var(--shadow-md); }
-  .sidebar-toggle { display: flex; }
-  .layout { position: relative; }
-  .main { width: 100%; }
-  .tab-panel { padding: 14px 14px; }
-  .dash-row { grid-template-columns: 1fr; }
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-  .tl-left { width: 68px; min-width: 68px; }
-  .filter-bar input[type=search] { width: 100%; }
-  .overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 199; }
-  .overlay-bg.show { display: block; }
-  .qi-rate-grid { flex-direction: column; }
+/* MOBILE */
+.sidebar-toggle{display:none;}
+@media(max-width:720px){
+  .sidebar{position:fixed;top:105px;left:0;bottom:0;z-index:200;transform:translateX(-100%);width:280px;}
+  .sidebar.open{transform:none;box-shadow:var(--shadow-md);}
+  .sidebar-toggle{display:flex;}
+  .layout{position:relative;}
+  .main{width:100%;}
+  .tab-panel{padding:14px;}
+  .dash-row{grid-template-columns:1fr;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .tl-left{width:68px;min-width:68px;}
+  .filter-bar input[type=search]{width:100%;}
+  .overlay-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:199;}
+  .overlay-bg.show{display:block;}
+  .qi-rate-grid{flex-direction:column;}
 }
 
-
-/* ── TOAST CONFIRM (Fix 5) ── */
-.toast-confirm {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--text-primary);
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: var(--shadow-md);
-  z-index: 9999;
-  opacity: 0;
-  transition: opacity .2s, transform .2s;
-  pointer-events: none;
-  white-space: nowrap;
+/* PRINT */
+@media print{
+  .header,.tabs,.sidebar,.sidebar-toggle,.card-actions,.filter-bar,.btn-export,.export-section,.tab-panel:not(#panel-timeline),.project-progress-card{display:none!important;}
+  .layout{display:block;}
+  .main{overflow:visible;}
+  #panel-timeline{display:block!important;padding:0;}
+  .tl-card{box-shadow:none;break-inside:avoid;}
+  body{background:#fff;}
+  .print-header{display:block!important;padding:0 0 16px;border-bottom:2px solid #000;margin-bottom:20px;}
 }
-.toast-confirm.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-}
-.toast-confirm-msg { flex: 1; }
-.toast-confirm-btns { display: flex; gap: 8px; }
-.toast-btn-cancel { font-family: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: rgba(255,255,255,0.8); cursor: pointer; }
-.toast-btn-cancel:hover { background: rgba(255,255,255,0.1); }
-.toast-btn-ok { font-family: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: none; background: var(--c-red); color: #fff; cursor: pointer; }
-.toast-btn-ok:hover { opacity: .85; }
-
-/* ── TODAY BADGE (Fix 6) ── */
-.tl-today-badge {
-  font-size: 9px;
-  font-weight: 700;
-  background: var(--c-green);
-  color: #fff;
-  padding: 1px 5px;
-  border-radius: 4px;
-  letter-spacing: .3px;
-  display: inline-block;
-  margin-top: 2px;
-}
-
-/* ── DASHBOARD TREND (Fix 7) ── */
-.stat-trend {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 10px;
-  font-weight: 600;
-  margin-top: 4px;
-  padding: 1px 6px;
-  border-radius: 4px;
-}
-.stat-trend.up   { background: var(--c-green-bg); color: var(--c-green); }
-.stat-trend.down { background: var(--c-red-bg);   color: var(--c-red); }
-.stat-trend.same { background: var(--bg);          color: var(--text-muted); }
-
-/* ── PRINT ── */
-@media print {
-  .header, .tabs, .sidebar, .sidebar-toggle, .card-actions, .filter-bar, .btn-export, .export-section, .tab-panel:not(#panel-timeline), .project-progress-card { display: none !important; }
-  .layout { display: block; }
-  .main { overflow: visible; }
-  #panel-timeline { display: block !important; padding: 0; }
-  .tl-card { box-shadow: none; break-inside: avoid; }
-  body { background: #fff; }
-  .print-header { display: block !important; padding: 0 0 16px; border-bottom: 2px solid #000; margin-bottom: 20px; }
-}
-.print-header { display: none; }
+.print-header{display:none;}
 </style>
 </head>
 <body>
 
-<!-- LOCK -->
 <div id="lock-screen">
   <div class="lock-card">
-    <div class="lock-logo">
-      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    </div>
+    <div class="lock-logo"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
     <h2>施工及監造回報</h2>
     <p>減碳A標　請輸入密碼以繼續</p>
     <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
@@ -672,21 +392,13 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
-
-  <!-- Header -->
   <div class="header">
-    <div class="header-logo">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </div>
-    <div class="header-title">
-      <h1>施工及監造工作回報</h1>
-      <p>減碳A標</p>
-    </div>
+    <div class="header-logo"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="header-title"><h1>施工及監造工作回報</h1><p>減碳A標</p></div>
     <div class="header-actions">
       <span class="sync-badge sync-local" id="sync-badge">本機模式</span>
-      <button class="btn-icon sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="新增工項">
+      <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="新增工項">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <button class="btn-icon" onclick="lockApp()" title="登出">
@@ -695,11 +407,10 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('dashboard')">儀表板</button>
     <button class="tab-btn" onclick="switchTab('timeline')">時間軸</button>
-    <button class="tab-btn" onclick="switchTab('defects')" id="tab-defects">改善事項追蹤 <span class="tab-badge" id="open-count">0</span></button>
+    <button class="tab-btn" onclick="switchTab('defects')">改善事項追蹤 <span class="tab-badge" id="open-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('docs')">文件送審 <span class="tab-badge" id="doc-pending-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('quality')">品質抽驗 <span class="tab-badge" id="qi-fail-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出</button>
@@ -708,7 +419,6 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
   <div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
 
   <div class="layout">
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-inner">
         <div class="sidebar-section-title" id="form-title">新增工項</div>
@@ -721,28 +431,22 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
             </select>
           </div>
         </div>
-        <div class="field">
-          <label>狀態</label>
+        <div class="field"><label>狀態</label>
           <select id="f-status">
-            <option value="normal">正常施工</option>
-            <option value="milestone">里程碑／進展</option>
-            <option value="warn">待注意</option>
-            <option value="pending">待決議</option>
-            <option value="issue">異常／已開單</option>
+            <option value="normal">正常施工</option><option value="milestone">里程碑／進展</option>
+            <option value="warn">待注意</option><option value="pending">待決議</option><option value="issue">異常／已開單</option>
           </select>
         </div>
         <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
         <div class="field">
           <label>出工人數</label>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）" style="flex:1;">
-          </div>
-          <!-- ★ Fix 8: 快速人數輸入器 -->
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;" id="workers-quick">
-            <span style="font-size:10px;color:var(--text-muted);align-self:center;">快速填入：施</span>
-            <input type="number" id="wk-labor" min="0" placeholder="0" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;" oninput="fillWorkers()">
-            <span style="font-size:10px;color:var(--text-muted);align-self:center;">管</span>
-            <input type="number" id="wk-mgmt" min="0" placeholder="0" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;" oninput="fillWorkers()">
+          <input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）">
+          <!-- Fix 8: 快速人數輸入 -->
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;align-items:center;">
+            <span style="font-size:10px;color:var(--text-muted);">快速填入：施</span>
+            <input type="number" id="wk-labor" min="0" placeholder="0" oninput="fillWorkers()" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;">
+            <span style="font-size:10px;color:var(--text-muted);">管</span>
+            <input type="number" id="wk-mgmt" min="0" placeholder="0" oninput="fillWorkers()" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;">
           </div>
         </div>
         <div class="field"><label>異常／備註（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
@@ -755,45 +459,26 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
       </div>
     </div>
 
-    <!-- Main -->
     <div class="main">
-
       <div class="print-header">
         <h2 style="font-size:18px;font-weight:700;">施工及監造工作回報 — 減碳A標</h2>
         <p style="font-size:12px;color:#888;margin-top:4px;">列印時間：<span id="print-time"></span></p>
       </div>
 
-      <!-- Dashboard Panel -->
+      <!-- Dashboard -->
       <div class="tab-panel active" id="panel-dashboard">
-
-        <!-- ★ 整體工程進度條 ★ -->
         <div class="project-progress-card">
           <div class="progress-header">
-            <div class="progress-header-left">
-              <h3>整體工程進度</h3>
-              <p id="progress-subtitle">減碳A標施工進度（可手動調整）</p>
-            </div>
-            <div class="progress-pct-display" id="progress-pct-display">0%</div>
+            <div class="progress-header-left"><h3>整體工程進度</h3><p>減碳A標施工進度（可手動調整）</p></div>
+            <div class="progress-pct-display" id="progress-pct-display" style="color:var(--c-amber)">0%</div>
           </div>
-
-          <!-- 大進度條 -->
-          <div class="progress-track">
-            <div class="progress-fill green" id="main-progress-fill" style="width:0%"></div>
-          </div>
-          <div class="progress-labels">
-            <span>開工</span>
-            <span id="progress-mid-label">50%</span>
-            <span>完工</span>
-          </div>
-
-          <!-- 多段式：各狀態佔比 -->
+          <div class="progress-track"><div class="progress-fill amber" id="main-progress-fill" style="width:0%"></div></div>
+          <div class="progress-labels"><span>開工</span><span>50%</span><span>完工</span></div>
           <div style="margin-bottom:8px;">
             <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">記錄組成分布</div>
             <div class="multi-progress-track" id="multi-progress"></div>
             <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;" id="multi-legend"></div>
           </div>
-
-          <!-- 滑桿控制 -->
           <div class="progress-controls">
             <label>手動調整進度：</label>
             <input type="range" class="progress-slider" id="progress-slider" min="0" max="100" value="0" oninput="updateProgress(this.value)">
@@ -801,22 +486,14 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
             <span style="font-size:11px;color:var(--text-muted);">%</span>
           </div>
         </div>
-
         <div class="stat-grid" id="stat-grid"></div>
-
         <div class="dash-row">
-          <div class="dash-box">
-            <h3>工項狀態分布</h3>
-            <div id="bar-chart"></div>
-          </div>
-          <div class="dash-box">
-            <h3>未結案改善事項 / 待決議</h3>
-            <div class="open-issues-list" id="open-issues-list"></div>
-          </div>
+          <div class="dash-box"><h3>工項狀態分布</h3><div id="bar-chart"></div></div>
+          <div class="dash-box"><h3>未結案改善事項 / 待決議</h3><div class="open-issues-list" id="open-issues-list"></div></div>
         </div>
       </div>
 
-      <!-- Timeline Panel -->
+      <!-- Timeline -->
       <div class="tab-panel" id="panel-timeline">
         <div id="alert-banner-area"></div>
         <div id="banner-area"></div>
@@ -829,22 +506,16 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         <div class="filter-bar">
           <input type="search" id="search-input" placeholder="搜尋工項說明…" oninput="render()">
           <select class="filter-select" id="filter-status" onchange="render()">
-            <option value="">全部狀態</option>
-            <option value="normal">正常施工</option>
-            <option value="milestone">里程碑</option>
-            <option value="warn">待注意</option>
-            <option value="pending">待決議</option>
-            <option value="issue">異常</option>
+            <option value="">全部狀態</option><option value="normal">正常施工</option><option value="milestone">里程碑</option>
+            <option value="warn">待注意</option><option value="pending">待決議</option><option value="issue">異常</option>
           </select>
-          <select class="filter-select" id="filter-month" onchange="render()">
-            <option value="">全部月份</option>
-          </select>
+          <select class="filter-select" id="filter-month" onchange="render()"><option value="">全部月份</option></select>
           <span class="filter-count" id="filter-count"></span>
         </div>
         <div id="timeline"></div>
       </div>
 
-      <!-- Defects Panel -->
+      <!-- Defects -->
       <div class="tab-panel" id="panel-defects">
         <div class="defect-header">
           <h2>改善事項通知單追蹤</h2>
@@ -853,38 +524,21 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         <div class="defects-list" id="defects-list"></div>
       </div>
 
-      <!-- Documents Panel -->
+      <!-- Documents -->
       <div class="tab-panel" id="panel-docs">
-        <div class="doc-header">
-          <h2>文件送審管理</h2>
-          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDocModal()">＋ 新增文件</button>
-        </div>
-
-        <!-- ★ 文件送審進度條 ★ -->
+        <div class="doc-header"><h2>文件送審管理</h2><button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDocModal()">＋ 新增文件</button></div>
         <div class="doc-progress-summary" id="doc-progress-summary" style="display:none">
           <h3>送審進度總覽</h3>
-          <div class="progress-track" style="height:10px;margin-bottom:8px;">
-            <div class="progress-fill green" id="doc-progress-fill" style="width:0%"></div>
-          </div>
+          <div class="progress-track" style="height:10px;margin-bottom:8px;"><div class="progress-fill green" id="doc-progress-fill" style="width:0%"></div></div>
           <div class="doc-progress-segments" id="doc-progress-segments"></div>
         </div>
-
         <div class="doc-filter-bar">
           <select class="filter-select" id="doc-filter-type" onchange="renderDocs()">
-            <option value="">全部類型</option>
-            <option value="plan">施工計畫書</option>
-            <option value="quality">品質計畫</option>
-            <option value="drawing">送審圖說</option>
-            <option value="material">材料送審單</option>
-            <option value="test">測試／檢驗報告</option>
-            <option value="other">其他</option>
+            <option value="">全部類型</option><option value="plan">施工計畫書</option><option value="quality">品質計畫</option>
+            <option value="drawing">送審圖說</option><option value="material">材料送審單</option><option value="test">測試／檢驗報告</option><option value="other">其他</option>
           </select>
           <select class="filter-select" id="doc-filter-status" onchange="renderDocs()">
-            <option value="">全部狀態</option>
-            <option value="pending">待審</option>
-            <option value="reviewing">審查中</option>
-            <option value="rejected">退件</option>
-            <option value="approved">已核定</option>
+            <option value="">全部狀態</option><option value="pending">待審</option><option value="reviewing">審查中</option><option value="rejected">退件</option><option value="approved">已核定</option>
           </select>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);cursor:pointer;">
             <input type="checkbox" id="doc-filter-overdue" onchange="renderDocs()" style="accent-color:var(--c-red)"> 僅顯示逾期
@@ -894,186 +548,99 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         <div class="doc-list" id="doc-list"></div>
       </div>
 
-      <!-- Quality Inspection Panel -->
+      <!-- Quality -->
       <div class="tab-panel" id="panel-quality">
-        <div class="qi-header">
-          <h2>品質抽驗記錄</h2>
-          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增抽驗記錄</button>
-        </div>
+        <div class="qi-header"><h2>品質抽驗記錄</h2><button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增抽驗記錄</button></div>
         <div class="qi-filter-bar">
           <select class="filter-select" id="qi-filter-result" onchange="renderQi()">
-            <option value="">全部結果</option>
-            <option value="pass">合格</option>
-            <option value="fail">不合格</option>
-            <option value="recheck">待複驗</option>
+            <option value="">全部結果</option><option value="pass">合格</option><option value="fail">不合格</option><option value="recheck">待複驗</option>
           </select>
-          <select class="filter-select" id="qi-filter-month" onchange="renderQi()">
-            <option value="">全部月份</option>
-          </select>
+          <select class="filter-select" id="qi-filter-month" onchange="renderQi()"><option value="">全部月份</option></select>
           <span class="filter-count" id="qi-count"></span>
         </div>
-
-        <!-- ★ 品質合格率進度條 ★ -->
         <div class="qi-rate-grid" id="qi-rate-grid"></div>
-
         <div class="stat-grid" id="qi-stat-grid" style="margin-bottom:20px;"></div>
-        <div class="qi-month-box">
-          <h3>本月抽驗摘要</h3>
-          <div id="qi-month-summary" style="font-size:13px;color:var(--text-muted);">載入中…</div>
-        </div>
+        <div class="qi-month-box"><h3>本月抽驗摘要</h3><div id="qi-month-summary" style="font-size:13px;color:var(--text-muted);">載入中…</div></div>
         <div class="qi-list" id="qi-list"></div>
       </div>
 
-      <!-- Export Panel -->
+      <!-- Export -->
       <div class="tab-panel" id="panel-export">
         <div class="export-section">
-          <h3>📄 匯出 CSV</h3>
-          <p>將施工時間軸資料匯出為 CSV 格式，可直接用 Excel 或 Google Sheets 開啟。</p>
-          <div class="export-options">
-            <label class="export-opt"><input type="checkbox" id="exp-all" checked> 全部記錄</label>
-            <label class="export-opt"><input type="checkbox" id="exp-issues"> 僅異常記錄</label>
-          </div>
-          <button class="btn-export csv" onclick="exportCSV()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            下載 CSV
-          </button>
+          <h3>📄 匯出 CSV</h3><p>將施工時間軸資料匯出為 CSV 格式，可直接用 Excel 或 Google Sheets 開啟。</p>
+          <div class="export-options"><label class="export-opt"><input type="checkbox" id="exp-all" checked> 全部記錄</label><label class="export-opt"><input type="checkbox" id="exp-issues"> 僅異常記錄</label></div>
+          <button class="btn-export csv" onclick="exportCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載 CSV</button>
         </div>
         <div class="export-section">
-          <h3>🖨 列印 / 匯出 PDF</h3>
-          <p>點擊下方按鈕將開啟列印視窗，可選擇「另存為 PDF」來儲存監造月報。列印時僅顯示時間軸內容。</p>
-          <button class="btn-export print" onclick="printReport()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            列印 / PDF
-          </button>
+          <h3>🖨 列印 / 匯出 PDF</h3><p>點擊下方按鈕將開啟列印視窗，可選擇「另存為 PDF」來儲存監造月報。列印時僅顯示時間軸內容。</p>
+          <button class="btn-export print" onclick="printReport()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>列印 / PDF</button>
         </div>
         <div class="export-section">
-          <h3>📋 改善事項通知單 CSV</h3>
-          <p>匯出所有改善事項通知單記錄，包含狀態與追蹤備註。</p>
-          <button class="btn-export csv" onclick="exportDefectsCSV()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            下載改善事項通知單 CSV
-          </button>
+          <h3>📋 改善事項通知單 CSV</h3><p>匯出所有改善事項通知單記錄，包含狀態與追蹤備註。</p>
+          <button class="btn-export csv" onclick="exportDefectsCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載改善事項通知單 CSV</button>
         </div>
         <div class="export-section">
-          <h3>🔬 品質抽驗記錄 CSV</h3>
-          <p>匯出所有品質抽驗記錄，包含工項、規範、結果及備註。</p>
-          <button class="btn-export csv" onclick="exportQiCSV()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            下載品質抽驗 CSV
-          </button>
+          <h3>🔬 品質抽驗記錄 CSV</h3><p>匯出所有品質抽驗記錄，包含工項、規範、結果及備註。</p>
+          <button class="btn-export csv" onclick="exportQiCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載品質抽驗 CSV</button>
         </div>
       </div>
+    </div>
+  </div>
 
-    </div><!-- main -->
-  </div><!-- layout -->
-
-  <!-- Add Defect Modal -->
+  <!-- Modals -->
   <div class="modal-overlay" id="defect-modal" style="display:none">
     <div class="modal">
-      <div class="modal-header">
-        <h3>新增改善事項通知單</h3>
-        <button class="modal-close" onclick="closeDefectModal()">×</button>
-      </div>
+      <div class="modal-header"><h3>新增改善事項通知單</h3><button class="modal-close" onclick="closeDefectModal()">×</button></div>
       <div class="modal-body">
         <div class="field"><label>改善事項通知單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
         <div class="field"><label>改善事項說明</label><textarea id="dm-title" placeholder="簡述改善事項內容"></textarea></div>
         <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
         <div class="field"><label>追蹤備註（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
-        <div class="field"><label>初始狀態</label>
-          <select id="dm-status">
-            <option value="open">未結案</option>
-            <option value="replied">承商已回覆</option>
-            <option value="closed">已結案</option>
-          </select>
-        </div>
+        <div class="field"><label>初始狀態</label><select id="dm-status"><option value="open">未結案</option><option value="replied">承商已回覆</option><option value="closed">已結案</option></select></div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-modal" onclick="closeDefectModal()">取消</button>
-        <button class="btn-modal primary" onclick="saveDefect()">儲存缺失單</button>
-      </div>
+      <div class="modal-footer"><button class="btn-modal" onclick="closeDefectModal()">取消</button><button class="btn-modal primary" onclick="saveDefect()">儲存缺失單</button></div>
     </div>
   </div>
 
-  <!-- Add Document Modal -->
   <div class="modal-overlay" id="doc-modal" style="display:none">
     <div class="modal">
-      <div class="modal-header">
-        <h3 id="doc-modal-title">新增文件</h3>
-        <button class="modal-close" onclick="closeDocModal()">×</button>
-      </div>
+      <div class="modal-header"><h3 id="doc-modal-title">新增文件</h3><button class="modal-close" onclick="closeDocModal()">×</button></div>
       <div class="modal-body">
         <div class="field"><label>文件名稱</label><input type="text" id="doc-name" placeholder="例：假設工程分項施工計畫書"></div>
         <div class="field-row">
-          <div class="field"><label>文件類型</label>
-            <select id="doc-type">
-              <option value="plan">施工計畫書</option>
-              <option value="quality">品質計畫</option>
-              <option value="drawing">送審圖說</option>
-              <option value="material">材料送審單</option>
-              <option value="test">測試／檢驗報告</option>
-              <option value="other">其他</option>
-            </select>
-          </div>
+          <div class="field"><label>文件類型</label><select id="doc-type"><option value="plan">施工計畫書</option><option value="quality">品質計畫</option><option value="drawing">送審圖說</option><option value="material">材料送審單</option><option value="test">測試／檢驗報告</option><option value="other">其他</option></select></div>
           <div class="field"><label>審查天數（合約）</label><input type="number" id="doc-review-days" value="14" min="1"></div>
         </div>
         <div class="field"><label>備註（選填）</label><textarea id="doc-note" placeholder="合約條款、特殊規定等" style="min-height:48px;"></textarea></div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-modal" onclick="closeDocModal()">取消</button>
-        <button class="btn-modal primary" onclick="saveDoc()">儲存</button>
-      </div>
+      <div class="modal-footer"><button class="btn-modal" onclick="closeDocModal()">取消</button><button class="btn-modal primary" onclick="saveDoc()">儲存</button></div>
     </div>
   </div>
 
-  <!-- Add Version Modal -->
   <div class="modal-overlay" id="ver-modal" style="display:none">
     <div class="modal">
-      <div class="modal-header">
-        <h3 id="ver-modal-title">新增送審版次</h3>
-        <button class="modal-close" onclick="closeVerModal()">×</button>
-      </div>
+      <div class="modal-header"><h3 id="ver-modal-title">新增送審版次</h3><button class="modal-close" onclick="closeVerModal()">×</button></div>
       <div class="modal-body">
-        <input type="hidden" id="ver-doc-id">
-        <input type="hidden" id="ver-edit-idx" value="-1">
+        <input type="hidden" id="ver-doc-id"><input type="hidden" id="ver-edit-idx" value="-1">
         <div class="field-row">
           <div class="field"><label>送審日期</label><input type="date" id="ver-date"></div>
-          <div class="field"><label>審查結果</label>
-            <select id="ver-result">
-              <option value="reviewing">審查中</option>
-              <option value="pending">待審</option>
-              <option value="approved">核定</option>
-              <option value="rejected">退件修正</option>
-            </select>
-          </div>
+          <div class="field"><label>審查結果</label><select id="ver-result"><option value="reviewing">審查中</option><option value="pending">待審</option><option value="approved">核定</option><option value="rejected">退件修正</option></select></div>
         </div>
         <div class="field"><label>實際回覆日期（選填）</label><input type="date" id="ver-reply-date"></div>
         <div class="field"><label>審查意見／備註</label><textarea id="ver-comment" placeholder="退件原因、核定條件、補件要求…"></textarea></div>
         <div class="field"><label>附件連結（選填）</label><input type="text" id="ver-link" placeholder="https://drive.google.com/…"></div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-modal" onclick="closeVerModal()">取消</button>
-        <button class="btn-modal primary" onclick="saveVersion()">儲存版次</button>
-      </div>
+      <div class="modal-footer"><button class="btn-modal" onclick="closeVerModal()">取消</button><button class="btn-modal primary" onclick="saveVersion()">儲存版次</button></div>
     </div>
   </div>
 
-  <!-- Quality Inspection Modal -->
   <div class="modal-overlay" id="qi-modal" style="display:none">
     <div class="modal">
-      <div class="modal-header">
-        <h3 id="qi-modal-title">新增抽驗記錄</h3>
-        <button class="modal-close" onclick="closeQiModal()">×</button>
-      </div>
+      <div class="modal-header"><h3 id="qi-modal-title">新增抽驗記錄</h3><button class="modal-close" onclick="closeQiModal()">×</button></div>
       <div class="modal-body">
         <div class="field-row">
           <div class="field"><label>抽驗日期</label><input type="date" id="qi-date"></div>
-          <div class="field"><label>抽驗結果</label>
-            <select id="qi-result">
-              <option value="pass">合格</option>
-              <option value="fail">不合格</option>
-              <option value="recheck">待複驗</option>
-            </select>
-          </div>
+          <div class="field"><label>抽驗結果</label><select id="qi-result"><option value="pass">合格</option><option value="fail">不合格</option><option value="recheck">待複驗</option></select></div>
         </div>
         <div class="field"><label>工項／部位</label><input type="text" id="qi-item" placeholder="例：防溢座混凝土、圍籬基礎"></div>
         <div class="field"><label>檢驗規範／標準</label><input type="text" id="qi-standard" placeholder="例：140 kgf/cm²、圖說 6-4"></div>
@@ -1081,68 +648,105 @@ body { font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-se
         <div class="field"><label>備註／不合格說明</label><textarea id="qi-notes" placeholder="不合格原因、改善要求、複驗結果…"></textarea></div>
         <div class="field"><label>照片連結（選填）</label><input type="text" id="qi-link" placeholder="https://drive.google.com/…"></div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-modal" onclick="closeQiModal()">取消</button>
-        <button class="btn-modal primary" onclick="saveQi()">儲存</button>
-      </div>
+      <div class="modal-footer"><button class="btn-modal" onclick="closeQiModal()">取消</button><button class="btn-modal primary" onclick="saveQi()">儲存</button></div>
     </div>
   </div>
 
-  <!-- Toast Confirm (Fix 5) -->
+  <!-- Fix 5: Toast Confirm -->
   <div class="toast-confirm" id="toast-confirm">
-    <span class="toast-confirm-msg" id="toast-confirm-msg">確定要刪除？</span>
-    <div class="toast-confirm-btns">
-      <button class="toast-btn-cancel" onclick="toastConfirmResolve(false)">取消</button>
-      <button class="toast-btn-ok" onclick="toastConfirmResolve(true)">刪除</button>
+    <span id="toast-msg">確定要刪除？</span>
+    <div style="display:flex;gap:8px;">
+      <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+      <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
     </div>
   </div>
-
-</div><!-- app -->
+</div>
 
 <script>
+'use strict';
+
+// ── 全域錯誤保護 ──
 window.onerror = function(msg, src, line, col, err) {
   console.error('App error:', msg, err);
-  showErrorBanner('發生錯誤：' + msg);
+  showErrBanner('發生錯誤：' + msg);
   return true;
 };
 window.onunhandledrejection = function(e) {
-  console.error('Unhandled promise rejection:', e.reason);
-  showErrorBanner('非同步錯誤：' + (e.reason?.message || e.reason));
+  showErrBanner('非同步錯誤：' + (e.reason && e.reason.message ? e.reason.message : e.reason));
 };
-function showErrorBanner(msg) {
+function showErrBanner(msg) {
   try {
-    const app = document.getElementById('app');
-    if (!app || app.style.display === 'none') return;
-    let banner = document.getElementById('global-err-banner');
-    if (!banner) {
-      banner = document.createElement('div');
-      banner.id = 'global-err-banner';
-      banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#7f1d1d;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:90vw;';
-      banner.innerHTML = '<span id="global-err-msg"></span><button onclick="this.parentElement.remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit;">×</button>';
-      document.body.appendChild(banner);
+    var b = document.getElementById('global-err-banner');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'global-err-banner';
+      b.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#7f1d1d;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:90vw;';
+      b.innerHTML = '<span id="global-err-msg"></span><button onclick="this.parentElement.remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:12px;">×</button>';
+      document.body.appendChild(b);
     }
     document.getElementById('global-err-msg').textContent = msg;
-  } catch(e) {}
+  } catch(e2) {}
 }
 
-// ══════════════════════════
-const PASSWORD = 'dnvccs2026';
-const API_URL  = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
-// ══════════════════════════
+// ── 常數 ──
+var PASSWORD    = 'dnvccs2026';
+var API_URL     = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
+var LOCAL_KEY   = 'construction_tl_v3';
+var DEFECT_KEY  = 'construction_defects_v1';
+var DOCS_KEY    = 'construction_docs_v1';
+var QI_KEY      = 'construction_qi_v1';
+var PROGRESS_KEY= 'construction_progress_v1';
 
-const BADGE = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
-const LOCAL_KEY   = 'construction_tl_v3';
-const DEFECT_KEY  = 'construction_defects_v1';
-const PROGRESS_KEY = 'construction_progress_v1';
-let entries = [], defects = [], docs = [], editingId = null; // ★ Fix 9: docs 統一宣告
-const useCloud = () => !!API_URL;
+var BADGE       = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
+var DOC_TYPE_LABEL = { plan:'施工計畫書', quality:'品質計畫', drawing:'送審圖說', material:'材料送審單', test:'測試／檢驗報告', other:'其他' };
+var DOC_TYPE_CLS   = { plan:'dtype-plan', quality:'dtype-quality', drawing:'dtype-drawing', material:'dtype-material', test:'dtype-test', other:'dtype-other' };
+var VER_RESULT_LABEL = { approved:'核定', rejected:'退件修正', pending:'待審', reviewing:'審查中' };
+var VALID_STATUS = { normal:1, milestone:1, warn:1, pending:1, issue:1 };
+// Fix 10: TAB_IDS 放在函式外
+var TAB_IDS = ['dashboard','timeline','defects','docs','quality','export'];
+
+// Fix 9: 所有資料變數統一在頂部宣告
+var entries = [], defects = [], docs = [], qualityItems = [];
+var editingId = null, editingDocId = null, editingQiId = null;
+
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function setSync(msg, cls) { const b = document.getElementById('sync-badge'); b.textContent = msg; b.className = 'sync-badge ' + cls; }
+function setSync(msg, cls) { var b = document.getElementById('sync-badge'); b.textContent = msg; b.className = 'sync-badge ' + cls; }
+
+// Fix 1: todayStr 完全用本地時間，不用 toISOString
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// Fix 1: addDays 用字串解析 + 本地 Date 建構
+function addDays(dateStr, days) {
+  var parts = dateStr.split('-');
+  var dt = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]) + parseInt(days));
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+}
+
+function daysDiff(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
+
+// Fix 1: normalizeDate 完全不依賴 toISOString
+function normalizeDate(raw) {
+  if (!raw) return '';
+  var s = String(raw).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  var m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) return m[1] + '-' + m[2].padStart(2,'0') + '-' + m[3].padStart(2,'0');
+  var roc = s.match(/^(\d{2,3})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+  if (roc) { var y = parseInt(roc[1]) + 1911; return y + '-' + roc[2].padStart(2,'0') + '-' + roc[3].padStart(2,'0'); }
+  try {
+    var d = new Date(s);
+    if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  } catch(e) {}
+  return s;
+}
 
 // ── AUTH ──
 function checkPw() {
-  const val = document.getElementById('pw-input').value;
-  const inp = document.getElementById('pw-input');
+  var val = document.getElementById('pw-input').value;
+  var inp = document.getElementById('pw-input');
   if (val === PASSWORD) {
     sessionStorage.setItem('tl_auth','1');
     document.getElementById('lock-screen').style.display = 'none';
@@ -1151,7 +755,7 @@ function checkPw() {
   } else {
     document.getElementById('pw-err').textContent = '密碼錯誤，請再試一次';
     inp.classList.add('error'); inp.value = '';
-    setTimeout(() => inp.classList.remove('error'), 500);
+    setTimeout(function() { inp.classList.remove('error'); }, 500);
   }
 }
 function lockApp() {
@@ -1162,70 +766,52 @@ function lockApp() {
 }
 
 // ── STORAGE ──
-function localSave()  { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(entries)); } catch(e) { console.warn('localSave failed:', e); } }
-function localLoad()  {
-  try {
-    const r = localStorage.getItem(LOCAL_KEY);
-    if (!r) return null;
-    const parsed = JSON.parse(r);
-    if (!Array.isArray(parsed)) return null;
-    return parsed;
-  } catch(e) { try { localStorage.removeItem(LOCAL_KEY); } catch(_) {} return null; }
+function localSave() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(entries)); } catch(e) {} }
+function localLoad() {
+  try { var r = localStorage.getItem(LOCAL_KEY); if (!r) return null; var p = JSON.parse(r); return Array.isArray(p) ? p : null; }
+  catch(e) { try { localStorage.removeItem(LOCAL_KEY); } catch(e2) {} return null; }
 }
 function defectSave() { try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); } catch(e) {} }
 function defectLoad() {
-  try { const r = localStorage.getItem(DEFECT_KEY); if (!r) return []; const p = JSON.parse(r); return Array.isArray(p) ? p : []; }
-  catch(e) { try { localStorage.removeItem(DEFECT_KEY); } catch(_) {} return []; }
+  try { var r = localStorage.getItem(DEFECT_KEY); if (!r) return []; var p = JSON.parse(r); return Array.isArray(p) ? p : []; }
+  catch(e) { return []; }
 }
-
-// ★ 進度條存取 ★
+function docsSave() { try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {} }
+function docsLoad() { try { var r = localStorage.getItem(DOCS_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
+function qiSave() { try { localStorage.setItem(QI_KEY, JSON.stringify(qualityItems)); } catch(e) {} }
+function qiLoad() { try { var r = localStorage.getItem(QI_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
 function progressSave(pct) { try { localStorage.setItem(PROGRESS_KEY, String(pct)); } catch(e) {} }
-function progressLoad()    { try { return parseInt(localStorage.getItem(PROGRESS_KEY)||'0')||0; } catch(e) { return 0; } }
+function progressLoad() { try { return parseInt(localStorage.getItem(PROGRESS_KEY) || '0') || 0; } catch(e) { return 0; } }
+
+function sanitizeEntry(raw) {
+  function get(obj) {
+    var keys = Array.prototype.slice.call(arguments, 1);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var found = Object.keys(obj).find(function(ok) { return ok.toLowerCase() === k.toLowerCase(); });
+      if (found !== undefined && obj[found] !== undefined && String(obj[found]).trim() !== '') return String(obj[found]).trim();
+    }
+    return '';
+  }
+  var status = get(raw, 'status');
+  return {
+    id: get(raw, 'id') || uid(),
+    date: normalizeDate(get(raw, 'date')),
+    weather: get(raw, 'weather') || '☀️ 晴',
+    status: VALID_STATUS[status] ? status : 'normal',
+    title: get(raw, 'title') || '（無說明）',
+    sub: get(raw, 'sub', 'workers', 'people') || '',
+    alert: get(raw, 'alert', 'note', 'notes', 'remark') || '',
+    defectNo: get(raw, 'defectno', 'defect_no', 'defectNo') || ''
+  };
+}
 
 async function apiCall(params) {
-  const url = API_URL + '?' + new URLSearchParams(params).toString();
-  let res;
-  try { res = await fetch(url); } catch(e) { throw new Error('網路連線失敗：' + e.message); }
-  let json;
-  try { json = await res.json(); } catch(e) { throw new Error('伺服器回應格式錯誤'); }
+  var url = API_URL + '?' + new URLSearchParams(params).toString();
+  var res = await fetch(url);
+  var json = await res.json();
   if (json.error) throw new Error(json.error);
   return json;
-}
-
-function normalizeDate(raw) {
-  if (!raw) return '';
-  const s = String(raw).trim();
-  // 已是 YYYY-MM-DD，直接回傳，不經過 Date 物件（避免時區位移）
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // YYYY/M/D 或 YYYY-M-D（月日可能無補零）
-  const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
-  // 民國年：113/4/7 → 2024-04-07
-  const roc = s.match(/^(\d{2,3})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-  if (roc) {
-    const y = parseInt(roc[1]) + 1911;
-    return `${y}-${roc[2].padStart(2,'0')}-${roc[3].padStart(2,'0')}`;
-  }
-  // 最後手段：用 Date 解析，但強制以本地時間取年月日，不用 toISOString()
-  try {
-    const d = new Date(s);
-    if (!isNaN(d)) {
-      const y  = d.getFullYear();
-      const mo = String(d.getMonth() + 1).padStart(2, '0');
-      const dy = String(d.getDate()).padStart(2, '0');
-      return `${y}-${mo}-${dy}`;
-    }
-  } catch(_) {}
-  return s;
-}
-const VALID_STATUS = new Set(['normal','milestone','warn','pending','issue']);
-function sanitizeEntry(raw) {
-  const get = (obj, ...keys) => {
-    for (const k of keys) { const found = Object.keys(obj).find(ok => ok.toLowerCase() === k.toLowerCase()); if (found !== undefined && obj[found] !== undefined && String(obj[found]).trim() !== '') return String(obj[found]).trim(); }
-    return '';
-  };
-  const status = get(raw, 'status');
-  return { id:get(raw,'id')||uid(), date:normalizeDate(get(raw,'date')), weather:get(raw,'weather')||'☀️ 晴', status:VALID_STATUS.has(status)?status:'normal', title:get(raw,'title')||'（無說明）', sub:get(raw,'sub','workers','people')||'', alert:get(raw,'alert','note','notes','remark')||'', defectNo:get(raw,'defectno','defect_no','defectNo')||'' };
 }
 
 async function init() {
@@ -1233,33 +819,33 @@ async function init() {
     defects = defectLoad();
     docs = docsLoad();
     qualityItems = qiLoad();
-    if (useCloud()) {
+
+    if (API_URL) {
       setSync('載入中…', 'sync-busy');
       try {
-        const data = await apiCall({ action:'getAll' });
-        const raw = Array.isArray(data.entries) ? data.entries : [];
-        entries = raw.map(sanitizeEntry).filter(e => e.date);
+        var data = await apiCall({ action: 'getAll' });
+        var raw = Array.isArray(data.entries) ? data.entries : [];
+        entries = raw.map(sanitizeEntry).filter(function(e) { return e.date; });
         localSave();
-        setSync(`已同步 ✓ (${entries.length} 筆)`, 'sync-ok');
+        setSync('已同步 ✓ (' + entries.length + ' 筆)', 'sync-ok');
       } catch(e) {
         setSync('離線，使用本機', 'sync-err');
         entries = localLoad() || [];
-        document.getElementById('banner-area').innerHTML = `<div class="info-banner">⚠️ 雲端同步失敗（${e.message}），目前顯示本機快取資料。</div>`;
+        document.getElementById('banner-area').innerHTML = '<div class="info-banner">⚠️ 雲端同步失敗（' + e.message + '），目前顯示本機快取資料。</div>';
       }
     } else {
       setSync('本機模式', 'sync-local');
-      const saved = localLoad();
+      var saved = localLoad();
       entries = saved || [];
       if (!saved) localSave();
-      document.getElementById('banner-area').innerHTML = `<div class="info-banner">目前使用<strong>本機模式</strong>，資料只存在這台裝置。設定 Google Apps Script 後即可跨裝置同步。</div>`;
+      document.getElementById('banner-area').innerHTML = '<div class="info-banner">目前使用<strong>本機模式</strong>，資料只存在這台裝置。</div>';
     }
-    // 載入進度條數值
-    const savedPct = progressLoad();
-    updateProgress(savedPct, false);
-    // ★ Fix 2: 初始化時設定今天日期
-    const fDate = document.getElementById('f-date');
-    if (fDate && !fDate.value) fDate.value = todayStr();
 
+    // Fix 2: 初始化自動帶入今天日期
+    var fDate = document.getElementById('f-date');
+    if (fDate) fDate.value = todayStr();
+
+    updateProgress(progressLoad(), false);
     populateMonthFilter();
     renderDashboard();
     render();
@@ -1272,222 +858,103 @@ async function init() {
     updateQiFailCount();
   } catch(e) {
     console.error('init failed:', e);
-    showErrorBanner('初始化失敗：' + e.message);
+    showErrBanner('初始化失敗：' + e.message);
     try {
       entries = localLoad() || [];
-      defects = [];
-      populateMonthFilter();
-      renderDashboard();
-      render();
-      renderDefects();
-      updateOpenCount();
-    } catch(e2) { console.error('recovery also failed:', e2); }
+      populateMonthFilter(); renderDashboard(); render(); renderDefects(); updateOpenCount();
+    } catch(e2) {}
   }
 }
 
-// ══════════════════════════════════════
-// ★ 進度條邏輯 ★
-// ══════════════════════════════════════
-function updateProgress(val, save=true) {
-  let pct = Math.min(100, Math.max(0, parseInt(val)||0));
-
-  // 同步滑桿和輸入框
-  const slider = document.getElementById('progress-slider');
-  const input  = document.getElementById('progress-pct-input');
-  if (slider) slider.value = pct;
-  if (input)  input.value  = pct;
-
-  // 主進度條
-  const fill = document.getElementById('main-progress-fill');
-  const disp = document.getElementById('progress-pct-display');
-  if (fill) {
-    fill.style.width = pct + '%';
-    fill.className = 'progress-fill ' + (pct >= 80 ? 'green' : pct >= 40 ? 'blue' : 'amber');
-  }
-  if (disp) {
-    disp.textContent = pct + '%';
-    disp.className = 'progress-pct-display ' + (pct >= 80 ? '' : pct >= 40 ? '' : 'amber');
-    disp.style.color = pct >= 80 ? 'var(--c-green)' : pct >= 40 ? 'var(--c-blue)' : 'var(--c-amber)';
-  }
-
-  // 多段進度條（工項狀態佔比）
-  renderMultiProgress();
-
-  if (save) progressSave(pct);
+// Fix 5: Toast Confirm
+var _toastResolve = null;
+function toastConfirm(msg, okLabel) {
+  return new Promise(function(resolve) {
+    _toastResolve = resolve;
+    document.getElementById('toast-msg').textContent = msg || '確定要刪除？';
+    document.getElementById('toast-ok-btn').textContent = okLabel || '刪除';
+    document.getElementById('toast-confirm').classList.add('show');
+  });
+}
+function toastResolve(result) {
+  document.getElementById('toast-confirm').classList.remove('show');
+  if (_toastResolve) { _toastResolve(result); _toastResolve = null; }
 }
 
-function renderMultiProgress() {
-  const total = entries.length;
-  if (!total) return;
-  const counts = { milestone:0, normal:0, warn:0, pending:0, issue:0 };
-  entries.forEach(e => { if (counts[e.status] !== undefined) counts[e.status]++; });
-  const colors = { milestone:'#16a34a', normal:'#2563eb', warn:'#d97706', pending:'#7c3aed', issue:'#dc2626' };
-  const labels = { milestone:'里程碑', normal:'正常施工', warn:'待注意', pending:'待決議', issue:'異常' };
-
-  const multi = document.getElementById('multi-progress');
-  const legend = document.getElementById('multi-legend');
-  if (!multi || !legend) return;
-
-  multi.innerHTML = Object.entries(counts)
-    .filter(([,v]) => v > 0)
-    .map(([k,v]) => {
-      const w = (v/total*100).toFixed(1);
-      return `<div class="multi-seg" style="width:${w}%;background:${colors[k]}" title="${labels[k]}：${v} 筆 (${w}%)"></div>`;
-    }).join('');
-
-  legend.innerHTML = Object.entries(counts)
-    .filter(([,v]) => v > 0)
-    .map(([k,v]) => `<div class="doc-seg-label"><div class="doc-seg-dot" style="background:${colors[k]};border-radius:2px;"></div><span>${labels[k]} ${v} 筆</span></div>`)
-    .join('');
-}
-
-// ══════════════════════════════════════
-// ★ 文件送審進度條 ★
-// ══════════════════════════════════════
-function renderDocProgress() {
-  const total    = docs.length;
-  const summary  = document.getElementById('doc-progress-summary');
-  if (!summary) return;
-  if (!total) { summary.style.display = 'none'; return; }
-  summary.style.display = 'block';
-
-  const approved  = docs.filter(d => docOverallStatus(d) === 'approved').length;
-  const reviewing = docs.filter(d => docOverallStatus(d) === 'reviewing').length;
-  const rejected  = docs.filter(d => docOverallStatus(d) === 'rejected').length;
-  const pending   = docs.filter(d => docOverallStatus(d) === 'pending').length;
-
-  const pct = Math.round(approved/total*100);
-  const fill = document.getElementById('doc-progress-fill');
-  if (fill) {
-    fill.style.width = pct + '%';
-    fill.className = 'progress-fill ' + (pct >= 80 ? 'green' : pct >= 40 ? 'blue' : 'amber');
-  }
-
-  const segs = document.getElementById('doc-progress-segments');
-  if (segs) {
-    const items = [
-      { label:'已核定', count:approved, color:'var(--c-green)', bg:'#16a34a' },
-      { label:'審查中', count:reviewing, color:'var(--c-blue)',  bg:'#2563eb' },
-      { label:'退件',   count:rejected,  color:'var(--c-red)',   bg:'#dc2626' },
-      { label:'待審',   count:pending,   color:'var(--c-amber)', bg:'#d97706' },
-    ].filter(x => x.count > 0);
-    segs.innerHTML = `<span style="font-size:13px;font-weight:600;color:var(--c-green)">${pct}% 核定</span>` +
-      items.map(x => `<div class="doc-seg-label"><div class="doc-seg-dot" style="background:${x.bg}"></div><span style="color:${x.color}">${x.label} ${x.count}</span></div>`).join('');
-  }
-}
-
-// ══════════════════════════════════════
-// ★ 品質合格率進度條 ★
-// ══════════════════════════════════════
-function renderQiRateGrid() {
-  const el = document.getElementById('qi-rate-grid');
-  if (!el) return;
-  const total   = qualityItems.length;
-  const pass    = qualityItems.filter(q=>q.result==='pass').length;
-  const fail    = qualityItems.filter(q=>q.result==='fail').length;
-  const recheck = qualityItems.filter(q=>q.result==='recheck').length;
-
-  if (!total) { el.innerHTML = ''; return; }
-
-  const passRate    = Math.round(pass/total*100);
-  const failRate    = Math.round(fail/total*100);
-  const recheckRate = Math.round(recheck/total*100);
-
-  el.innerHTML = `
-    <div class="qi-rate-card">
-      <div class="qi-rate-label">整體合格率</div>
-      <div class="qi-rate-bar-wrap">
-        <div class="qi-rate-value" style="color:var(--c-teal)">${passRate}%</div>
-        <div class="qi-rate-bar-track">
-          <div class="qi-rate-bar-fill" style="width:${passRate}%;background:linear-gradient(90deg,#0d9488,#2dd4bf)"></div>
-        </div>
-        <span style="font-size:11px;color:var(--text-muted)">${pass}/${total}</span>
-      </div>
-    </div>
-    <div class="qi-rate-card">
-      <div class="qi-rate-label">不合格比率</div>
-      <div class="qi-rate-bar-wrap">
-        <div class="qi-rate-value" style="color:var(--c-red)">${failRate}%</div>
-        <div class="qi-rate-bar-track">
-          <div class="qi-rate-bar-fill" style="width:${failRate}%;background:linear-gradient(90deg,#dc2626,#f87171)"></div>
-        </div>
-        <span style="font-size:11px;color:var(--text-muted)">${fail}/${total}</span>
-      </div>
-    </div>
-    <div class="qi-rate-card">
-      <div class="qi-rate-label">待複驗比率</div>
-      <div class="qi-rate-bar-wrap">
-        <div class="qi-rate-value" style="color:var(--c-amber)">${recheckRate}%</div>
-        <div class="qi-rate-bar-track">
-          <div class="qi-rate-bar-fill" style="width:${recheckRate}%;background:linear-gradient(90deg,#d97706,#fbbf24)"></div>
-        </div>
-        <span style="font-size:11px;color:var(--text-muted)">${recheck}/${total}</span>
-      </div>
-    </div>
-  `;
-}
-
-
-// ══════════════════════════════════════
-
-// ★ Fix 8: 快速人數填入
+// Fix 8: 快速人數填入
 function fillWorkers() {
-  const labor = parseInt(document.getElementById('wk-labor').value)||0;
-  const mgmt  = parseInt(document.getElementById('wk-mgmt').value)||0;
-  const total = labor + mgmt;
+  var labor = parseInt(document.getElementById('wk-labor').value) || 0;
+  var mgmt  = parseInt(document.getElementById('wk-mgmt').value) || 0;
+  var total = labor + mgmt;
   if (total > 0) {
-    let txt = `出工 ${total}人`;
-    if (labor > 0 && mgmt > 0) txt += `（施工 ${labor}、管理 ${mgmt}）`;
-    else if (labor > 0) txt += `（施工 ${labor}）`;
-    else txt += `（管理 ${mgmt}）`;
+    var txt = '出工 ' + total + '人';
+    if (labor > 0 && mgmt > 0) txt += '（施工 ' + labor + '、管理 ' + mgmt + '）';
+    else if (labor > 0) txt += '（施工 ' + labor + '）';
+    else txt += '（管理 ' + mgmt + '）';
     document.getElementById('f-sub').value = txt;
   } else {
     document.getElementById('f-sub').value = '';
   }
 }
 
-// ★ Fix 5: Toast Confirm — 取代瀏覽器原生 confirm()
-// ══════════════════════════════════════
-let _toastResolve = null;
-function toastConfirm(msg = '確定要刪除？', okLabel = '刪除') {
-  return new Promise(resolve => {
-    _toastResolve = resolve;
-    const tc = document.getElementById('toast-confirm');
-    const tm = document.getElementById('toast-confirm-msg');
-    const okBtn = tc.querySelector('.toast-btn-ok');
-    if (tm) tm.textContent = msg;
-    if (okBtn) okBtn.textContent = okLabel;
-    tc.classList.add('show');
-  });
-}
-function toastConfirmResolve(result) {
-  document.getElementById('toast-confirm').classList.remove('show');
-  if (_toastResolve) { _toastResolve(result); _toastResolve = null; }
+// ── 進度條 ──
+function updateProgress(val, save) {
+  var pct = Math.min(100, Math.max(0, parseInt(val) || 0));
+  var slider = document.getElementById('progress-slider');
+  var input  = document.getElementById('progress-pct-input');
+  if (slider) slider.value = pct;
+  if (input)  input.value  = pct;
+  var fill = document.getElementById('main-progress-fill');
+  var disp = document.getElementById('progress-pct-display');
+  if (fill) {
+    fill.style.width = pct + '%';
+    fill.className = 'progress-fill ' + (pct >= 80 ? 'green' : pct >= 40 ? 'blue' : 'amber');
+  }
+  if (disp) {
+    disp.textContent = pct + '%';
+    disp.style.color = pct >= 80 ? 'var(--c-green)' : pct >= 40 ? 'var(--c-blue)' : 'var(--c-amber)';
+  }
+  renderMultiProgress();
+  if (save !== false) progressSave(pct);
 }
 
-// ── TABS ──
-// ★ Fix 10: tabs 陣列移到函式外，避免每次切換都重新建立
-const TAB_IDS = ['dashboard','timeline','defects','docs','quality','export'];
+function renderMultiProgress() {
+  var total = entries.length;
+  if (!total) return;
+  var counts = { milestone:0, normal:0, warn:0, pending:0, issue:0 };
+  entries.forEach(function(e) { if (counts[e.status] !== undefined) counts[e.status]++; });
+  var colors = { milestone:'#16a34a', normal:'#2563eb', warn:'#d97706', pending:'#7c3aed', issue:'#dc2626' };
+  var labels = { milestone:'里程碑', normal:'正常施工', warn:'待注意', pending:'待決議', issue:'異常' };
+  var multi = document.getElementById('multi-progress');
+  var legend = document.getElementById('multi-legend');
+  if (!multi || !legend) return;
+  multi.innerHTML = Object.keys(counts).filter(function(k) { return counts[k] > 0; }).map(function(k) {
+    var w = (counts[k]/total*100).toFixed(1);
+    return '<div class="multi-seg" style="width:' + w + '%;background:' + colors[k] + '" title="' + labels[k] + '：' + counts[k] + ' 筆 (' + w + '%)"></div>';
+  }).join('');
+  legend.innerHTML = Object.keys(counts).filter(function(k) { return counts[k] > 0; }).map(function(k) {
+    return '<div class="doc-seg-label"><div class="doc-seg-dot" style="background:' + colors[k] + ';border-radius:2px;"></div><span>' + labels[k] + ' ' + counts[k] + ' 筆</span></div>';
+  }).join('');
+}
+
+// Fix 10: switchTab 用常數 TAB_IDS
 function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
     b.classList.toggle('active', TAB_IDS[i] === tab);
   });
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
   document.getElementById('panel-' + tab).classList.add('active');
-  if (tab === 'timeline')  { render(); }
-  if (tab === 'defects')   { renderDefects(); }
-  if (tab === 'dashboard') { renderDashboard(); }
-  if (tab === 'docs')      { renderDocs(); }
-  if (tab === 'quality')   { renderQi(); }
+  if (tab === 'timeline')  render();
+  if (tab === 'defects')   renderDefects();
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'docs')      renderDocs();
+  if (tab === 'quality')   renderQi();
   closeSidebar();
 }
 
-// ── SIDEBAR MOBILE ──
 function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const ob = document.getElementById('overlay-bg');
-  sb.classList.toggle('open');
-  ob.classList.toggle('show');
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay-bg').classList.toggle('show');
 }
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
@@ -1499,30 +966,53 @@ document.getElementById('f-status').addEventListener('change', function() {
   document.getElementById('f-defect-wrap').style.display = (this.value === 'issue' || this.value === 'warn') ? 'flex' : 'none';
 });
 
+// Fix 2: resetFormState 自動帶入今天日期
+function resetFormState() {
+  editingId = null;
+  document.getElementById('f-date').value    = todayStr();
+  document.getElementById('f-title').value   = '';
+  document.getElementById('f-sub').value     = '';
+  document.getElementById('f-alert').value   = '';
+  document.getElementById('f-defect-no').value = '';
+  document.getElementById('f-status').value  = 'normal';
+  document.getElementById('f-weather').value = '☀️ 晴';
+  document.getElementById('f-defect-wrap').style.display = 'none';
+  document.getElementById('form-title').textContent  = '新增工項';
+  document.getElementById('btn-submit').textContent  = '新增到時間軸';
+  document.getElementById('btn-cancel').style.display = 'none';
+  // Fix 8: 清除快速人數
+  var wkL = document.getElementById('wk-labor'); if (wkL) wkL.value = '';
+  var wkM = document.getElementById('wk-mgmt');  if (wkM) wkM.value = '';
+}
+
 async function submitEntry() {
-  const date    = document.getElementById('f-date').value;
-  const weather = document.getElementById('f-weather').value;
-  const status  = document.getElementById('f-status').value;
-  const title   = document.getElementById('f-title').value.trim();
-  const sub     = document.getElementById('f-sub').value.trim();
-  const alertTx = document.getElementById('f-alert').value.trim();
-  const defectNo= document.getElementById('f-defect-no').value.trim();
+  var date    = document.getElementById('f-date').value;
+  var weather = document.getElementById('f-weather').value;
+  var status  = document.getElementById('f-status').value;
+  var title   = document.getElementById('f-title').value.trim();
+  var sub     = document.getElementById('f-sub').value.trim();
+  var alertTx = document.getElementById('f-alert').value.trim();
+  var defectNo= document.getElementById('f-defect-no').value.trim();
   if (!date || !title) { alert('請填寫日期和工項說明'); return; }
-  const btn = document.getElementById('btn-submit');
+  var btn = document.getElementById('btn-submit');
   btn.disabled = true;
-  if (useCloud()) {
+  if (API_URL) {
     setSync('儲存中…', 'sync-busy');
     try {
-      if (editingId) { await apiCall({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo }); }
-      else           { await apiCall({ action:'add', date, weather, status, title, sub, alert:alertTx, defectNo }); }
-      const data = await apiCall({ action:'getAll' });
-      entries = data.entries || [];
+      if (editingId) await apiCall({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo });
+      else           await apiCall({ action:'add', date, weather, status, title, sub, alert:alertTx, defectNo });
+      var data = await apiCall({ action:'getAll' });
+      entries = (data.entries || []).map(sanitizeEntry).filter(function(e) { return e.date; });
       localSave();
       setSync('已同步 ✓', 'sync-ok');
-    } catch(e) { setSync('儲存失敗', 'sync-err'); alert('儲存失敗：' + e.message); btn.disabled=false; return; }
+    } catch(e) { setSync('儲存失敗', 'sync-err'); alert('儲存失敗：' + e.message); btn.disabled = false; return; }
   } else {
-    if (editingId) { const idx = entries.findIndex(e => e.id === editingId); if (idx !== -1) entries[idx] = { id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo }; }
-    else { entries.push({ id:uid(), date, weather, status, title, sub, alert:alertTx, defectNo }); }
+    if (editingId) {
+      var idx = entries.findIndex(function(e) { return e.id === editingId; });
+      if (idx !== -1) entries[idx] = { id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo };
+    } else {
+      entries.push({ id:uid(), date, weather, status, title, sub, alert:alertTx, defectNo });
+    }
     localSave();
   }
   btn.disabled = false;
@@ -1534,29 +1024,9 @@ async function submitEntry() {
   closeSidebar();
 }
 
-function resetFormState() {
-  editingId = null;
-  // ★ Fix 2: 自動帶入今天日期，不再讓使用者每次手動選
-  document.getElementById('f-date').value    = todayStr();
-  document.getElementById('f-title').value   = '';
-  document.getElementById('f-sub').value     = '';
-  document.getElementById('f-alert').value   = '';
-  document.getElementById('f-defect-no').value = '';
-  document.getElementById('f-status').value  = 'normal';
-  document.getElementById('f-weather').value = '☀️ 晴';
-  document.getElementById('f-defect-wrap').style.display = 'none';
-  // ★ Fix 8: 清除快速人數輸入
-  const wkL = document.getElementById('wk-labor');
-  const wkM = document.getElementById('wk-mgmt');
-  if (wkL) wkL.value = '';
-  if (wkM) wkM.value = '';
-  document.getElementById('form-title').textContent  = '新增工項';
-  document.getElementById('btn-submit').textContent  = '新增到時間軸';
-  document.getElementById('btn-cancel').style.display = 'none';
-}
-
 function editEntry(id) {
-  const e = entries.find(x => x.id === id); if (!e) return;
+  var e = entries.find(function(x) { return x.id === id; });
+  if (!e) return;
   editingId = id;
   document.getElementById('f-date').value    = e.date;
   document.getElementById('f-weather').value = e.weather || '☀️ 晴';
@@ -1565,7 +1035,7 @@ function editEntry(id) {
   document.getElementById('f-sub').value     = e.sub || '';
   document.getElementById('f-alert').value   = e.alert || '';
   document.getElementById('f-defect-no').value = e.defectNo || '';
-  document.getElementById('f-defect-wrap').style.display = (e.status==='issue'||e.status==='warn') ? 'flex':'none';
+  document.getElementById('f-defect-wrap').style.display = (e.status === 'issue' || e.status === 'warn') ? 'flex' : 'none';
   document.getElementById('form-title').textContent  = '✏️ 編輯工項';
   document.getElementById('btn-submit').textContent  = '儲存變更';
   document.getElementById('btn-cancel').style.display = 'block';
@@ -1578,489 +1048,587 @@ function editEntry(id) {
 function cancelEdit() { resetFormState(); render(); }
 
 async function deleteEntry(id) {
-  if (!await toastConfirm('確定要刪除這筆施工記錄？')) return; // ★ Fix 5
-  if (useCloud()) {
+  if (!await toastConfirm('確定要刪除這筆施工記錄？')) return;
+  if (API_URL) {
     setSync('刪除中…', 'sync-busy');
-    try { await apiCall({ action:'delete', id }); entries = entries.filter(e => e.id !== id); localSave(); setSync('已同步 ✓', 'sync-ok'); }
+    try { await apiCall({ action:'delete', id }); entries = entries.filter(function(e) { return e.id !== id; }); localSave(); setSync('已同步 ✓', 'sync-ok'); }
     catch(e) { setSync('刪除失敗', 'sync-err'); return; }
-  } else { entries = entries.filter(e => e.id !== id); localSave(); }
+  } else { entries = entries.filter(function(e) { return e.id !== id; }); localSave(); }
   if (editingId === id) resetFormState();
   populateMonthFilter(); renderDashboard(); render();
 }
 
-// ── FILTER & MONTH ──
 function populateMonthFilter() {
-  const months = [...new Set(entries.map(e => e.date.slice(0,7)))].sort();
-  const sel = document.getElementById('filter-month');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">全部月份</option>' + months.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年')}月</option>`).join('');
-}
-function getFiltered() {
-  const q  = (document.getElementById('search-input')?.value||'').trim().toLowerCase();
-  const st = document.getElementById('filter-status')?.value || '';
-  const mo = document.getElementById('filter-month')?.value  || '';
-  return entries.filter(e => (!q||e.title.toLowerCase().includes(q)||(e.alert||'').toLowerCase().includes(q)) && (!st||e.status===st) && (!mo||e.date.startsWith(mo)));
+  var months = [];
+  var seen = {};
+  entries.forEach(function(e) { var m = e.date.slice(0,7); if (!seen[m]) { seen[m] = 1; months.push(m); } });
+  months.sort();
+  var sel = document.getElementById('filter-month');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">全部月份</option>' + months.map(function(m) {
+    return '<option value="' + m + '"' + (m === cur ? ' selected' : '') + '>' + m.replace('-','年') + '月</option>';
+  }).join('');
 }
 
-// ── RENDER TIMELINE ──
+function getFiltered() {
+  var q  = (document.getElementById('search-input') ? document.getElementById('search-input').value : '').trim().toLowerCase();
+  var st = document.getElementById('filter-status') ? document.getElementById('filter-status').value : '';
+  var mo = document.getElementById('filter-month')  ? document.getElementById('filter-month').value  : '';
+  return entries.filter(function(e) {
+    return (!q  || e.title.toLowerCase().indexOf(q) >= 0 || (e.alert||'').toLowerCase().indexOf(q) >= 0) &&
+           (!st || e.status === st) &&
+           (!mo || e.date.startsWith(mo));
+  });
+}
+
 function formatDate(d) {
   if (!d) return '';
-  const norm = normalizeDate(d);
-  const parts = norm.split('-');
+  var norm = normalizeDate(d);
+  var parts = norm.split('-');
   if (parts.length !== 3) return d;
-  const [y, m, day] = parts;
-  return m.replace(/^0/,'') + '/' + day.replace(/^0/,'') + '\n' + y;
+  return parts[1].replace(/^0/,'') + '/' + parts[2].replace(/^0/,'') + '\n' + parts[0];
 }
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function render() {
   try {
-    const filtered = getFiltered().sort((a,b) => b.date.localeCompare(a.date));
-    const count = document.getElementById('filter-count');
-    if (count) count.textContent = `共 ${filtered.length} 筆`;
-    const openIssues = entries.filter(e => e.status==='issue'||e.status==='pending');
-    const ba = document.getElementById('alert-banner-area');
+    var filtered = getFiltered().sort(function(a,b) { return b.date.localeCompare(a.date); });
+    var countEl = document.getElementById('filter-count');
+    if (countEl) countEl.textContent = '共 ' + filtered.length + ' 筆';
+
+    var ba = document.getElementById('alert-banner-area');
     if (ba) {
-      if (openIssues.length > 0) {
-        const issCount = entries.filter(e=>e.status==='issue').length;
-        const penCount = entries.filter(e=>e.status==='pending').length;
-        let msg = [];
-        if (issCount) msg.push(`<strong>${issCount} 筆異常</strong>`);
-        if (penCount) msg.push(`<strong>${penCount} 筆待決議</strong>`);
-        ba.innerHTML = `<div class="alert-banner">⚠️ 目前有 ${msg.join('、')} 項目需要關注。<a onclick="switchTab('defects')">查看改善事項追蹤 →</a></div>`;
+      var issCount = entries.filter(function(e) { return e.status === 'issue'; }).length;
+      var penCount = entries.filter(function(e) { return e.status === 'pending'; }).length;
+      if (issCount + penCount > 0) {
+        var msgs = [];
+        if (issCount) msgs.push('<strong>' + issCount + ' 筆異常</strong>');
+        if (penCount) msgs.push('<strong>' + penCount + ' 筆待決議</strong>');
+        ba.innerHTML = '<div class="alert-banner">⚠️ 目前有 ' + msgs.join('、') + ' 項目需要關注。<a onclick="switchTab(\'defects\')">查看改善事項追蹤 →</a></div>';
       } else { ba.innerHTML = ''; }
     }
-    const tl = document.getElementById('timeline');
+
+    var tl = document.getElementById('timeline');
     if (!filtered.length) { tl.innerHTML = '<div class="empty">沒有符合條件的記錄</div>'; return; }
-    const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    tl.innerHTML = filtered.map((e,i) => {
-      const alertCls = e.status==='issue' ? 'alert-issue' : 'alert-warn';
-      const defect = e.defectNo ? defects.find(d => d.no === e.defectNo) : null;
-      const defectTag = defect
-        ? `<span class="defect-tag iss-${esc(defect.status)}" onclick="switchTab('defects')" title="缺失單 ${esc(defect.no)}">📋 ${esc(defect.no)} · ${{open:'未結案',replied:'已回覆',closed:'已結案'}[defect.status]||esc(defect.status)}</span>`
-        : (e.defectNo ? `<span class="defect-tag iss-open" onclick="switchTab('defects')">📋 ${esc(e.defectNo)}</span>` : '');
-      const qiOnDate = qualityItems ? qualityItems.filter(q=>q.date===e.date) : [];
-      const qiTag = qiOnDate.length ? `<span class="badge" style="background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;cursor:pointer;" onclick="switchTab('quality')">🔬 抽驗 ${qiOnDate.length} 筆</span>` : '';
-      const isToday = e.date === todayStr();
-      return `<div class="tl-item" style="animation-delay:${Math.min(i*0.03,0.3)}s">
-        <div class="tl-left">
-          <div class="tl-date">${formatDate(e.date).replace('\n','<br>')}</div>
-          ${isToday ? '<div class="tl-today-badge">今天</div>' : ''}
-          <div class="tl-weather">${esc(e.weather)}</div>
-        </div>
-        <div class="tl-spine">
-          <div class="tl-line${i===0?' hidden':''}"></div>
-          <div class="tl-dot dot-${e.status}"></div>
-          <div class="tl-line${i===filtered.length-1?' hidden':''}"></div>
-        </div>
-        <div class="tl-card${e.id===editingId?' editing':''}">
-          <div class="card-top">
-            <span class="badge s-${e.status}">${BADGE[e.status]||esc(e.status)}</span>
-            ${defectTag}${qiTag}
-            <div class="card-actions">
-              <button class="btn-sm edit" onclick="editEntry('${e.id}')">編輯</button>
-              <button class="btn-sm del"  onclick="deleteEntry('${e.id}')">刪除</button>
-            </div>
-          </div>
-          <div class="card-title">${esc(e.title).replace(/\n/g,'<br>')}</div>
-          ${e.sub   ? `<div class="card-sub">${esc(e.sub)}</div>` : ''}
-          ${e.alert ? `<div class="card-alert ${alertCls}">${esc(e.alert).replace(/\n/g,'<br>')}</div>` : ''}
-        </div>
-      </div>`;
+    var today = todayStr();
+
+    tl.innerHTML = filtered.map(function(e, i) {
+      var alertCls = e.status === 'issue' ? 'alert-issue' : 'alert-warn';
+      var defect = e.defectNo ? defects.find(function(d) { return d.no === e.defectNo; }) : null;
+      var defectMap = { open:'未結案', replied:'已回覆', closed:'已結案' };
+      var defectTag = defect
+        ? '<span class="defect-tag iss-' + esc(defect.status) + '" onclick="switchTab(\'defects\')" title="缺失單 ' + esc(defect.no) + '">📋 ' + esc(defect.no) + ' · ' + (defectMap[defect.status] || esc(defect.status)) + '</span>'
+        : (e.defectNo ? '<span class="defect-tag iss-open" onclick="switchTab(\'defects\')">📋 ' + esc(e.defectNo) + '</span>' : '');
+      var qiOnDate = qualityItems.filter(function(q) { return q.date === e.date; });
+      var qiTag = qiOnDate.length ? '<span class="badge" style="background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;cursor:pointer;" onclick="switchTab(\'quality\')">🔬 抽驗 ' + qiOnDate.length + ' 筆</span>' : '';
+      // Fix 6: 今天標記
+      var todayBadge = (e.date === today) ? '<div class="tl-today-badge">今天</div>' : '';
+      var dateStr = formatDate(e.date).replace('\n','<br>');
+      var delay = 'animation-delay:' + Math.min(i*0.03,0.3) + 's';
+
+      return '<div class="tl-item" style="' + delay + '">' +
+        '<div class="tl-left"><div class="tl-date">' + dateStr + '</div>' + todayBadge + '<div class="tl-weather">' + esc(e.weather) + '</div></div>' +
+        '<div class="tl-spine">' +
+          '<div class="tl-line' + (i===0?' hidden':'') + '"></div>' +
+          '<div class="tl-dot dot-' + e.status + '"></div>' +
+          '<div class="tl-line' + (i===filtered.length-1?' hidden':'') + '"></div>' +
+        '</div>' +
+        '<div class="tl-card' + (e.id===editingId?' editing':'') + '">' +
+          '<div class="card-top">' +
+            '<span class="badge s-' + e.status + '">' + (BADGE[e.status]||esc(e.status)) + '</span>' +
+            defectTag + qiTag +
+            '<div class="card-actions">' +
+              '<button class="btn-sm edit" onclick="editEntry(\'' + e.id + '\')">編輯</button>' +
+              '<button class="btn-sm del" onclick="deleteEntry(\'' + e.id + '\')">刪除</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card-title">' + esc(e.title).replace(/\n/g,'<br>') + '</div>' +
+          (e.sub   ? '<div class="card-sub">' + esc(e.sub) + '</div>' : '') +
+          (e.alert ? '<div class="card-alert ' + alertCls + '">' + esc(e.alert).replace(/\n/g,'<br>') + '</div>' : '') +
+        '</div>' +
+      '</div>';
     }).join('');
-  } catch(err) { console.error('render() error:', err); showErrorBanner('畫面更新失敗'); }
+  } catch(err) { console.error('render error:', err); showErrBanner('畫面更新失敗'); }
 }
 
-// ── DASHBOARD ──
+// Fix 7 & 11: Dashboard — 單次 reduce 計算所有統計
 function renderDashboard() {
-  // ★ Fix 7 & 11: 一次 reduce 計算所有統計，避免多次 filter 重複遍歷
-  const thisMonth = todayStr().slice(0,7);
-  const lastMonth = (() => {
-    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-1);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-  })();
+  var d0 = new Date(); d0.setDate(1); d0.setMonth(d0.getMonth()-1);
+  var lastMonth = d0.getFullYear() + '-' + String(d0.getMonth()+1).padStart(2,'0');
+  var thisMonth = todayStr().slice(0,7);
 
-  const stats = entries.reduce((acc, e) => {
+  var st = entries.reduce(function(acc, e) {
     acc.total++;
     if (e.status === 'issue')     acc.issues++;
     if (e.status === 'pending')   acc.pending++;
     if (e.status === 'milestone') acc.milestones++;
-    if (e.status === 'issue' || e.status === 'pending') acc.openItems++;
-    const m = (e.sub||'').match(/出工\s*(\d+)/);
-    if (m) acc.workers += parseInt(m[1]);
-    if (e.date.startsWith(thisMonth)) {
-      acc.thisMonthCount++;
-      if (e.status === 'issue') acc.thisMonthIssues++;
-    }
-    if (e.date.startsWith(lastMonth)) { acc.lastMonthCount++; }
+    var wm = (e.sub||'').match(/出工\s*(\d+)/);
+    if (wm) acc.workers += parseInt(wm[1]);
+    if (e.date.startsWith(thisMonth)) acc.thisMo++;
+    if (e.date.startsWith(lastMonth)) acc.lastMo++;
     acc.counts[e.status] = (acc.counts[e.status]||0) + 1;
     return acc;
-  }, { total:0, issues:0, pending:0, milestones:0, workers:0, openItems:0, thisMonthCount:0, thisMonthIssues:0, lastMonthCount:0, counts:{} });
+  }, { total:0, issues:0, pending:0, milestones:0, workers:0, thisMo:0, lastMo:0, counts:{} });
 
-  const openDef = defects.filter(d=>d.status!=='closed').length;
-  const qiPass  = qualityItems.filter(q=>q.result==='pass').length;
-  const qiPending = qualityItems.filter(q=>q.result==='fail'||q.result==='recheck').length;
-  const qiRate  = qualityItems.length ? Math.round(qiPass/qualityItems.length*100)+'%' : '—';
+  var openDef  = defects.filter(function(d) { return d.status !== 'closed'; }).length;
+  var qiPass   = qualityItems.filter(function(q) { return q.result === 'pass'; }).length;
+  var qiPend   = qualityItems.filter(function(q) { return q.result === 'fail' || q.result === 'recheck'; }).length;
+  var qiRate   = qualityItems.length ? Math.round(qiPass/qualityItems.length*100) + '%' : '—';
 
-  // 本月 vs 上月趨勢
-  const trendHtml = (cur, prev, label) => {
+  // Fix 7: 趨勢標籤
+  function trendBadge(cur, prev) {
     if (!prev) return '';
-    const diff = cur - prev;
-    if (diff > 0) return `<div class="stat-trend up">↑ +${diff} vs 上月</div>`;
-    if (diff < 0) return `<div class="stat-trend down">↓ ${diff} vs 上月</div>`;
-    return `<div class="stat-trend same">→ 與上月持平</div>`;
-  };
+    var diff = cur - prev;
+    if (diff > 0) return '<div class="stat-trend up">↑ +' + diff + ' vs 上月</div>';
+    if (diff < 0) return '<div class="stat-trend down">↓ ' + diff + ' vs 上月</div>';
+    return '<div class="stat-trend same">→ 與上月持平</div>';
+  }
 
-  document.getElementById('stat-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-label">總記錄天數</div><div class="stat-value">${stats.total}</div><div class="stat-sub">筆施工記錄</div>${trendHtml(stats.thisMonthCount, stats.lastMonthCount, '本月記錄')}</div>
-    <div class="stat-card red"><div class="stat-label">異常記錄</div><div class="stat-value">${stats.issues}</div><div class="stat-sub">已開單</div></div>
-    <div class="stat-card amber"><div class="stat-label">待決議</div><div class="stat-value">${stats.pending}</div><div class="stat-sub">待處理</div></div>
-    <div class="stat-card amber"><div class="stat-label">未結案缺失</div><div class="stat-value">${openDef}</div><div class="stat-sub">缺失單</div></div>
-    <div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">${stats.workers}</div><div class="stat-sub">人次</div></div>
-    <div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">${stats.milestones}</div><div class="stat-sub">個進展</div></div>
-    <div class="stat-card teal"><div class="stat-label">品質合格率</div><div class="stat-value">${qiRate}</div><div class="stat-sub">${qiPending} 筆待追蹤</div></div>
-  `;
+  document.getElementById('stat-grid').innerHTML =
+    '<div class="stat-card"><div class="stat-label">總記錄天數</div><div class="stat-value">' + st.total + '</div><div class="stat-sub">筆施工記錄</div>' + trendBadge(st.thisMo, st.lastMo) + '</div>' +
+    '<div class="stat-card red"><div class="stat-label">異常記錄</div><div class="stat-value">' + st.issues + '</div><div class="stat-sub">已開單</div></div>' +
+    '<div class="stat-card amber"><div class="stat-label">待決議</div><div class="stat-value">' + st.pending + '</div><div class="stat-sub">待處理</div></div>' +
+    '<div class="stat-card amber"><div class="stat-label">未結案缺失</div><div class="stat-value">' + openDef + '</div><div class="stat-sub">缺失單</div></div>' +
+    '<div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">' + st.workers + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">' + st.milestones + '</div><div class="stat-sub">個進展</div></div>' +
+    '<div class="stat-card teal"><div class="stat-label">品質合格率</div><div class="stat-value">' + qiRate + '</div><div class="stat-sub">' + qiPend + ' 筆待追蹤</div></div>';
 
-  // ★ Fix 11: 直接用 stats.counts，不再重複遍歷
-  const counts = { normal:0, milestone:0, warn:0, pending:0, issue:0 };
-  Object.entries(stats.counts).forEach(([k,v]) => { if (k in counts) counts[k] = v; });
-  const max = Math.max(...Object.values(counts), 1);
-  const colors = { normal:'var(--c-blue)', milestone:'var(--c-green)', warn:'var(--c-amber)', pending:'var(--c-purple)', issue:'var(--c-red)' };
-  const labels = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
-  document.getElementById('bar-chart').innerHTML = Object.entries(counts).map(([k,v]) => {
-    const pct = total ? Math.round(v/total*100) : 0;
-    return `<div class="bar-row">
-      <div class="bar-label">${labels[k]}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${v/max*100}%;background:${colors[k]}"></div></div>
-      <div class="bar-count">${v}</div>
-      <div class="bar-pct">${pct}%</div>
-    </div>`;
+  // Fix 11: 直接用 st.counts，不重複遍歷
+  var countsOrder = ['normal','milestone','warn','pending','issue'];
+  var counts = {};
+  countsOrder.forEach(function(k) { counts[k] = st.counts[k] || 0; });
+  var maxC = Math.max.apply(null, countsOrder.map(function(k) { return counts[k]; }).concat([1]));
+  var colors = { normal:'var(--c-blue)', milestone:'var(--c-green)', warn:'var(--c-amber)', pending:'var(--c-purple)', issue:'var(--c-red)' };
+  var labels = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
+  document.getElementById('bar-chart').innerHTML = countsOrder.map(function(k) {
+    var v = counts[k];
+    var pct = st.total ? Math.round(v/st.total*100) : 0;
+    return '<div class="bar-row">' +
+      '<div class="bar-label">' + labels[k] + '</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + (v/maxC*100) + '%;background:' + colors[k] + '"></div></div>' +
+      '<div class="bar-count">' + v + '</div>' +
+      '<div class="bar-pct">' + pct + '%</div>' +
+    '</div>';
   }).join('');
 
-  // 更新多段進度條（資料變更時重繪）
   renderMultiProgress();
 
-  const openItems = entries.filter(e=>e.status==='issue'||e.status==='pending').sort((a,b)=>b.date.localeCompare(a.date)); // already computed above
-  const statusLabel = { issue:'異常', pending:'待決議' };
+  var openItems = entries.filter(function(e) { return e.status === 'issue' || e.status === 'pending'; })
+    .sort(function(a,b) { return b.date.localeCompare(a.date); });
+  var sLabel = { issue:'異常', pending:'待決議' };
   document.getElementById('open-issues-list').innerHTML = openItems.length
-    ? openItems.map(e => `<div class="mini-issue ${e.status==='issue'?'open':'pending'}">
-        <div class="mini-issue-date">${e.date}</div>
-        <div class="mini-issue-title">${e.title.split('\n')[0]}</div>
-        ${e.alert ? `<div style="margin-top:3px;font-size:11px;opacity:.8">${e.alert.slice(0,60)}${e.alert.length>60?'…':''}</div>` : ''}
-        <span class="mini-issue-status ${e.status==='issue'?'iss-open':'iss-pending'}">${statusLabel[e.status]}</span>
-      </div>`).join('')
+    ? openItems.map(function(e) {
+        return '<div class="mini-issue ' + (e.status==='issue'?'open':'pending') + '">' +
+          '<div class="mini-issue-date">' + e.date + '</div>' +
+          '<div class="mini-issue-title">' + esc(e.title.split('\n')[0]) + '</div>' +
+          (e.alert ? '<div style="margin-top:3px;font-size:11px;opacity:.8">' + esc(e.alert.slice(0,60)) + (e.alert.length>60?'…':'') + '</div>' : '') +
+          '<span class="mini-issue-status ' + (e.status==='issue'?'iss-open':'iss-pending') + '">' + sLabel[e.status] + '</span>' +
+        '</div>';
+      }).join('')
     : '<div style="font-size:13px;color:var(--text-muted);padding:12px 0;text-align:center">✅ 目前沒有未結案項目</div>';
 }
 
 // ── DEFECTS ──
 function updateOpenCount() {
-  const n = defects.filter(d=>d.status!=='closed').length;
-  document.getElementById('open-count').textContent = n;
-  document.getElementById('open-count').style.display = n ? 'inline-flex' : 'none';
+  var n = defects.filter(function(d) { return d.status !== 'closed'; }).length;
+  var el = document.getElementById('open-count');
+  el.textContent = n; el.style.display = n ? 'inline-flex' : 'none';
 }
+
 function renderDefects() {
-  const list = document.getElementById('defects-list');
+  var list = document.getElementById('defects-list');
   if (!defects.length) { list.innerHTML = '<div class="empty">目前沒有改善事項通知單記錄。</div>'; return; }
-  const statusMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
-  list.innerHTML = defects.sort((a,b)=>b.date.localeCompare(a.date)).map(d => `
-    <div class="defect-card" id="dc-${d.id}">
-      <div class="defect-card-top">
-        <span class="defect-no"># ${d.no||d.id.slice(-6)}</span>
-        <div class="defect-title">${d.title}</div>
-        <span class="badge iss-${d.status}" style="flex-shrink:0">${statusMap[d.status]||d.status}</span>
-      </div>
-      <div class="defect-body">${(d.notes||'（無追蹤備註）').replace(/\n/g,'<br>')}</div>
-      <div class="defect-meta"><span>📅 ${d.date||'—'}</span></div>
-      <div class="defect-actions">
-        <button class="btn-status${d.status==='open'?' active-open':''}" onclick="setDefectStatus('${d.id}','open')">未結案</button>
-        <button class="btn-status${d.status==='replied'?' active-replied':''}" onclick="setDefectStatus('${d.id}','replied')">承商已回覆</button>
-        <button class="btn-status${d.status==='closed'?' active-closed':''}" onclick="setDefectStatus('${d.id}','closed')">已結案</button>
-        <button class="btn-sm del" style="margin-left:auto" onclick="deleteDefect('${d.id}')">刪除</button>
-      </div>
-      <div class="defect-notes" style="position:relative;">
-        <textarea placeholder="追蹤備註（即時自動儲存）" oninput="saveDefectNotes('${d.id}',this.value)">${d.notes||''}</textarea>
-        <span class="notes-saved-hint" id="hint-${d.id}" style="display:none;position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--c-green);font-weight:600;pointer-events:none;">已儲存 ✓</span>
-      </div>
-    </div>`).join('');
+  var sMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
+  var sorted = defects.slice().sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); });
+  list.innerHTML = sorted.map(function(d) {
+    return '<div class="defect-card" id="dc-' + d.id + '">' +
+      '<div class="defect-card-top">' +
+        '<span class="defect-no"># ' + (d.no||d.id.slice(-6)) + '</span>' +
+        '<div class="defect-title">' + esc(d.title) + '</div>' +
+        '<span class="badge iss-' + d.status + '" style="flex-shrink:0">' + (sMap[d.status]||d.status) + '</span>' +
+      '</div>' +
+      '<div class="defect-body">' + esc(d.notes||'（無追蹤備註）').replace(/\n/g,'<br>') + '</div>' +
+      '<div class="defect-meta"><span>📅 ' + (d.date||'—') + '</span></div>' +
+      '<div class="defect-actions">' +
+        '<button class="btn-status' + (d.status==='open'?' active-open':'') + '" onclick="setDefectStatus(\'' + d.id + '\',\'open\')">未結案</button>' +
+        '<button class="btn-status' + (d.status==='replied'?' active-replied':'') + '" onclick="setDefectStatus(\'' + d.id + '\',\'replied\')">承商已回覆</button>' +
+        '<button class="btn-status' + (d.status==='closed'?' active-closed':'') + '" onclick="setDefectStatus(\'' + d.id + '\',\'closed\')">已結案</button>' +
+        '<button class="btn-sm del" style="margin-left:auto" onclick="deleteDefect(\'' + d.id + '\')">刪除</button>' +
+      '</div>' +
+      '<div class="defect-notes">' +
+        '<textarea placeholder="追蹤備註（即時自動儲存）" oninput="saveDefectNotes(\'' + d.id + '\',this.value)">' + esc(d.notes||'') + '</textarea>' +
+        // Fix 4: 即時儲存提示
+        '<span class="notes-saved-hint" id="hint-' + d.id + '">已儲存 ✓</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
-function setDefectStatus(id, status) { const d=defects.find(x=>x.id===id); if(d){d.status=status;defectSave();renderDefects();updateOpenCount();renderDashboard();} }
+
+function setDefectStatus(id, status) {
+  var d = defects.find(function(x) { return x.id === id; });
+  if (d) { d.status = status; defectSave(); renderDefects(); updateOpenCount(); renderDashboard(); }
+}
+
+// Fix 4: oninput 即時儲存 + 顯示提示
 function saveDefectNotes(id, val) {
-  // ★ Fix 4: 即時儲存並顯示提示
-  const d = defects.find(x=>x.id===id);
+  var d = defects.find(function(x) { return x.id === id; });
   if (!d) return;
   d.notes = val;
   defectSave();
-  const hint = document.getElementById('hint-'+id);
+  var hint = document.getElementById('hint-' + id);
   if (hint) {
     hint.style.display = 'block';
-    clearTimeout(hint._t);
-    hint._t = setTimeout(() => { hint.style.display = 'none'; }, 1500);
+    clearTimeout(hint._timer);
+    hint._timer = setTimeout(function() { hint.style.display = 'none'; }, 1500);
   }
 }
-async function deleteDefect(id) { if(!await toastConfirm('確定要刪除此缺失單？'))return; // ★ Fix 5 defects=defects.filter(d=>d.id!==id); defectSave();renderDefects();updateOpenCount();renderDashboard(); }
-function openAddDefectModal() { document.getElementById('defect-modal').style.display='flex'; }
-function closeDefectModal()   { document.getElementById('defect-modal').style.display='none'; }
+
+async function deleteDefect(id) {
+  if (!await toastConfirm('確定要刪除此缺失單？')) return;
+  defects = defects.filter(function(d) { return d.id !== id; });
+  defectSave(); renderDefects(); updateOpenCount(); renderDashboard();
+}
+
+function openAddDefectModal() { document.getElementById('defect-modal').style.display = 'flex'; }
+function closeDefectModal()   { document.getElementById('defect-modal').style.display = 'none'; }
 function saveDefect() {
-  const no=document.getElementById('dm-no').value.trim(), title=document.getElementById('dm-title').value.trim();
-  const date=document.getElementById('dm-date').value, notes=document.getElementById('dm-notes').value.trim();
-  const status=document.getElementById('dm-status').value;
-  if(!title){alert('請填寫缺失說明');return;}
-  defects.push({id:uid(),no,title,date,notes,status});
+  var no    = document.getElementById('dm-no').value.trim();
+  var title = document.getElementById('dm-title').value.trim();
+  var date  = document.getElementById('dm-date').value;
+  var notes = document.getElementById('dm-notes').value.trim();
+  var status= document.getElementById('dm-status').value;
+  if (!title) { alert('請填寫缺失說明'); return; }
+  defects.push({ id:uid(), no, title, date, notes, status });
   defectSave(); closeDefectModal();
-  ['dm-no','dm-title','dm-date','dm-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('dm-status').value='open';
-  renderDefects();updateOpenCount();renderDashboard();
+  ['dm-no','dm-title','dm-date','dm-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('dm-status').value = 'open';
+  renderDefects(); updateOpenCount(); renderDashboard();
 }
 
 // ── DOCUMENTS ──
-const DOCS_KEY = 'construction_docs_v1';
-// ★ Fix 9: docs 已在頂部統一宣告，移除舊式 var 宣告
-const DOC_TYPE_LABEL = { plan:'施工計畫書', quality:'品質計畫', drawing:'送審圖說', material:'材料送審單', test:'測試／檢驗報告', other:'其他' };
-const DOC_TYPE_CLS   = { plan:'dtype-plan', quality:'dtype-quality', drawing:'dtype-drawing', material:'dtype-material', test:'dtype-test', other:'dtype-other' };
-const VER_RESULT_LABEL = { approved:'核定', rejected:'退件修正', pending:'待審', reviewing:'審查中' };
-
-function docsSave() { try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {} }
-function docsLoad() { try { const r=localStorage.getItem(DOCS_KEY); return r?JSON.parse(r):[]; } catch(e) { return []; } }
-// ★ Fix 1: addDays/todayStr 改用本地時間，避免 UTC 時區位移
-function addDays(dateStr, days) {
-  const [y,m,d] = dateStr.split('-').map(Number);
-  const dt = new Date(y, m-1, d + parseInt(days));
-  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-}
-function daysDiff(a, b) { return Math.round((new Date(b)-new Date(a))/86400000); }
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function docLatestVersion(doc) { return (doc.versions&&doc.versions.length)?doc.versions[doc.versions.length-1]:null; }
-function docOverallStatus(doc) { const v=docLatestVersion(doc); return v?v.result:'pending'; }
+function docLatestVersion(doc) { return (doc.versions && doc.versions.length) ? doc.versions[doc.versions.length-1] : null; }
+function docOverallStatus(doc) { var v = docLatestVersion(doc); return v ? v.result : 'pending'; }
 function isDocOverdue(doc) {
-  const v=docLatestVersion(doc); if(!v)return false; if(v.result==='approved')return false;
-  return todayStr()>addDays(v.date,doc.reviewDays||14)&&!v.replyDate;
+  var v = docLatestVersion(doc);
+  if (!v || v.result === 'approved') return false;
+  return todayStr() > addDays(v.date, doc.reviewDays||14) && !v.replyDate;
 }
+
+// Fix 3: 只計未核定文件
 function updateDocPendingCount() {
-  // ★ Fix 3: 修正邏輯——badge 只計「未核定」+ 「真正逾期（未核定且超時）」
-  // 「已核定且逾期」在邏輯上不存在（isDocOverdue 已排除 approved），舊條件會重複計算
-  const n = docs.filter(d => {
-    const s = docOverallStatus(d);
-    if (s !== 'approved') return true;   // 未核定者全算
-    return false;                        // 已核定一律不算
-  }).length;
-  const el=document.getElementById('doc-pending-count');
-  if(el){el.textContent=n;el.style.display=n?'inline-flex':'none';}
+  var n = docs.filter(function(d) { return docOverallStatus(d) !== 'approved'; }).length;
+  var el = document.getElementById('doc-pending-count');
+  if (el) { el.textContent = n; el.style.display = n ? 'inline-flex' : 'none'; }
 }
+
+function renderDocProgress() {
+  var total = docs.length;
+  var summary = document.getElementById('doc-progress-summary');
+  if (!summary) return;
+  if (!total) { summary.style.display = 'none'; return; }
+  summary.style.display = 'block';
+  var approved  = docs.filter(function(d) { return docOverallStatus(d) === 'approved'; }).length;
+  var reviewing = docs.filter(function(d) { return docOverallStatus(d) === 'reviewing'; }).length;
+  var rejected  = docs.filter(function(d) { return docOverallStatus(d) === 'rejected'; }).length;
+  var pending   = docs.filter(function(d) { return docOverallStatus(d) === 'pending'; }).length;
+  var pct = Math.round(approved/total*100);
+  var fill = document.getElementById('doc-progress-fill');
+  if (fill) {
+    fill.style.width = pct + '%';
+    fill.className = 'progress-fill ' + (pct >= 80 ? 'green' : pct >= 40 ? 'blue' : 'amber');
+  }
+  var segs = document.getElementById('doc-progress-segments');
+  if (segs) {
+    var items = [
+      { label:'已核定', count:approved, color:'var(--c-green)', bg:'#16a34a' },
+      { label:'審查中', count:reviewing, color:'var(--c-blue)',  bg:'#2563eb' },
+      { label:'退件',   count:rejected,  color:'var(--c-red)',   bg:'#dc2626' },
+      { label:'待審',   count:pending,   color:'var(--c-amber)', bg:'#d97706' },
+    ].filter(function(x) { return x.count > 0; });
+    segs.innerHTML = '<span style="font-size:13px;font-weight:600;color:var(--c-green)">' + pct + '% 核定</span>' +
+      items.map(function(x) {
+        return '<div class="doc-seg-label"><div class="doc-seg-dot" style="background:' + x.bg + '"></div><span style="color:' + x.color + '">' + x.label + ' ' + x.count + '</span></div>';
+      }).join('');
+  }
+}
+
 function renderDocs() {
-  renderDocProgress(); // ★ 渲染送審進度條
-  const typeF=document.getElementById('doc-filter-type')?.value||'';
-  const statusF=document.getElementById('doc-filter-status')?.value||'';
-  const overdueF=document.getElementById('doc-filter-overdue')?.checked||false;
-  const filtered=docs.filter(d=>{
-    if(typeF&&d.type!==typeF)return false;
-    if(statusF&&docOverallStatus(d)!==statusF)return false;
-    if(overdueF&&!isDocOverdue(d))return false;
+  renderDocProgress();
+  var typeF   = document.getElementById('doc-filter-type')  ? document.getElementById('doc-filter-type').value  : '';
+  var statusF = document.getElementById('doc-filter-status') ? document.getElementById('doc-filter-status').value : '';
+  var overdueF= document.getElementById('doc-filter-overdue')? document.getElementById('doc-filter-overdue').checked : false;
+  var filtered = docs.filter(function(d) {
+    if (typeF   && d.type !== typeF) return false;
+    if (statusF && docOverallStatus(d) !== statusF) return false;
+    if (overdueF && !isDocOverdue(d)) return false;
     return true;
   });
-  const countEl=document.getElementById('doc-count');
-  if(countEl)countEl.textContent=`共 ${filtered.length} 份文件`;
-  const list=document.getElementById('doc-list');
-  if(!list)return;
-  if(!filtered.length){list.innerHTML='<div class="empty">目前沒有文件記錄。</div>';return;}
-  const escH=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  list.innerHTML=filtered.map(doc=>{
-    const status=docOverallStatus(doc),overdue=isDocOverdue(doc);
-    const verCount=(doc.versions||[]).length;
-    const versionsHtml=(doc.versions||[]).map((v,vi)=>{
-      const deadline=addDays(v.date,doc.reviewDays||14);
-      const isOver=!v.replyDate&&v.result!=='approved'&&todayStr()>deadline;
-      const dlLabel=isOver?`⚠️ 應審完 ${deadline}（逾期 ${daysDiff(deadline,todayStr())} 天）`:`應審完 ${deadline}${v.replyDate?'　實際回覆 '+v.replyDate:''}`;
-      return `<div class="ver-row">
-        <div class="ver-dot ${v.result}"></div>
-        <div class="ver-top"><span class="ver-no">第 ${vi+1} 次</span><span class="ver-date">送審 ${v.date}</span><span class="ver-deadline ${isOver?'overdue':'ok'}">${dlLabel}</span><span class="ver-result ${v.result}">${VER_RESULT_LABEL[v.result]||v.result}</span></div>
-        ${v.comment?`<div class="ver-comment">💬 ${escH(v.comment).replace(/\n/g,'<br>')}</div>`:''}
-        ${v.link?`<a class="ver-link" href="${escH(v.link)}" target="_blank" rel="noopener">📎 附件連結</a>`:''}
-        <div class="ver-actions"><button class="btn-sm edit" onclick="editVersion('${doc.id}',${vi})">編輯</button><button class="btn-sm del" onclick="deleteVersion('${doc.id}',${vi})">刪除版次</button></div>
-      </div>`;
+  var countEl = document.getElementById('doc-count');
+  if (countEl) countEl.textContent = '共 ' + filtered.length + ' 份文件';
+  var list = document.getElementById('doc-list');
+  if (!list) return;
+  if (!filtered.length) { list.innerHTML = '<div class="empty">目前沒有文件記錄。</div>'; return; }
+
+  list.innerHTML = filtered.map(function(doc) {
+    var status = docOverallStatus(doc), overdue = isDocOverdue(doc);
+    var verCount = (doc.versions||[]).length;
+    var versionsHtml = (doc.versions||[]).map(function(v, vi) {
+      var deadline = addDays(v.date, doc.reviewDays||14);
+      var isOver = !v.replyDate && v.result !== 'approved' && todayStr() > deadline;
+      var dlLabel = isOver
+        ? '⚠️ 應審完 ' + deadline + '（逾期 ' + daysDiff(deadline, todayStr()) + ' 天）'
+        : '應審完 ' + deadline + (v.replyDate ? '　實際回覆 ' + v.replyDate : '');
+      return '<div class="ver-row">' +
+        '<div class="ver-dot ' + v.result + '"></div>' +
+        '<div class="ver-top">' +
+          '<span class="ver-no">第 ' + (vi+1) + ' 次</span>' +
+          '<span class="ver-date">送審 ' + v.date + '</span>' +
+          '<span class="ver-deadline ' + (isOver?'overdue':'ok') + '">' + dlLabel + '</span>' +
+          '<span class="ver-result ' + v.result + '">' + (VER_RESULT_LABEL[v.result]||v.result) + '</span>' +
+        '</div>' +
+        (v.comment ? '<div class="ver-comment">💬 ' + esc(v.comment).replace(/\n/g,'<br>') + '</div>' : '') +
+        (v.link ? '<a class="ver-link" href="' + esc(v.link) + '" target="_blank" rel="noopener">📎 附件連結</a>' : '') +
+        '<div class="ver-actions">' +
+          '<button class="btn-sm edit" onclick="editVersion(\'' + doc.id + '\',' + vi + ')">編輯</button>' +
+          '<button class="btn-sm del" onclick="deleteVersion(\'' + doc.id + '\',' + vi + ')">刪除版次</button>' +
+        '</div>' +
+      '</div>';
     }).join('');
-    return `<div class="doc-card" id="doccard-${doc.id}">
-      <div class="doc-card-header" onclick="toggleDocCard('${doc.id}')">
-        <span class="doc-type-badge ${DOC_TYPE_CLS[doc.type]||'dtype-other'}">${DOC_TYPE_LABEL[doc.type]||doc.type}</span>
-        <span class="doc-name">${escH(doc.name)}</span>
-        <span class="doc-meta-inline">${verCount} 次　${doc.reviewDays||14} 天審查</span>
-        ${overdue?`<span class="doc-overdue">⚠️ 逾期</span>`:''}
-        <span class="ver-result ${status}" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;border:1px solid;flex-shrink:0;">${VER_RESULT_LABEL[status]||status}</span>
-        <span class="doc-expand-icon">▼</span>
-      </div>
-      <div class="doc-card-body"><div class="doc-card-body-inner">
-        ${doc.note?`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;padding:8px 10px;background:var(--bg);border-radius:6px;">📝 ${escH(doc.note)}</div>`:''}
-        <div class="ver-list">${versionsHtml||'<div style="font-size:13px;color:var(--text-muted);padding:4px 0 8px;">尚未有送審記錄</div>'}</div>
-        <div class="doc-add-ver-btn">
-          <button class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;" onclick="openAddVerModal('${doc.id}')">＋ 新增送審版次</button>
-          <button class="btn-sm edit" onclick="editDoc('${doc.id}')">編輯文件</button>
-          <button class="btn-sm del" onclick="deleteDoc('${doc.id}')">刪除文件</button>
-        </div>
-      </div></div>
-    </div>`;
+
+    return '<div class="doc-card" id="doccard-' + doc.id + '">' +
+      '<div class="doc-card-header" onclick="toggleDocCard(\'' + doc.id + '\')">' +
+        '<span class="doc-type-badge ' + (DOC_TYPE_CLS[doc.type]||'dtype-other') + '">' + (DOC_TYPE_LABEL[doc.type]||doc.type) + '</span>' +
+        '<span class="doc-name">' + esc(doc.name) + '</span>' +
+        '<span class="doc-meta-inline">' + verCount + ' 次　' + (doc.reviewDays||14) + ' 天審查</span>' +
+        (overdue ? '<span class="doc-overdue">⚠️ 逾期</span>' : '') +
+        '<span class="ver-result ' + status + '" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;border:1px solid;flex-shrink:0;">' + (VER_RESULT_LABEL[status]||status) + '</span>' +
+        '<span class="doc-expand-icon">▼</span>' +
+      '</div>' +
+      '<div class="doc-card-body"><div class="doc-card-body-inner">' +
+        (doc.note ? '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;padding:8px 10px;background:var(--bg);border-radius:6px;">📝 ' + esc(doc.note) + '</div>' : '') +
+        '<div class="ver-list">' + (versionsHtml || '<div style="font-size:13px;color:var(--text-muted);padding:4px 0 8px;">尚未有送審記錄</div>') + '</div>' +
+        '<div class="doc-add-ver-btn">' +
+          '<button class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;" onclick="openAddVerModal(\'' + doc.id + '\')">＋ 新增送審版次</button>' +
+          '<button class="btn-sm edit" onclick="editDoc(\'' + doc.id + '\')">編輯文件</button>' +
+          '<button class="btn-sm del" onclick="deleteDoc(\'' + doc.id + '\')">刪除文件</button>' +
+        '</div>' +
+      '</div></div>' +
+    '</div>';
   }).join('');
 }
-function toggleDocCard(id){const el=document.getElementById('doccard-'+id);if(el)el.classList.toggle('open');}
-let editingDocId=null;
-function openAddDocModal(){editingDocId=null;document.getElementById('doc-modal-title').textContent='新增文件';['doc-name','doc-note'].forEach(id=>document.getElementById(id).value='');document.getElementById('doc-type').value='plan';document.getElementById('doc-review-days').value='14';document.getElementById('doc-modal').style.display='flex';}
-function editDoc(id){const d=docs.find(x=>x.id===id);if(!d)return;editingDocId=id;document.getElementById('doc-modal-title').textContent='編輯文件';document.getElementById('doc-name').value=d.name;document.getElementById('doc-type').value=d.type;document.getElementById('doc-review-days').value=d.reviewDays||14;document.getElementById('doc-note').value=d.note||'';document.getElementById('doc-modal').style.display='flex';}
-function closeDocModal(){document.getElementById('doc-modal').style.display='none';}
-function saveDoc(){
-  const name=document.getElementById('doc-name').value.trim();if(!name){alert('請填寫文件名稱');return;}
-  const payload={name,type:document.getElementById('doc-type').value,reviewDays:parseInt(document.getElementById('doc-review-days').value)||14,note:document.getElementById('doc-note').value.trim()};
-  if(editingDocId){const idx=docs.findIndex(d=>d.id===editingDocId);if(idx!==-1)docs[idx]={...docs[idx],...payload};}
-  else{docs.push({id:uid(),versions:[],...payload});}
-  docsSave();closeDocModal();renderDocs();updateDocPendingCount();
+
+function toggleDocCard(id) { var el = document.getElementById('doccard-'+id); if (el) el.classList.toggle('open'); }
+
+function openAddDocModal() {
+  editingDocId = null; document.getElementById('doc-modal-title').textContent = '新增文件';
+  ['doc-name','doc-note'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('doc-type').value = 'plan'; document.getElementById('doc-review-days').value = '14';
+  document.getElementById('doc-modal').style.display = 'flex';
 }
-async function deleteDoc(id){if(!await toastConfirm('確定要刪除此文件及所有送審記錄？'))return; // ★ Fix 5docs=docs.filter(d=>d.id!==id);docsSave();renderDocs();updateDocPendingCount();}
-function openAddVerModal(docId){
-  document.getElementById('ver-modal-title').textContent='新增送審版次';
-  document.getElementById('ver-doc-id').value=docId;document.getElementById('ver-edit-idx').value='-1';
-  document.getElementById('ver-date').value=todayStr();document.getElementById('ver-reply-date').value='';
-  document.getElementById('ver-result').value='reviewing';document.getElementById('ver-comment').value='';document.getElementById('ver-link').value='';
-  document.getElementById('ver-modal').style.display='flex';
+function editDoc(id) {
+  var d = docs.find(function(x) { return x.id === id; }); if (!d) return;
+  editingDocId = id; document.getElementById('doc-modal-title').textContent = '編輯文件';
+  document.getElementById('doc-name').value = d.name; document.getElementById('doc-type').value = d.type;
+  document.getElementById('doc-review-days').value = d.reviewDays||14; document.getElementById('doc-note').value = d.note||'';
+  document.getElementById('doc-modal').style.display = 'flex';
 }
-function editVersion(docId,idx){
-  const doc=docs.find(d=>d.id===docId);if(!doc)return;const v=doc.versions[idx];
-  document.getElementById('ver-modal-title').textContent='編輯送審版次';
-  document.getElementById('ver-doc-id').value=docId;document.getElementById('ver-edit-idx').value=idx;
-  document.getElementById('ver-date').value=v.date||'';document.getElementById('ver-reply-date').value=v.replyDate||'';
-  document.getElementById('ver-result').value=v.result||'reviewing';document.getElementById('ver-comment').value=v.comment||'';document.getElementById('ver-link').value=v.link||'';
-  document.getElementById('ver-modal').style.display='flex';
+function closeDocModal() { document.getElementById('doc-modal').style.display = 'none'; }
+function saveDoc() {
+  var name = document.getElementById('doc-name').value.trim(); if (!name) { alert('請填寫文件名稱'); return; }
+  var payload = { name, type:document.getElementById('doc-type').value, reviewDays:parseInt(document.getElementById('doc-review-days').value)||14, note:document.getElementById('doc-note').value.trim() };
+  if (editingDocId) { var idx = docs.findIndex(function(d) { return d.id === editingDocId; }); if (idx !== -1) docs[idx] = Object.assign({}, docs[idx], payload); }
+  else { docs.push(Object.assign({ id:uid(), versions:[] }, payload)); }
+  docsSave(); closeDocModal(); renderDocs(); updateDocPendingCount();
 }
-function closeVerModal(){document.getElementById('ver-modal').style.display='none';}
-function saveVersion(){
-  const docId=document.getElementById('ver-doc-id').value,editIdx=parseInt(document.getElementById('ver-edit-idx').value);
-  const date=document.getElementById('ver-date').value;if(!date){alert('請填寫送審日期');return;}
-  const doc=docs.find(d=>d.id===docId);if(!doc)return;
-  const ver={date,replyDate:document.getElementById('ver-reply-date').value||'',result:document.getElementById('ver-result').value,comment:document.getElementById('ver-comment').value.trim(),link:document.getElementById('ver-link').value.trim()};
-  if(editIdx>=0){doc.versions[editIdx]=ver;}else{doc.versions.push(ver);}
-  docsSave();closeVerModal();renderDocs();updateDocPendingCount();
-  const card=document.getElementById('doccard-'+docId);if(card&&!card.classList.contains('open'))card.classList.add('open');
+async function deleteDoc(id) {
+  if (!await toastConfirm('確定要刪除此文件及所有送審記錄？')) return;
+  docs = docs.filter(function(d) { return d.id !== id; }); docsSave(); renderDocs(); updateDocPendingCount();
 }
-async function deleteVersion(docId,idx){
-  if(!await toastConfirm('確定要刪除此送審版次？'))return; // ★ Fix 5
-  const doc=docs.find(d=>d.id===docId);if(!doc)return;
-  doc.versions.splice(idx,1);docsSave();renderDocs();updateDocPendingCount();
+function openAddVerModal(docId) {
+  document.getElementById('ver-modal-title').textContent = '新增送審版次';
+  document.getElementById('ver-doc-id').value = docId; document.getElementById('ver-edit-idx').value = '-1';
+  document.getElementById('ver-date').value = todayStr(); document.getElementById('ver-reply-date').value = '';
+  document.getElementById('ver-result').value = 'reviewing'; document.getElementById('ver-comment').value = ''; document.getElementById('ver-link').value = '';
+  document.getElementById('ver-modal').style.display = 'flex';
+}
+function editVersion(docId, idx) {
+  var doc = docs.find(function(d) { return d.id === docId; }); if (!doc) return; var v = doc.versions[idx];
+  document.getElementById('ver-modal-title').textContent = '編輯送審版次';
+  document.getElementById('ver-doc-id').value = docId; document.getElementById('ver-edit-idx').value = idx;
+  document.getElementById('ver-date').value = v.date||''; document.getElementById('ver-reply-date').value = v.replyDate||'';
+  document.getElementById('ver-result').value = v.result||'reviewing'; document.getElementById('ver-comment').value = v.comment||''; document.getElementById('ver-link').value = v.link||'';
+  document.getElementById('ver-modal').style.display = 'flex';
+}
+function closeVerModal() { document.getElementById('ver-modal').style.display = 'none'; }
+function saveVersion() {
+  var docId = document.getElementById('ver-doc-id').value, editIdx = parseInt(document.getElementById('ver-edit-idx').value);
+  var date = document.getElementById('ver-date').value; if (!date) { alert('請填寫送審日期'); return; }
+  var doc = docs.find(function(d) { return d.id === docId; }); if (!doc) return;
+  var ver = { date, replyDate:document.getElementById('ver-reply-date').value||'', result:document.getElementById('ver-result').value, comment:document.getElementById('ver-comment').value.trim(), link:document.getElementById('ver-link').value.trim() };
+  if (editIdx >= 0) { doc.versions[editIdx] = ver; } else { doc.versions.push(ver); }
+  docsSave(); closeVerModal(); renderDocs(); updateDocPendingCount();
+  var card = document.getElementById('doccard-'+docId); if (card && !card.classList.contains('open')) card.classList.add('open');
+}
+async function deleteVersion(docId, idx) {
+  if (!await toastConfirm('確定要刪除此送審版次？')) return;
+  var doc = docs.find(function(d) { return d.id === docId; }); if (!doc) return;
+  doc.versions.splice(idx, 1); docsSave(); renderDocs(); updateDocPendingCount();
 }
 
-// ── QUALITY INSPECTION ──
-const QI_KEY = 'construction_qi_v1';
-var qualityItems = [];
-function qiSave(){ try{localStorage.setItem(QI_KEY,JSON.stringify(qualityItems));}catch(e){} }
-function qiLoad(){ try{const r=localStorage.getItem(QI_KEY);return r?JSON.parse(r):[];}catch(e){return[];} }
-function updateQiFailCount(){
-  const n=qualityItems.filter(q=>q.result==='fail'||q.result==='recheck').length;
-  const el=document.getElementById('qi-fail-count');
-  if(el){el.textContent=n;el.style.display=n?'inline-flex':'none';}
+// ── QUALITY ──
+function updateQiFailCount() {
+  var n = qualityItems.filter(function(q) { return q.result === 'fail' || q.result === 'recheck'; }).length;
+  var el = document.getElementById('qi-fail-count');
+  if (el) { el.textContent = n; el.style.display = n ? 'inline-flex' : 'none'; }
 }
-function populateQiMonthFilter(){
-  const months=[...new Set(qualityItems.map(q=>(q.date||'').slice(0,7)).filter(Boolean))].sort();
-  const sel=document.getElementById('qi-filter-month');if(!sel)return;
-  const cur=sel.value;
-  sel.innerHTML='<option value="">全部月份</option>'+months.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年')}月</option>`).join('');
+function populateQiMonthFilter() {
+  var seen = {}, months = [];
+  qualityItems.forEach(function(q) { var m = (q.date||'').slice(0,7); if (m && !seen[m]) { seen[m] = 1; months.push(m); } });
+  months.sort();
+  var sel = document.getElementById('qi-filter-month'); if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">全部月份</option>' + months.map(function(m) {
+    return '<option value="' + m + '"' + (m === cur ? ' selected' : '') + '>' + m.replace('-','年') + '月</option>';
+  }).join('');
 }
-function renderQiStats(){
-  const total=qualityItems.length,pass=qualityItems.filter(q=>q.result==='pass').length;
-  const fail=qualityItems.filter(q=>q.result==='fail').length,recheck=qualityItems.filter(q=>q.result==='recheck').length;
-  const el=document.getElementById('qi-stat-grid');if(!el)return;
-  el.innerHTML=`
-    <div class="stat-card"><div class="stat-label">總抽驗次數</div><div class="stat-value">${total}</div><div class="stat-sub">筆記錄</div></div>
-    <div class="stat-card teal"><div class="stat-label">合格率</div><div class="stat-value">${total?Math.round(pass/total*100)+'%':'—'}</div><div class="stat-sub">${pass} 筆合格</div></div>
-    <div class="stat-card red"><div class="stat-label">不合格</div><div class="stat-value">${fail}</div><div class="stat-sub">需改善</div></div>
-    <div class="stat-card amber"><div class="stat-label">待複驗</div><div class="stat-value">${recheck}</div><div class="stat-sub">待追蹤</div></div>
-  `;
+function renderQiRateGrid() {
+  var el = document.getElementById('qi-rate-grid'); if (!el) return;
+  var total = qualityItems.length;
+  if (!total) { el.innerHTML = ''; return; }
+  var pass = qualityItems.filter(function(q) { return q.result === 'pass'; }).length;
+  var fail = qualityItems.filter(function(q) { return q.result === 'fail'; }).length;
+  var recheck = qualityItems.filter(function(q) { return q.result === 'recheck'; }).length;
+  var pR = Math.round(pass/total*100), fR = Math.round(fail/total*100), rR = Math.round(recheck/total*100);
+  el.innerHTML =
+    '<div class="qi-rate-card"><div class="qi-rate-label">整體合格率</div><div class="qi-rate-bar-wrap"><div class="qi-rate-value" style="color:var(--c-teal)">' + pR + '%</div><div class="qi-rate-bar-track"><div class="qi-rate-bar-fill" style="width:' + pR + '%;background:linear-gradient(90deg,#0d9488,#2dd4bf)"></div></div><span style="font-size:11px;color:var(--text-muted)">' + pass + '/' + total + '</span></div></div>' +
+    '<div class="qi-rate-card"><div class="qi-rate-label">不合格比率</div><div class="qi-rate-bar-wrap"><div class="qi-rate-value" style="color:var(--c-red)">' + fR + '%</div><div class="qi-rate-bar-track"><div class="qi-rate-bar-fill" style="width:' + fR + '%;background:linear-gradient(90deg,#dc2626,#f87171)"></div></div><span style="font-size:11px;color:var(--text-muted)">' + fail + '/' + total + '</span></div></div>' +
+    '<div class="qi-rate-card"><div class="qi-rate-label">待複驗比率</div><div class="qi-rate-bar-wrap"><div class="qi-rate-value" style="color:var(--c-amber)">' + rR + '%</div><div class="qi-rate-bar-track"><div class="qi-rate-bar-fill" style="width:' + rR + '%;background:linear-gradient(90deg,#d97706,#fbbf24)"></div></div><span style="font-size:11px;color:var(--text-muted)">' + recheck + '/' + total + '</span></div></div>';
 }
-function renderQiMonthSummary(){
-  const mo=todayStr().slice(0,7); // ★ Fix 1: 用本地時間
-  const thisMonth=qualityItems.filter(q=>(q.date||'').startsWith(mo));
-  const el=document.getElementById('qi-month-summary');if(!el)return;
-  if(!thisMonth.length){el.innerHTML='本月尚無抽驗記錄';return;}
-  const mPass=thisMonth.filter(q=>q.result==='pass').length;
-  const mFail=thisMonth.filter(q=>q.result==='fail').length;
-  const mRecheck=thisMonth.filter(q=>q.result==='recheck').length;
-  const mRate=Math.round(mPass/thisMonth.length*100);
-  el.innerHTML=`<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
-    <span>共 <strong>${thisMonth.length}</strong> 次抽驗</span>
-    <span style="color:var(--c-green)">✅ 合格 <strong>${mPass}</strong> 筆</span>
-    ${mFail?`<span style="color:var(--c-red)">❌ 不合格 <strong>${mFail}</strong> 筆</span>`:''}
-    ${mRecheck?`<span style="color:var(--c-amber)">⏳ 待複驗 <strong>${mRecheck}</strong> 筆</span>`:''}
-    <span style="font-family:'DM Mono',monospace;font-weight:600;color:#0d9488;">合格率 ${mRate}%</span>
-  </div>`;
+function renderQiStats() {
+  var total = qualityItems.length;
+  var pass = qualityItems.filter(function(q) { return q.result === 'pass'; }).length;
+  var fail = qualityItems.filter(function(q) { return q.result === 'fail'; }).length;
+  var recheck = qualityItems.filter(function(q) { return q.result === 'recheck'; }).length;
+  var el = document.getElementById('qi-stat-grid'); if (!el) return;
+  el.innerHTML =
+    '<div class="stat-card"><div class="stat-label">總抽驗次數</div><div class="stat-value">' + total + '</div><div class="stat-sub">筆記錄</div></div>' +
+    '<div class="stat-card teal"><div class="stat-label">合格率</div><div class="stat-value">' + (total ? Math.round(pass/total*100)+'%' : '—') + '</div><div class="stat-sub">' + pass + ' 筆合格</div></div>' +
+    '<div class="stat-card red"><div class="stat-label">不合格</div><div class="stat-value">' + fail + '</div><div class="stat-sub">需改善</div></div>' +
+    '<div class="stat-card amber"><div class="stat-label">待複驗</div><div class="stat-value">' + recheck + '</div><div class="stat-sub">待追蹤</div></div>';
 }
-function renderQi(){
-  renderQiRateGrid(); // ★ 渲染合格率進度條
-  const resultF=document.getElementById('qi-filter-result')?.value||'';
-  const monthF=document.getElementById('qi-filter-month')?.value||'';
-  const filtered=qualityItems.filter(q=>(!resultF||q.result===resultF)&&(!monthF||(q.date||'').startsWith(monthF))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const countEl=document.getElementById('qi-count');if(countEl)countEl.textContent=`共 ${filtered.length} 筆`;
-  renderQiStats();renderQiMonthSummary();
-  const list=document.getElementById('qi-list');if(!list)return;
-  if(!filtered.length){list.innerHTML='<div class="empty">目前沒有抽驗記錄。</div>';return;}
-  const resultLabel={pass:'合格',fail:'不合格',recheck:'待複驗'};
-  const resultCls={pass:'qi-result-pass',fail:'qi-result-fail',recheck:'qi-result-recheck'};
-  const escH=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  list.innerHTML=filtered.map(q=>`
-    <div class="qi-card">
-      <div class="qi-card-top">
-        <span class="badge ${resultCls[q.result]||''}">${resultLabel[q.result]||q.result}</span>
-        <div class="qi-item-name">${escH(q.item)}</div>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);flex-shrink:0">${q.date||'—'}</span>
-      </div>
-      ${q.standard?`<div class="qi-body">📐 規範：${escH(q.standard)}</div>`:''}
-      ${q.inspector?`<div class="qi-meta"><span>👤 ${escH(q.inspector)}</span></div>`:''}
-      ${q.notes?`<div class="card-alert ${q.result==='fail'?'alert-issue':'alert-warn'}" style="margin-top:8px;">${escH(q.notes).replace(/\n/g,'<br>')}</div>`:''}
-      ${q.link?`<div style="margin-top:6px;"><a href="${escH(q.link)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--c-blue);text-decoration:none;">📎 照片連結</a></div>`:''}
-      <div class="qi-actions">
-        <button class="btn-sm edit" onclick="editQi('${q.id}')">編輯</button>
-        <button class="btn-sm del"  onclick="deleteQi('${q.id}')">刪除</button>
-      </div>
-    </div>`).join('');
+function renderQiMonthSummary() {
+  // Fix 1: 用 todayStr() 取本月
+  var mo = todayStr().slice(0,7);
+  var thisMonth = qualityItems.filter(function(q) { return (q.date||'').startsWith(mo); });
+  var el = document.getElementById('qi-month-summary'); if (!el) return;
+  if (!thisMonth.length) { el.innerHTML = '本月尚無抽驗記錄'; return; }
+  var mPass = thisMonth.filter(function(q) { return q.result === 'pass'; }).length;
+  var mFail = thisMonth.filter(function(q) { return q.result === 'fail'; }).length;
+  var mRe   = thisMonth.filter(function(q) { return q.result === 'recheck'; }).length;
+  var mRate = Math.round(mPass/thisMonth.length*100);
+  el.innerHTML = '<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">' +
+    '<span>共 <strong>' + thisMonth.length + '</strong> 次抽驗</span>' +
+    '<span style="color:var(--c-green)">✅ 合格 <strong>' + mPass + '</strong> 筆</span>' +
+    (mFail ? '<span style="color:var(--c-red)">❌ 不合格 <strong>' + mFail + '</strong> 筆</span>' : '') +
+    (mRe   ? '<span style="color:var(--c-amber)">⏳ 待複驗 <strong>' + mRe + '</strong> 筆</span>' : '') +
+    '<span style="font-family:\'DM Mono\',monospace;font-weight:600;color:#0d9488;">合格率 ' + mRate + '%</span>' +
+  '</div>';
 }
-let editingQiId=null;
-function openAddQiModal(){editingQiId=null;document.getElementById('qi-modal-title').textContent='新增抽驗記錄';['qi-item','qi-standard','qi-inspector','qi-notes','qi-link'].forEach(id=>document.getElementById(id).value='');document.getElementById('qi-date').value=todayStr();document.getElementById('qi-result').value='pass';document.getElementById('qi-modal').style.display='flex';}
-function editQi(id){const q=qualityItems.find(x=>x.id===id);if(!q)return;editingQiId=id;document.getElementById('qi-modal-title').textContent='編輯抽驗記錄';document.getElementById('qi-date').value=q.date||'';document.getElementById('qi-result').value=q.result||'pass';document.getElementById('qi-item').value=q.item||'';document.getElementById('qi-standard').value=q.standard||'';document.getElementById('qi-inspector').value=q.inspector||'';document.getElementById('qi-notes').value=q.notes||'';document.getElementById('qi-link').value=q.link||'';document.getElementById('qi-modal').style.display='flex';}
-function closeQiModal(){document.getElementById('qi-modal').style.display='none';}
-function saveQi(){
-  const item=document.getElementById('qi-item').value.trim();if(!item){alert('請填寫工項');return;}
-  const payload={date:document.getElementById('qi-date').value,result:document.getElementById('qi-result').value,item,standard:document.getElementById('qi-standard').value.trim(),inspector:document.getElementById('qi-inspector').value.trim(),notes:document.getElementById('qi-notes').value.trim(),link:document.getElementById('qi-link').value.trim()};
-  if(editingQiId){const idx=qualityItems.findIndex(q=>q.id===editingQiId);if(idx!==-1)qualityItems[idx]={...qualityItems[idx],...payload};}
-  else{qualityItems.push({id:uid(),...payload});}
-  qiSave();closeQiModal();populateQiMonthFilter();renderQi();updateQiFailCount();renderDashboard();
+function renderQi() {
+  renderQiRateGrid();
+  var resultF = document.getElementById('qi-filter-result') ? document.getElementById('qi-filter-result').value : '';
+  var monthF  = document.getElementById('qi-filter-month')  ? document.getElementById('qi-filter-month').value  : '';
+  var filtered = qualityItems.filter(function(q) {
+    return (!resultF || q.result === resultF) && (!monthF || (q.date||'').startsWith(monthF));
+  }).sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); });
+  var countEl = document.getElementById('qi-count'); if (countEl) countEl.textContent = '共 ' + filtered.length + ' 筆';
+  renderQiStats(); renderQiMonthSummary();
+  var list = document.getElementById('qi-list'); if (!list) return;
+  if (!filtered.length) { list.innerHTML = '<div class="empty">目前沒有抽驗記錄。</div>'; return; }
+  var rLabel = { pass:'合格', fail:'不合格', recheck:'待複驗' };
+  var rCls   = { pass:'qi-result-pass', fail:'qi-result-fail', recheck:'qi-result-recheck' };
+  list.innerHTML = filtered.map(function(q) {
+    return '<div class="qi-card">' +
+      '<div class="qi-card-top">' +
+        '<span class="badge ' + (rCls[q.result]||'') + '">' + (rLabel[q.result]||q.result) + '</span>' +
+        '<div class="qi-item-name">' + esc(q.item) + '</div>' +
+        '<span style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text-muted);flex-shrink:0">' + (q.date||'—') + '</span>' +
+      '</div>' +
+      (q.standard  ? '<div class="qi-body">📐 規範：' + esc(q.standard) + '</div>' : '') +
+      (q.inspector ? '<div class="qi-meta"><span>👤 ' + esc(q.inspector) + '</span></div>' : '') +
+      (q.notes     ? '<div class="card-alert ' + (q.result==='fail'?'alert-issue':'alert-warn') + '" style="margin-top:8px;">' + esc(q.notes).replace(/\n/g,'<br>') + '</div>' : '') +
+      (q.link      ? '<div style="margin-top:6px;"><a href="' + esc(q.link) + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--c-blue);text-decoration:none;">📎 照片連結</a></div>' : '') +
+      '<div class="qi-actions">' +
+        '<button class="btn-sm edit" onclick="editQi(\'' + q.id + '\')">編輯</button>' +
+        '<button class="btn-sm del" onclick="deleteQi(\'' + q.id + '\')">刪除</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
-async function deleteQi(id){if(!await toastConfirm('確定要刪除此抽驗記錄？'))return; // ★ Fix 5qualityItems=qualityItems.filter(q=>q.id!==id);qiSave();populateQiMonthFilter();renderQi();updateQiFailCount();renderDashboard();}
+function openAddQiModal() {
+  editingQiId = null; document.getElementById('qi-modal-title').textContent = '新增抽驗記錄';
+  ['qi-item','qi-standard','qi-inspector','qi-notes','qi-link'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('qi-date').value = todayStr(); document.getElementById('qi-result').value = 'pass';
+  document.getElementById('qi-modal').style.display = 'flex';
+}
+function editQi(id) {
+  var q = qualityItems.find(function(x) { return x.id === id; }); if (!q) return;
+  editingQiId = id; document.getElementById('qi-modal-title').textContent = '編輯抽驗記錄';
+  document.getElementById('qi-date').value = q.date||''; document.getElementById('qi-result').value = q.result||'pass';
+  document.getElementById('qi-item').value = q.item||''; document.getElementById('qi-standard').value = q.standard||'';
+  document.getElementById('qi-inspector').value = q.inspector||''; document.getElementById('qi-notes').value = q.notes||'';
+  document.getElementById('qi-link').value = q.link||''; document.getElementById('qi-modal').style.display = 'flex';
+}
+function closeQiModal() { document.getElementById('qi-modal').style.display = 'none'; }
+function saveQi() {
+  var item = document.getElementById('qi-item').value.trim(); if (!item) { alert('請填寫工項'); return; }
+  var payload = { date:document.getElementById('qi-date').value, result:document.getElementById('qi-result').value, item, standard:document.getElementById('qi-standard').value.trim(), inspector:document.getElementById('qi-inspector').value.trim(), notes:document.getElementById('qi-notes').value.trim(), link:document.getElementById('qi-link').value.trim() };
+  if (editingQiId) { var idx = qualityItems.findIndex(function(q) { return q.id === editingQiId; }); if (idx !== -1) qualityItems[idx] = Object.assign({}, qualityItems[idx], payload); }
+  else { qualityItems.push(Object.assign({ id:uid() }, payload)); }
+  qiSave(); closeQiModal(); populateQiMonthFilter(); renderQi(); updateQiFailCount(); renderDashboard();
+}
+async function deleteQi(id) {
+  if (!await toastConfirm('確定要刪除此抽驗記錄？')) return;
+  qualityItems = qualityItems.filter(function(q) { return q.id !== id; });
+  qiSave(); populateQiMonthFilter(); renderQi(); updateQiFailCount(); renderDashboard();
+}
 
 // ── EXPORT ──
-function exportCSV(){
-  const onlyIssues=document.getElementById('exp-issues').checked&&!document.getElementById('exp-all').checked;
-  const data=onlyIssues?entries.filter(e=>e.status==='issue'):entries;
-  const sorted=[...data].sort((a,b)=>a.date.localeCompare(b.date));
-  const rows=[['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
-  const B2={normal:'正常施工',milestone:'里程碑',warn:'待注意',pending:'待決議',issue:'異常'};
-  sorted.forEach(e=>rows.push([e.date,e.weather||'',B2[e.status]||e.status,e.title,e.sub||'',e.alert||'',e.defectNo||'']));
-  downloadCSV(rows,'施工時間軸_'+todayStr()+'.csv'); // ★ Fix 1
+function exportCSV() {
+  var onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
+  var data = onlyIssues ? entries.filter(function(e) { return e.status === 'issue'; }) : entries;
+  var sorted = data.slice().sort(function(a,b) { return a.date.localeCompare(b.date); });
+  var rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
+  var B2 = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
+  sorted.forEach(function(e) { rows.push([e.date,e.weather||'',B2[e.status]||e.status,e.title,e.sub||'',e.alert||'',e.defectNo||'']); });
+  downloadCSV(rows, '施工時間軸_' + todayStr() + '.csv');
 }
-function exportDefectsCSV(){
-  const rows=[['改善事項通知單號','缺失說明','相關日期','狀態','追蹤備註']];
-  const statusMap={open:'未結案',replied:'承商已回覆',closed:'已結案'};
-  defects.sort((a,b)=>b.date.localeCompare(a.date)).forEach(d=>rows.push([d.no||'',d.title,d.date||'',statusMap[d.status]||d.status,d.notes||'']));
-  downloadCSV(rows,'改善事項通知單追蹤_'+new Date().toISOString().slice(0,10)+'.csv');
+function exportDefectsCSV() {
+  var rows = [['改善事項通知單號','缺失說明','相關日期','狀態','追蹤備註']];
+  var sMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
+  defects.slice().sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); }).forEach(function(d) {
+    rows.push([d.no||'',d.title,d.date||'',sMap[d.status]||d.status,d.notes||'']);
+  });
+  downloadCSV(rows, '改善事項通知單追蹤_' + todayStr() + '.csv');
 }
-function exportQiCSV(){
-  const rows=[['抽驗日期','工項','檢驗規範／標準','抽驗人員','抽驗結果','備註','照片連結']];
-  const rl={pass:'合格',fail:'不合格',recheck:'待複驗'};
-  qualityItems.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(q=>rows.push([q.date||'',q.item||'',q.standard||'',q.inspector||'',rl[q.result]||q.result,q.notes||'',q.link||'']));
-  downloadCSV(rows,'品質抽驗記錄_'+new Date().toISOString().slice(0,10)+'.csv');
+function exportQiCSV() {
+  var rows = [['抽驗日期','工項','檢驗規範／標準','抽驗人員','抽驗結果','備註','照片連結']];
+  var rl = { pass:'合格', fail:'不合格', recheck:'待複驗' };
+  qualityItems.slice().sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); }).forEach(function(q) {
+    rows.push([q.date||'',q.item||'',q.standard||'',q.inspector||'',rl[q.result]||q.result,q.notes||'',q.link||'']);
+  });
+  downloadCSV(rows, '品質抽驗記錄_' + todayStr() + '.csv');
 }
-function downloadCSV(rows,filename){
-  const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+function downloadCSV(rows, filename) {
+  var csv = '\uFEFF' + rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
 }
-function printReport(){
-  document.getElementById('print-time').textContent=new Date().toLocaleString('zh-TW');
+function printReport() {
+  document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
   switchTab('timeline');
-  setTimeout(()=>window.print(),200);
+  setTimeout(function() { window.print(); }, 200);
 }
 
 // ── BOOT ──
