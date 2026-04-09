@@ -437,7 +437,10 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
             <option value="warn">待注意</option><option value="pending">待決議</option><option value="issue">異常／已開單</option>
           </select>
         </div>
-        <div class="field"><label>工項說明</label><textarea id="f-title" placeholder="例：沉砂池開挖、防溢座施作"></textarea></div>
+        <div class="field"><label>一、工程進行情況</label><textarea id="f-title-1" placeholder="描述本日工程進行情況…" style="min-height:56px;"></textarea></div>
+        <div class="field"><label>二、品質抽查驗工作項目</label><textarea id="f-title-2" placeholder="描述品質抽查驗相關工作…" style="min-height:56px;"></textarea></div>
+        <div class="field"><label>三、督導環保及職安衛事項</label><textarea id="f-title-3" placeholder="描述環保、職業安全衛生督導情況…" style="min-height:56px;"></textarea></div>
+        <div class="field"><label>四、其他重要事項</label><textarea id="f-title-4" placeholder="其他重要事項…" style="min-height:48px;"></textarea></div>
         <div class="field">
           <label>出工人數</label>
           <input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）">
@@ -988,7 +991,10 @@ document.getElementById('f-status').addEventListener('change', function() {
 function resetFormState() {
   editingId = null;
   document.getElementById('f-date').value    = todayStr();
-  document.getElementById('f-title').value   = '';
+  document.getElementById('f-title-1').value = '';
+  document.getElementById('f-title-2').value = '';
+  document.getElementById('f-title-3').value = '';
+  document.getElementById('f-title-4').value = '';
   document.getElementById('f-sub').value     = '';
   document.getElementById('f-alert').value   = '';
   document.getElementById('f-defect-no').value = '';
@@ -1007,11 +1013,22 @@ async function submitEntry() {
   var date    = document.getElementById('f-date').value;
   var weather = document.getElementById('f-weather').value;
   var status  = document.getElementById('f-status').value;
-  var title   = document.getElementById('f-title').value.trim();
+  var t1 = document.getElementById('f-title-1').value.trim();
+  var t2 = document.getElementById('f-title-2').value.trim();
+  var t3 = document.getElementById('f-title-3').value.trim();
+  var t4 = document.getElementById('f-title-4').value.trim();
+  // 組合成結構化工項說明
+  var titleParts = [];
+  if (t1) titleParts.push('一、工程進行情況\n' + t1);
+  if (t2) titleParts.push('二、品質抽查驗工作項目\n' + t2);
+  if (t3) titleParts.push('三、督導環保及職安衛事項\n' + t3);
+  if (t4) titleParts.push('四、其他重要事項\n' + t4);
+  var title = titleParts.join('\n\n');
   var sub     = document.getElementById('f-sub').value.trim();
   var alertTx = document.getElementById('f-alert').value.trim();
   var defectNo= document.getElementById('f-defect-no').value.trim();
-  if (!date || !title) { alert('請填寫日期和工項說明'); return; }
+  if (!date) { alert('請填寫日期'); return; }
+  if (!title) { alert('請至少填寫一項工項說明（一～四）'); return; }
   var btn = document.getElementById('btn-submit');
   btn.disabled = true;
   if (API_URL) {
@@ -1049,7 +1066,13 @@ function editEntry(id) {
   document.getElementById('f-date').value    = e.date;
   document.getElementById('f-weather').value = e.weather || '☀️ 晴';
   document.getElementById('f-status').value  = e.status;
-  document.getElementById('f-title').value   = e.title;
+  // 解析回四個欄位（用字串分割）
+  var titleRaw = e.title || '';
+  var titleFields = parseTitle(titleRaw);
+  document.getElementById('f-title-1').value = titleFields[0];
+  document.getElementById('f-title-2').value = titleFields[1];
+  document.getElementById('f-title-3').value = titleFields[2];
+  document.getElementById('f-title-4').value = titleFields[3];
   document.getElementById('f-sub').value     = e.sub || '';
   document.getElementById('f-alert').value   = e.alert || '';
   document.getElementById('f-defect-no').value = e.defectNo || '';
@@ -1109,6 +1132,43 @@ function formatDate(d) {
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+function parseTitle(raw) {
+  var HDRS = ['一、工程進行情況','二、品質抽查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
+  var result = ['','','',''];
+  if (!raw) return result;
+  // 新格式：含有標題行
+  var hasHeaders = HDRS.some(function(h){ return raw.indexOf(h) >= 0; });
+  if (!hasHeaders) { result[0] = raw; return result; }
+  // 找每個標題的位置，截取到下一個標題前
+  HDRS.forEach(function(h, hi) {
+    var pos = raw.indexOf(h);
+    if (pos < 0) return;
+    var afterHeader = raw.indexOf('\n', pos);
+    if (afterHeader < 0) return;
+    var segStart = afterHeader + 1;
+    // 找下一個標題
+    var segEnd = raw.length;
+    for (var ni = hi+1; ni < HDRS.length; ni++) {
+      var np = raw.indexOf('\n\n' + HDRS[ni], segStart);
+      if (np >= 0 && np < segEnd) segEnd = np;
+    }
+    result[hi] = raw.slice(segStart, segEnd).trim();
+  });
+  return result;
+}
+
+function formatTitle(raw) {
+  if (!raw) return '';
+  var lines = raw.split('\n');
+  var headers = ['一、工程進行情況','二、品質抽查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
+  return lines.map(function(line) {
+    var trimmed = line.trim();
+    var isHeader = headers.some(function(h) { return trimmed === h; });
+    if (isHeader) return '<span style="font-weight:700;color:var(--text-primary)">' + esc(trimmed) + '</span>';
+    return esc(line);
+  }).join('<br>');
+}
+
 function render() {
   try {
     var filtered = getFiltered().sort(function(a,b) { return b.date.localeCompare(a.date); });
@@ -1161,7 +1221,7 @@ function render() {
               '<button class="btn-sm del" onclick="deleteEntry(\'' + e.id + '\')">刪除</button>' +
             '</div>' +
           '</div>' +
-          '<div class="card-title">' + esc(e.title).replace(/\n/g,'<br>') + '</div>' +
+          '<div class="card-title">' + formatTitle(e.title) + '</div>' +
           (e.sub   ? '<div class="card-sub">' + esc(e.sub) + '</div>' : '') +
           (e.alert ? '<div class="card-alert ' + alertCls + '">' + esc(e.alert).replace(/\n/g,'<br>') + '</div>' : '') +
         '</div>' +
@@ -1239,7 +1299,7 @@ function renderDashboard() {
     ? openItems.map(function(e) {
         return '<div class="mini-issue ' + (e.status==='issue'?'open':'pending') + '">' +
           '<div class="mini-issue-date">' + e.date + '</div>' +
-          '<div class="mini-issue-title">' + esc(e.title.split('\n')[0]) + '</div>' +
+          '<div class="mini-issue-title">' + (function(t){ var lines = t.split('\n'); var content = lines.find(function(l){ return l && l.indexOf('、') < 0 && l.trim(); }); return esc(content || lines[0]); })(e.title) + '</div>' +
           (e.alert ? '<div style="margin-top:3px;font-size:11px;opacity:.8">' + esc(e.alert.slice(0,60)) + (e.alert.length>60?'…':'') + '</div>' : '') +
           '<span class="mini-issue-status ' + (e.status==='issue'?'iss-open':'iss-pending') + '">' + sLabel[e.status] + '</span>' +
         '</div>';
