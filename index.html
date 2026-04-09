@@ -582,6 +582,15 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
         <div class="export-section">
           <h3>🔬 品質抽驗記錄 CSV</h3><p>匯出所有品質抽驗記錄，包含工項、規範、結果及備註。</p>
           <button class="btn-export csv" onclick="exportQiCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載品質抽驗 CSV</button>
+        <div class="export-section">
+          <h3>🔧 資料診斷 / 手動還原</h3>
+          <p>如果改善事項、文件送審、品質抽驗資料消失，請先點擊「診斷」確認 localStorage 狀態，再點「強制重新讀取」。</p>
+          <div id="storage-diag-result" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:12px;line-height:1.9;display:none;"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-export csv" onclick="diagStorage()" style="font-size:12px;padding:8px 14px;">🔍 診斷 localStorage</button>
+            <button class="btn-export csv" onclick="forceReload()" style="font-size:12px;padding:8px 14px;background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);">🔄 強制重新讀取</button>
+          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -819,6 +828,15 @@ async function init() {
     defects = defectLoad();
     docs = docsLoad();
     qualityItems = qiLoad();
+    // Debug: log what was loaded from localStorage
+    console.log('[Init] Loaded from localStorage:', {
+      defects: defects.length,
+      docs: docs.length,
+      qualityItems: qualityItems.length,
+      defectKey: localStorage.getItem(DEFECT_KEY) ? 'HAS DATA' : 'EMPTY',
+      docsKey: localStorage.getItem(DOCS_KEY) ? 'HAS DATA' : 'EMPTY',
+      qiKey: localStorage.getItem(QI_KEY) ? 'HAS DATA' : 'EMPTY',
+    });
 
     if (API_URL) {
       setSync('載入中…', 'sync-busy');
@@ -1629,6 +1647,50 @@ function printReport() {
   document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
   switchTab('timeline');
   setTimeout(function() { window.print(); }, 200);
+}
+
+
+// ── 資料診斷工具 ──
+function diagStorage() {
+  var keys = [
+    { name: '施工時間軸', key: LOCAL_KEY },
+    { name: '改善事項通知單', key: DEFECT_KEY },
+    { name: '文件送審', key: DOCS_KEY },
+    { name: '品質抽驗', key: QI_KEY },
+    { name: '工程進度', key: PROGRESS_KEY },
+  ];
+  var lines = ['<strong>localStorage 診斷結果：</strong><br>'];
+  keys.forEach(function(k) {
+    var raw = localStorage.getItem(k.key);
+    if (!raw) {
+      lines.push('❌ <strong>' + k.name + '</strong>（' + k.key + '）：<span style="color:var(--c-red)">無資料</span>');
+    } else {
+      try {
+        var parsed = JSON.parse(raw);
+        var count = Array.isArray(parsed) ? parsed.length + ' 筆' : '已存';
+        lines.push('✅ <strong>' + k.name + '</strong>（' + k.key + '）：<span style="color:var(--c-green)">' + count + '（' + raw.length + ' bytes）</span>');
+      } catch(e) {
+        lines.push('⚠️ <strong>' + k.name + '</strong>（' + k.key + '）：<span style="color:var(--c-amber)">JSON 損壞</span>');
+      }
+    }
+  });
+  lines.push('<br><strong>目前記憶體中：</strong>');
+  lines.push('entries: ' + entries.length + ' 筆　defects: ' + defects.length + ' 筆　docs: ' + docs.length + ' 筆　qualityItems: ' + qualityItems.length + ' 筆');
+  var el = document.getElementById('storage-diag-result');
+  el.innerHTML = lines.join('<br>');
+  el.style.display = 'block';
+}
+
+function forceReload() {
+  defects = defectLoad();
+  docs = docsLoad();
+  qualityItems = qiLoad();
+  renderDefects(); updateOpenCount();
+  renderDocs(); updateDocPendingCount();
+  populateQiMonthFilter(); renderQi(); updateQiFailCount();
+  renderDashboard();
+  diagStorage();
+  showErrBanner('已強制重新讀取！defects:' + defects.length + ' docs:' + docs.length + ' qi:' + qualityItems.length);
 }
 
 // ── BOOT ──
