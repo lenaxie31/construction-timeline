@@ -297,9 +297,12 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .ver-row{position:relative;padding:8px 0;}
 .ver-dot{position:absolute;left:-28px;top:13px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 2px var(--border);background:var(--text-muted);z-index:1;}
 .ver-dot.approved{background:var(--c-green);box-shadow:0 0 0 2px var(--c-green-border);}
+.ver-dot.approved_mod{background:#0d7a5a;box-shadow:0 0 0 2px #6ee7b7;}
+.ver-dot.approved_after{background:#166534;box-shadow:0 0 0 2px #bbf7d0;}
 .ver-dot.rejected{background:var(--c-red);box-shadow:0 0 0 2px var(--c-red-border);}
-.ver-dot.pending{background:var(--c-amber);box-shadow:0 0 0 2px var(--c-amber-border);}
 .ver-dot.reviewing{background:var(--c-blue);box-shadow:0 0 0 2px var(--c-blue-border);}
+.ver-dot.pending{background:#94a3b8;box-shadow:0 0 0 2px #cbd5e1;}
+.ver-dot.sent{background:var(--c-purple);box-shadow:0 0 0 2px var(--c-purple-border);}
 .ver-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
 .ver-no{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:var(--text-muted);}
 .ver-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);}
@@ -308,9 +311,12 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .ver-deadline.ok{color:var(--text-muted);}
 .ver-result{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;border:1px solid;}
 .ver-result.approved{background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border);}
+.ver-result.approved_mod{background:#ecfdf5;color:#0d7a5a;border-color:#6ee7b7;}
+.ver-result.approved_after{background:#f0fdf4;color:#166534;border-color:#bbf7d0;}
 .ver-result.rejected{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
-.ver-result.pending{background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
 .ver-result.reviewing{background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);}
+.ver-result.pending{background:#F1F5F9;color:#475569;border-color:#cbd5e1;}
+.ver-result.sent{background:var(--c-purple-bg);color:var(--c-purple);border-color:var(--c-purple-border);}
 .ver-comment{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:3px;}
 .ver-link{font-size:11px;color:var(--c-blue);text-decoration:none;margin-top:3px;display:inline-block;}
 .ver-link:hover{text-decoration:underline;}
@@ -348,6 +354,41 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .toast-btn-ok{font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;border:none;background:var(--c-red);color:#fff;cursor:pointer;}
 .toast-btn-ok:hover{opacity:.85;}
 
+
+/* QI TABLE */
+.qi-table{width:100%;border-collapse:collapse;font-size:12px;min-width:1100px;}
+.qi-table th{background:var(--text-primary);color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2;}
+.qi-table td{padding:7px 10px;border-bottom:1px solid var(--border-light);vertical-align:middle;white-space:nowrap;}
+.qi-table tr:hover td{background:var(--bg);}
+.qi-table tr.row-completed td{background:rgba(22,163,74,0.04);}
+.qi-check-yes{color:var(--c-green);font-weight:700;font-size:14px;}
+.qi-check-no{color:var(--text-muted);font-size:14px;}
+.qi-progress-done{display:inline-block;background:var(--c-green);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.qi-progress-wip{display:inline-block;background:var(--c-amber-bg);color:var(--c-amber);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--c-amber-border);}
+.qi-table .item-red{color:var(--c-red);font-weight:600;}
+.qi-table .item-normal{color:var(--text-primary);}
+.qi-notice{display:inline-block;background:var(--c-red-bg);color:var(--c-red);font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;border:1px solid var(--c-red-border);}
+
+/* DOC CATEGORY CARD */
+.doc-cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.doc-cat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.doc-cat-card.plan::before{background:var(--c-blue);}
+.doc-cat-card.drawing::before{background:var(--c-purple);}
+.doc-cat-card.subplan::before{background:var(--c-teal);}
+.doc-cat-card.other::before{background:var(--c-amber);}
+.doc-cat-title{font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:10px;}
+.doc-cat-progress{height:8px;background:var(--border-light);border-radius:4px;overflow:hidden;margin-bottom:8px;}
+.doc-cat-fill{height:100%;border-radius:4px;transition:width .8s cubic-bezier(0.4,0,0.2,1);}
+.doc-cat-stats{display:flex;justify-content:space-between;align-items:center;}
+.doc-cat-pct{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;}
+.doc-cat-detail{font-size:11px;color:var(--text-muted);text-align:right;line-height:1.6;}
+
+/* DOC TYPE BADGES - updated */
+.dtype-plan{background:#EFF6FF;color:#1d4ed8;border-color:#bfdbfe;}
+.dtype-drawing{background:#F5F3FF;color:#6d28d9;border-color:#ddd6fe;}
+.dtype-subplan{background:var(--c-teal-bg);color:var(--c-teal);border-color:var(--c-teal-border);}
+.dtype-other{background:#F1F5F9;color:#475569;border-color:#cbd5e1;}
+
 /* MOBILE */
 .sidebar-toggle{display:none;}
 @media(max-width:720px){
@@ -377,7 +418,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
   .print-header{display:block!important;padding:0 0 16px;border-bottom:2px solid #000;margin-bottom:20px;}
 }
 .print-header{display:none;}
-</style>
+</style></style>
 </head>
 <body>
 
@@ -530,18 +571,34 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <!-- Documents -->
       <div class="tab-panel" id="panel-docs">
         <div class="doc-header"><h2>文件送審管理</h2><button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDocModal()">＋ 新增文件</button></div>
+
+        <!-- 三大類別儀表板進度卡 -->
+        <div id="doc-dashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+        <!-- 整體進度條 -->
         <div class="doc-progress-summary" id="doc-progress-summary" style="display:none">
-          <h3>送審進度總覽</h3>
+          <h3>整體送審進度</h3>
           <div class="progress-track" style="height:10px;margin-bottom:8px;"><div class="progress-fill green" id="doc-progress-fill" style="width:0%"></div></div>
           <div class="doc-progress-segments" id="doc-progress-segments"></div>
         </div>
+
         <div class="doc-filter-bar">
           <select class="filter-select" id="doc-filter-type" onchange="renderDocs()">
-            <option value="">全部類型</option><option value="plan">施工計畫書</option><option value="quality">品質文件</option>
-            <option value="drawing">細部設計圖說</option><option value="material">材料送審單</option><option value="test">測試／檢驗報告</option><option value="other">其他</option>
+            <option value="">全部類型</option>
+            <option value="plan">計畫書</option>
+            <option value="drawing">細部設計圖說</option>
+            <option value="subplan">分項計畫書</option>
+            <option value="other">其他</option>
           </select>
           <select class="filter-select" id="doc-filter-status" onchange="renderDocs()">
-            <option value="">全部狀態</option><option value="pending">待審</option><option value="reviewing">審查中</option><option value="rejected">退件</option><option value="approved">已核定</option>
+            <option value="">全部狀態</option>
+            <option value="pending">未送</option>
+            <option value="sent">已送</option>
+            <option value="reviewing">審查中</option>
+            <option value="approved">核定</option>
+            <option value="approved_mod">審查認可但有修正處</option>
+            <option value="approved_after">修正後核定</option>
+            <option value="rejected">退回修正</option>
           </select>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);cursor:pointer;">
             <input type="checkbox" id="doc-filter-overdue" onchange="renderDocs()" style="accent-color:var(--c-red)"> 僅顯示逾期
@@ -553,19 +610,58 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 
       <!-- Quality -->
       <div class="tab-panel" id="panel-quality">
-        <div class="qi-header"><h2>品質抽驗記錄</h2><button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增抽驗記錄</button></div>
+        <div class="qi-header">
+          <h2>品質抽驗記錄</h2>
+          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增抽驗記錄</button>
+        </div>
+        <!-- 統計卡 -->
+        <div class="stat-grid" id="qi-stat-grid" style="margin-bottom:16px;"></div>
+        <!-- 篩選 -->
         <div class="qi-filter-bar">
-          <select class="filter-select" id="qi-filter-result" onchange="renderQi()">
-            <option value="">全部結果</option><option value="pass">合格</option><option value="fail">不合格</option><option value="recheck">待複驗</option>
+          <select class="filter-select" id="qi-filter-type" onchange="renderQi()">
+            <option value="">全部進場類型</option>
+            <option value="材料抽驗">材料抽驗</option>
+            <option value="施工抽查">施工抽查</option>
+            <option value="不定期抽查">不定期抽查</option>
+          </select>
+          <select class="filter-select" id="qi-filter-progress" onchange="renderQi()">
+            <option value="">全部進度</option>
+            <option value="Completed">Completed</option>
+            <option value="製作中">製作中</option>
           </select>
           <select class="filter-select" id="qi-filter-month" onchange="renderQi()"><option value="">全部月份</option></select>
           <span class="filter-count" id="qi-count"></span>
         </div>
-        <div class="qi-rate-grid" id="qi-rate-grid"></div>
-        <div class="stat-grid" id="qi-stat-grid" style="margin-bottom:20px;"></div>
-        <div class="qi-month-box"><h3>本月抽驗摘要</h3><div id="qi-month-summary" style="font-size:13px;color:var(--text-muted);">載入中…</div></div>
-        <div class="qi-list" id="qi-list"></div>
+        <!-- 表格 -->
+        <div style="overflow-x:auto;">
+          <table class="qi-table" id="qi-table">
+            <thead>
+              <tr>
+                <th>N</th>
+                <th>材料進場或施工</th>
+                <th>項目名稱</th>
+                <th>自檢☑</th>
+                <th>自檢編號</th>
+                <th>自檢日期</th>
+                <th>申請者☑</th>
+                <th>申請編號</th>
+                <th>申請日期</th>
+                <th>抽查紀錄☑</th>
+                <th>抽驗日期</th>
+                <th>辦理進度</th>
+                <th>抽驗紀錄表號</th>
+                <th>抽驗報告號</th>
+                <th>抽驗人</th>
+                <th>改善通知單</th>
+                <th>改善期限</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="qi-tbody"></tbody>
+          </table>
+        </div>
       </div>
+
 
       <!-- Export -->
       <div class="tab-panel" id="panel-export">
@@ -620,7 +716,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <div class="modal-body">
         <div class="field"><label>文件名稱</label><input type="text" id="doc-name" placeholder="例：假設工程分項施工計畫書"></div>
         <div class="field-row">
-          <div class="field"><label>文件類型</label><select id="doc-type"><option value="plan">施工計畫書</option><option value="quality">品質計畫</option><option value="drawing">送審圖說</option><option value="material">材料送審單</option><option value="test">測試／檢驗報告</option><option value="other">其他</option></select></div>
+          <div class="field"><label>文件類型</label><select id="doc-type"><option value="plan">計畫書</option><option value="drawing">細部設計圖說</option><option value="subplan">分項計畫書</option><option value="other">其他</option></select></div>
           <div class="field"><label>審查天數（合約）</label><input type="number" id="doc-review-days" value="14" min="1"></div>
         </div>
         <div class="field"><label>備註（選填）</label><textarea id="doc-note" placeholder="合約條款、特殊規定等" style="min-height:48px;"></textarea></div>
@@ -636,7 +732,15 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
         <input type="hidden" id="ver-doc-id"><input type="hidden" id="ver-edit-idx" value="-1">
         <div class="field-row">
           <div class="field"><label>送審日期</label><input type="date" id="ver-date"></div>
-          <div class="field"><label>審查結果</label><select id="ver-result"><option value="reviewing">審查中</option><option value="pending">待審</option><option value="approved">核定</option><option value="rejected">退件修正</option></select></div>
+          <div class="field"><label>審查結果</label><select id="ver-result">
+              <option value="pending">未送</option>
+              <option value="sent">已送</option>
+              <option value="reviewing">審查中</option>
+              <option value="approved">核定</option>
+              <option value="approved_mod">審查認可但有修正處</option>
+              <option value="approved_after">修正後核定</option>
+              <option value="rejected">退回修正</option>
+            </select></div>
         </div>
         <div class="field"><label>實際回覆日期（選填）</label><input type="date" id="ver-reply-date"></div>
         <div class="field"><label>審查意見／備註</label><textarea id="ver-comment" placeholder="退件原因、核定條件、補件要求…"></textarea></div>
@@ -647,18 +751,60 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
   </div>
 
   <div class="modal-overlay" id="qi-modal" style="display:none">
-    <div class="modal">
+    <div class="modal" style="max-width:600px;">
       <div class="modal-header"><h3 id="qi-modal-title">新增抽驗記錄</h3><button class="modal-close" onclick="closeQiModal()">×</button></div>
       <div class="modal-body">
         <div class="field-row">
-          <div class="field"><label>抽驗日期</label><input type="date" id="qi-date"></div>
-          <div class="field"><label>抽驗結果</label><select id="qi-result"><option value="pass">合格</option><option value="fail">不合格</option><option value="recheck">待複驗</option></select></div>
+          <div class="field"><label>材料進場或施工類型</label>
+            <select id="qi-type">
+              <option value="材料抽驗">材料抽驗</option>
+              <option value="施工抽查">施工抽查</option>
+              <option value="不定期抽查">不定期抽查</option>
+            </select>
+          </div>
+          <div class="field"><label>項目名稱</label><input type="text" id="qi-item" placeholder="例：圍籬大小門、防溢座尺寸"></div>
         </div>
-        <div class="field"><label>工項／部位</label><input type="text" id="qi-item" placeholder="例：防溢座混凝土、圍籬基礎"></div>
-        <div class="field"><label>檢驗規範／標準</label><input type="text" id="qi-standard" placeholder="例：140 kgf/cm²、圖說 6-4"></div>
-        <div class="field"><label>抽驗人員</label><input type="text" id="qi-inspector" placeholder="例：監造工程師 王○○"></div>
-        <div class="field"><label>備註／不合格說明</label><textarea id="qi-notes" placeholder="不合格原因、改善要求、複驗結果…"></textarea></div>
-        <div class="field"><label>照片連結（選填）</label><input type="text" id="qi-link" placeholder="https://drive.google.com/…"></div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">自主檢查</div>
+          <div class="field-row">
+            <div class="field"><label>自檢完成</label><select id="qi-self-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
+            <div class="field"><label>自檢編號</label><input type="text" id="qi-self-no" placeholder="例：070101_01"></div>
+          </div>
+          <div class="field"><label>自檢日期</label><input type="date" id="qi-self-date"></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">申請抽驗</div>
+          <div class="field-row">
+            <div class="field"><label>申請完成</label><select id="qi-req-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
+            <div class="field"><label>申請編號</label><input type="text" id="qi-req-no" placeholder="例：070101_001"></div>
+          </div>
+          <div class="field"><label>申請日期</label><input type="date" id="qi-req-date"></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">抽查（驗）紀錄</div>
+          <div class="field-row">
+            <div class="field"><label>抽查完成</label><select id="qi-insp-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
+            <div class="field"><label>抽驗日期</label><input type="date" id="qi-date"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>辦理進度</label>
+              <select id="qi-progress">
+                <option value="製作中">製作中</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+            <div class="field"><label>抽驗人</label><input type="text" id="qi-inspector" placeholder="例：王中平"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>抽驗紀錄表號</label><input type="text" id="qi-record-no" placeholder="例：MESCR-10490817_001.1a"></div>
+            <div class="field"><label>抽驗報告號</label><input type="text" id="qi-report-no" placeholder="例：MESR-10490817_001.1a"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>改善通知單號（選填）</label><input type="text" id="qi-notice-no" placeholder="例：10490817_0002"></div>
+          <div class="field"><label>改善期限（選填）</label><input type="date" id="qi-deadline"></div>
+        </div>
+        <div class="field"><label>備註（選填）</label><textarea id="qi-notes" placeholder="備註說明…" style="min-height:48px;"></textarea></div>
       </div>
       <div class="modal-footer"><button class="btn-modal" onclick="closeQiModal()">取消</button><button class="btn-modal primary" onclick="saveQi()">儲存</button></div>
     </div>
@@ -706,13 +852,13 @@ var API_URL     = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDD
 var LOCAL_KEY   = 'construction_tl_v3';
 var DEFECT_KEY  = 'construction_defects_v1';
 var DOCS_KEY    = 'construction_docs_v1';
-var QI_KEY      = 'construction_qi_v1';
+var QI_KEY      = 'construction_qi_v2';
 var PROGRESS_KEY= 'construction_progress_v1';
 
 var BADGE       = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
-var DOC_TYPE_LABEL = { plan:'施工計畫書', quality:'品質計畫', drawing:'送審圖說', material:'材料送審單', test:'測試／檢驗報告', other:'其他' };
-var DOC_TYPE_CLS   = { plan:'dtype-plan', quality:'dtype-quality', drawing:'dtype-drawing', material:'dtype-material', test:'dtype-test', other:'dtype-other' };
-var VER_RESULT_LABEL = { approved:'核定', rejected:'退件修正', pending:'待審', reviewing:'審查中' };
+var DOC_TYPE_LABEL = { plan:'計畫書', drawing:'細部設計圖說', subplan:'分項計畫書', other:'其他' };
+var DOC_TYPE_CLS   = { plan:'dtype-plan', drawing:'dtype-drawing', subplan:'dtype-subplan', other:'dtype-other' };
+var VER_RESULT_LABEL = { approved:'核定', approved_mod:'審查認可但有修正處', approved_after:'修正後核定', rejected:'退回修正', reviewing:'審查中', pending:'未送', sent:'已送' };
 var VALID_STATUS = { normal:1, milestone:1, warn:1, pending:1, issue:1 };
 // Fix 10: TAB_IDS 放在函式外
 var TAB_IDS = ['dashboard','timeline','defects','docs','quality','export'];
@@ -1389,13 +1535,17 @@ function docLatestVersion(doc) { return (doc.versions && doc.versions.length) ? 
 function docOverallStatus(doc) { var v = docLatestVersion(doc); return v ? v.result : 'pending'; }
 function isDocOverdue(doc) {
   var v = docLatestVersion(doc);
-  if (!v || v.result === 'approved') return false;
+  if (!v) return false;
+  var approvedStates = { approved:1, approved_mod:1, approved_after:1 };
+  if (approvedStates[v.result]) return false;
+  if (v.result === 'pending' || v.result === 'sent') return false;
   return todayStr() > addDays(v.date, doc.reviewDays||14) && !v.replyDate;
 }
 
 // Fix 3: 只計未核定文件
 function updateDocPendingCount() {
-  var n = docs.filter(function(d) { return docOverallStatus(d) !== 'approved'; }).length;
+  var approvedStates = { approved:1, approved_mod:1, approved_after:1 };
+  var n = docs.filter(function(d) { return !approvedStates[docOverallStatus(d)]; }).length;
   var el = document.getElementById('doc-pending-count');
   if (el) { el.textContent = n; el.style.display = n ? 'inline-flex' : 'none'; }
 }
@@ -1406,9 +1556,11 @@ function renderDocProgress() {
   if (!summary) return;
   if (!total) { summary.style.display = 'none'; return; }
   summary.style.display = 'block';
-  var approved  = docs.filter(function(d) { return docOverallStatus(d) === 'approved'; }).length;
+  var approvedStates = { approved:1, approved_mod:1, approved_after:1 };
+  var approved  = docs.filter(function(d) { return approvedStates[docOverallStatus(d)]; }).length;
   var reviewing = docs.filter(function(d) { return docOverallStatus(d) === 'reviewing'; }).length;
   var rejected  = docs.filter(function(d) { return docOverallStatus(d) === 'rejected'; }).length;
+  var sent      = docs.filter(function(d) { return docOverallStatus(d) === 'sent'; }).length;
   var pending   = docs.filter(function(d) { return docOverallStatus(d) === 'pending'; }).length;
   var pct = Math.round(approved/total*100);
   var fill = document.getElementById('doc-progress-fill');
@@ -1419,10 +1571,11 @@ function renderDocProgress() {
   var segs = document.getElementById('doc-progress-segments');
   if (segs) {
     var items = [
-      { label:'已核定', count:approved, color:'var(--c-green)', bg:'#16a34a' },
-      { label:'審查中', count:reviewing, color:'var(--c-blue)',  bg:'#2563eb' },
-      { label:'退件',   count:rejected,  color:'var(--c-red)',   bg:'#dc2626' },
-      { label:'待審',   count:pending,   color:'var(--c-amber)', bg:'#d97706' },
+      { label:'核定（各類）', count:approved,  color:'var(--c-green)',  bg:'#16a34a' },
+      { label:'審查中',       count:reviewing, color:'var(--c-blue)',   bg:'#2563eb' },
+      { label:'退回修正',     count:rejected,  color:'var(--c-red)',    bg:'#dc2626' },
+      { label:'已送',         count:sent,      color:'var(--c-purple)', bg:'#7c3aed' },
+      { label:'未送',         count:pending,   color:'var(--text-muted)', bg:'#94a3b8' },
     ].filter(function(x) { return x.count > 0; });
     segs.innerHTML = '<span style="font-size:13px;font-weight:600;color:var(--c-green)">' + pct + '% 核定</span>' +
       items.map(function(x) {
@@ -1431,8 +1584,51 @@ function renderDocProgress() {
   }
 }
 
+// ── 三大類別送審進度儀表板 ──
+function renderDocDashboard() {
+  var el = document.getElementById('doc-dashboard');
+  if (!el) return;
+  var categories = [
+    { key:'plan',    label:'計畫書',      colorClass:'plan',    fillColor:'linear-gradient(90deg,#2563eb,#60a5fa)', pctColor:'var(--c-blue)' },
+    { key:'drawing', label:'細部設計圖說', colorClass:'drawing', fillColor:'linear-gradient(90deg,#7c3aed,#a78bfa)', pctColor:'var(--c-purple)' },
+    { key:'subplan', label:'分項計畫書',   colorClass:'subplan', fillColor:'linear-gradient(90deg,#0d9488,#2dd4bf)', pctColor:'var(--c-teal)' },
+  ];
+  el.innerHTML = categories.map(function(cat) {
+    var catDocs = docs.filter(function(d) { return d.type === cat.key; });
+    var total    = catDocs.length;
+    var approvedStates = { approved:1, approved_mod:1, approved_after:1 };
+    var approved = catDocs.filter(function(d) { return approvedStates[docOverallStatus(d)]; }).length;
+    var reviewing= catDocs.filter(function(d) { return docOverallStatus(d) === 'reviewing'; }).length;
+    var rejected = catDocs.filter(function(d) { return docOverallStatus(d) === 'rejected'; }).length;
+    var sent     = catDocs.filter(function(d) { return docOverallStatus(d) === 'sent'; }).length;
+    var pending  = catDocs.filter(function(d) { return docOverallStatus(d) === 'pending'; }).length;
+    var pct = total ? Math.round(approved/total*100) : 0;
+    var overdueN = catDocs.filter(isDocOverdue).length;
+    return '<div class="doc-cat-card ' + cat.colorClass + '" onclick="filterDocsByType(\'' + cat.key + '\')" style="cursor:pointer;">' +
+      '<div class="doc-cat-title">' + cat.label + (total ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:400;">(' + total + ' 份)</span>' : '') + '</div>' +
+      (total ? (
+        '<div class="doc-cat-progress"><div class="doc-cat-fill" style="width:' + pct + '%;background:' + cat.fillColor + '"></div></div>' +
+        '<div class="doc-cat-stats">' +
+          '<div class="doc-cat-pct" style="color:' + cat.pctColor + '">' + pct + '%</div>' +
+          '<div class="doc-cat-detail">' +
+            '核定 ' + approved + ' ／ 審查中 ' + reviewing + '<br>' +
+            '退件 ' + rejected + ' ／ 已送 ' + sent + ' ／ 未送 ' + pending +
+            (overdueN ? '<br><span style="color:var(--c-red);font-weight:600;">⚠ 逾期 ' + overdueN + '</span>' : '') +
+          '</div>' +
+        '</div>'
+      ) : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">尚無文件</div>') +
+    '</div>';
+  }).join('');
+}
+
+function filterDocsByType(type) {
+  var sel = document.getElementById('doc-filter-type');
+  if (sel) { sel.value = type; renderDocs(); }
+}
+
 function renderDocs() {
   renderDocProgress();
+  renderDocDashboard();
   var typeF   = document.getElementById('doc-filter-type')  ? document.getElementById('doc-filter-type').value  : '';
   var statusF = document.getElementById('doc-filter-status') ? document.getElementById('doc-filter-status').value : '';
   var overdueF= document.getElementById('doc-filter-overdue')? document.getElementById('doc-filter-overdue').checked : false;
@@ -1527,7 +1723,7 @@ function openAddVerModal(docId) {
   document.getElementById('ver-modal-title').textContent = '新增送審版次';
   document.getElementById('ver-doc-id').value = docId; document.getElementById('ver-edit-idx').value = '-1';
   document.getElementById('ver-date').value = todayStr(); document.getElementById('ver-reply-date').value = '';
-  document.getElementById('ver-result').value = 'reviewing'; document.getElementById('ver-comment').value = ''; document.getElementById('ver-link').value = '';
+  document.getElementById('ver-result').value = 'pending'; document.getElementById('ver-comment').value = ''; document.getElementById('ver-link').value = '';
   document.getElementById('ver-modal').style.display = 'flex';
 }
 function editVersion(docId, idx) {
@@ -1556,13 +1752,13 @@ async function deleteVersion(docId, idx) {
 
 // ── QUALITY ──
 function updateQiFailCount() {
-  var n = qualityItems.filter(function(q) { return q.result === 'fail' || q.result === 'recheck'; }).length;
+  var n = qualityItems.filter(function(q) { return q.progress !== 'Completed'; }).length;
   var el = document.getElementById('qi-fail-count');
   if (el) { el.textContent = n; el.style.display = n ? 'inline-flex' : 'none'; }
 }
 function populateQiMonthFilter() {
   var seen = {}, months = [];
-  qualityItems.forEach(function(q) { var m = (q.date||'').slice(0,7); if (m && !seen[m]) { seen[m] = 1; months.push(m); } });
+  qualityItems.forEach(function(q) { var m = (q.date||q.inspDate||'').slice(0,7); if (m && !seen[m]) { seen[m] = 1; months.push(m); } });
   months.sort();
   var sel = document.getElementById('qi-filter-month'); if (!sel) return;
   var cur = sel.value;
@@ -1570,100 +1766,140 @@ function populateQiMonthFilter() {
     return '<option value="' + m + '"' + (m === cur ? ' selected' : '') + '>' + m.replace('-','年') + '月</option>';
   }).join('');
 }
-function renderQiRateGrid() {
-  var el = document.getElementById('qi-rate-grid'); if (!el) return;
-  var total = qualityItems.length;
-  if (!total) { el.innerHTML = ''; return; }
-  var pass = qualityItems.filter(function(q) { return q.result === 'pass'; }).length;
-  var fail = qualityItems.filter(function(q) { return q.result === 'fail'; }).length;
-  var recheck = qualityItems.filter(function(q) { return q.result === 'recheck'; }).length;
-  var pR = Math.round(pass/total*100), fR = Math.round(fail/total*100), rR = Math.round(recheck/total*100);
-  el.innerHTML =
-    '<div class="qi-rate-card"><div class="qi-rate-label">整體合格率</div><div class="qi-rate-bar-wrap"><div class="qi-rate-value" style="color:var(--c-teal)">' + pR + '%</div><div class="qi-rate-bar-track"><div class="qi-rate-bar-fill" style="width:' + pR + '%;background:linear-gradient(90deg,#0d9488,#2dd4bf)"></div></div><span style="font-size:11px;color:var(--text-muted)">' + pass + '/' + total + '</span></div></div>' +
-    '<div class="qi-rate-card"><div class="qi-rate-label">不合格比率</div><div class="qi-rate-bar-wrap"><div class="qi-rate-value" style="color:var(--c-red)">' + fR + '%</div><div class="qi-rate-bar-track"><div class="qi-rate-bar-fill" style="width:' + fR + '%;background:linear-gradient(90deg,#dc2626,#f87171)"></div></div><span style="font-size:11px;color:var(--text-muted)">' + fail + '/' + total + '</span></div></div>' +
-    '<div class="qi-rate-card"><div class="qi-rate-label">待複驗比率</div><div class="qi-rate-bar-wrap"><div class="qi-rate-value" style="color:var(--c-amber)">' + rR + '%</div><div class="qi-rate-bar-track"><div class="qi-rate-bar-fill" style="width:' + rR + '%;background:linear-gradient(90deg,#d97706,#fbbf24)"></div></div><span style="font-size:11px;color:var(--text-muted)">' + recheck + '/' + total + '</span></div></div>';
-}
 function renderQiStats() {
-  var total = qualityItems.length;
-  var pass = qualityItems.filter(function(q) { return q.result === 'pass'; }).length;
-  var fail = qualityItems.filter(function(q) { return q.result === 'fail'; }).length;
-  var recheck = qualityItems.filter(function(q) { return q.result === 'recheck'; }).length;
+  var total     = qualityItems.length;
+  var completed = qualityItems.filter(function(q) { return q.progress === 'Completed'; }).length;
+  var wip       = total - completed;
+  var overdue   = qualityItems.filter(function(q) { return q.noticeNo || (q.deadline && todayStr() > q.deadline); }).length;
   var el = document.getElementById('qi-stat-grid'); if (!el) return;
   el.innerHTML =
-    '<div class="stat-card"><div class="stat-label">總抽驗次數</div><div class="stat-value">' + total + '</div><div class="stat-sub">筆記錄</div></div>' +
-    '<div class="stat-card teal"><div class="stat-label">合格率</div><div class="stat-value">' + (total ? Math.round(pass/total*100)+'%' : '—') + '</div><div class="stat-sub">' + pass + ' 筆合格</div></div>' +
-    '<div class="stat-card red"><div class="stat-label">不合格</div><div class="stat-value">' + fail + '</div><div class="stat-sub">需改善</div></div>' +
-    '<div class="stat-card amber"><div class="stat-label">待複驗</div><div class="stat-value">' + recheck + '</div><div class="stat-sub">待追蹤</div></div>';
-}
-function renderQiMonthSummary() {
-  // Fix 1: 用 todayStr() 取本月
-  var mo = todayStr().slice(0,7);
-  var thisMonth = qualityItems.filter(function(q) { return (q.date||'').startsWith(mo); });
-  var el = document.getElementById('qi-month-summary'); if (!el) return;
-  if (!thisMonth.length) { el.innerHTML = '本月尚無抽驗記錄'; return; }
-  var mPass = thisMonth.filter(function(q) { return q.result === 'pass'; }).length;
-  var mFail = thisMonth.filter(function(q) { return q.result === 'fail'; }).length;
-  var mRe   = thisMonth.filter(function(q) { return q.result === 'recheck'; }).length;
-  var mRate = Math.round(mPass/thisMonth.length*100);
-  el.innerHTML = '<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">' +
-    '<span>共 <strong>' + thisMonth.length + '</strong> 次抽驗</span>' +
-    '<span style="color:var(--c-green)">✅ 合格 <strong>' + mPass + '</strong> 筆</span>' +
-    (mFail ? '<span style="color:var(--c-red)">❌ 不合格 <strong>' + mFail + '</strong> 筆</span>' : '') +
-    (mRe   ? '<span style="color:var(--c-amber)">⏳ 待複驗 <strong>' + mRe + '</strong> 筆</span>' : '') +
-    '<span style="font-family:\'DM Mono\',monospace;font-weight:600;color:#0d9488;">合格率 ' + mRate + '%</span>' +
-  '</div>';
+    '<div class="stat-card"><div class="stat-label">總抽驗項目</div><div class="stat-value">' + total + '</div><div class="stat-sub">筆記錄</div></div>' +
+    '<div class="stat-card teal"><div class="stat-label">Completed</div><div class="stat-value">' + completed + '</div><div class="stat-sub">' + (total ? Math.round(completed/total*100) + '%' : '—') + ' 完成率</div></div>' +
+    '<div class="stat-card amber"><div class="stat-label">製作中</div><div class="stat-value">' + wip + '</div><div class="stat-sub">待完成</div></div>' +
+    '<div class="stat-card red"><div class="stat-label">已開改善通知</div><div class="stat-value">' + overdue + '</div><div class="stat-sub">筆</div></div>';
 }
 function renderQi() {
-  renderQiRateGrid();
-  var resultF = document.getElementById('qi-filter-result') ? document.getElementById('qi-filter-result').value : '';
-  var monthF  = document.getElementById('qi-filter-month')  ? document.getElementById('qi-filter-month').value  : '';
+  var typeF    = document.getElementById('qi-filter-type')     ? document.getElementById('qi-filter-type').value     : '';
+  var progF    = document.getElementById('qi-filter-progress') ? document.getElementById('qi-filter-progress').value : '';
+  var monthF   = document.getElementById('qi-filter-month')    ? document.getElementById('qi-filter-month').value    : '';
   var filtered = qualityItems.filter(function(q) {
-    return (!resultF || q.result === resultF) && (!monthF || (q.date||'').startsWith(monthF));
-  }).sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); });
+    var dateKey = q.inspDate || q.date || '';
+    return (!typeF  || q.type === typeF) &&
+           (!progF  || q.progress === progF) &&
+           (!monthF || dateKey.startsWith(monthF));
+  }).sort(function(a,b) {
+    var da = a.inspDate || a.date || '';
+    var db = b.inspDate || b.date || '';
+    return da.localeCompare(db);
+  });
   var countEl = document.getElementById('qi-count'); if (countEl) countEl.textContent = '共 ' + filtered.length + ' 筆';
-  renderQiStats(); renderQiMonthSummary();
-  var list = document.getElementById('qi-list'); if (!list) return;
-  if (!filtered.length) { list.innerHTML = '<div class="empty">目前沒有抽驗記錄。</div>'; return; }
-  var rLabel = { pass:'合格', fail:'不合格', recheck:'待複驗' };
-  var rCls   = { pass:'qi-result-pass', fail:'qi-result-fail', recheck:'qi-result-recheck' };
-  list.innerHTML = filtered.map(function(q) {
-    return '<div class="qi-card">' +
-      '<div class="qi-card-top">' +
-        '<span class="badge ' + (rCls[q.result]||'') + '">' + (rLabel[q.result]||q.result) + '</span>' +
-        '<div class="qi-item-name">' + esc(q.item) + '</div>' +
-        '<span style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text-muted);flex-shrink:0">' + (q.date||'—') + '</span>' +
-      '</div>' +
-      (q.standard  ? '<div class="qi-body">📐 規範：' + esc(q.standard) + '</div>' : '') +
-      (q.inspector ? '<div class="qi-meta"><span>👤 ' + esc(q.inspector) + '</span></div>' : '') +
-      (q.notes     ? '<div class="card-alert ' + (q.result==='fail'?'alert-issue':'alert-warn') + '" style="margin-top:8px;">' + esc(q.notes).replace(/\n/g,'<br>') + '</div>' : '') +
-      (q.link      ? '<div style="margin-top:6px;"><a href="' + esc(q.link) + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--c-blue);text-decoration:none;">📎 照片連結</a></div>' : '') +
-      '<div class="qi-actions">' +
-        '<button class="btn-sm edit" onclick="editQi(\'' + q.id + '\')">編輯</button>' +
-        '<button class="btn-sm del" onclick="deleteQi(\'' + q.id + '\')">刪除</button>' +
-      '</div>' +
-    '</div>';
+  renderQiStats();
+  var tbody = document.getElementById('qi-tbody'); if (!tbody) return;
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有抽驗記錄</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(function(q, idx) {
+    var rowClass = q.progress === 'Completed' ? 'row-completed' : '';
+    var hasIssue = !q.selfCheck || !q.reqCheck;
+    var itemCls  = hasIssue ? 'item-red' : 'item-normal';
+    var chk = function(v) { return v == '1' ? '<span class="qi-check-yes">☑</span>' : '<span class="qi-check-no">☐</span>'; };
+    var progBadge = q.progress === 'Completed'
+      ? '<span class="qi-progress-done">Completed</span>'
+      : '<span class="qi-progress-wip">製作中</span>';
+    var noticeCell = q.noticeNo
+      ? '<span class="qi-notice">' + esc(q.noticeNo) + '</span>'
+      : '<span style="color:var(--text-muted)">—</span>';
+    return '<tr class="' + rowClass + '">' +
+      '<td style="color:var(--text-muted);font-family:\'DM Mono\',monospace;">' + (idx+1) + '</td>' +
+      '<td><span class="badge" style="background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)">' + esc(q.type||'—') + '</span></td>' +
+      '<td class="' + itemCls + '" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="' + esc(q.item||'') + '">' + esc(q.item||'—') + '</td>' +
+      '<td style="text-align:center;">' + chk(q.selfCheck) + '</td>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text-secondary);">' + esc(q.selfNo||'—') + '</td>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.selfDate||'—') + '</td>' +
+      '<td style="text-align:center;">' + chk(q.reqCheck) + '</td>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text-secondary);">' + esc(q.reqNo||'—') + '</td>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.reqDate||'—') + '</td>' +
+      '<td style="text-align:center;">' + chk(q.inspCheck) + '</td>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.inspDate||'—') + '</td>' +
+      '<td>' + progBadge + '</td>' +
+      '<td style="font-size:11px;color:var(--text-secondary);">' + esc(q.recordNo||'—') + '</td>' +
+      '<td style="font-size:11px;color:var(--text-secondary);">' + esc(q.reportNo||'—') + '</td>' +
+      '<td style="font-size:11px;">' + esc(q.inspector||'—') + '</td>' +
+      '<td>' + noticeCell + '</td>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.deadline||'—') + '</td>' +
+      '<td><button class="btn-sm edit" onclick="editQi(\'' + q.id + '\')">編輯</button> <button class="btn-sm del" onclick="deleteQi(\'' + q.id + '\')">刪</button></td>' +
+    '</tr>';
   }).join('');
 }
 function openAddQiModal() {
-  editingQiId = null; document.getElementById('qi-modal-title').textContent = '新增抽驗記錄';
-  ['qi-item','qi-standard','qi-inspector','qi-notes','qi-link'].forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('qi-date').value = todayStr(); document.getElementById('qi-result').value = 'pass';
+  editingQiId = null;
+  document.getElementById('qi-modal-title').textContent = '新增抽驗記錄';
+  var ids = ['qi-item','qi-self-no','qi-req-no','qi-record-no','qi-report-no','qi-inspector','qi-notice-no','qi-notes'];
+  ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  var dates = ['qi-date','qi-self-date','qi-req-date','qi-deadline'];
+  dates.forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('qi-type').value = '材料抽驗';
+  document.getElementById('qi-self-check').value = '0';
+  document.getElementById('qi-req-check').value = '0';
+  document.getElementById('qi-insp-check').value = '0';
+  document.getElementById('qi-progress').value = '製作中';
   document.getElementById('qi-modal').style.display = 'flex';
 }
 function editQi(id) {
   var q = qualityItems.find(function(x) { return x.id === id; }); if (!q) return;
-  editingQiId = id; document.getElementById('qi-modal-title').textContent = '編輯抽驗記錄';
-  document.getElementById('qi-date').value = q.date||''; document.getElementById('qi-result').value = q.result||'pass';
-  document.getElementById('qi-item').value = q.item||''; document.getElementById('qi-standard').value = q.standard||'';
-  document.getElementById('qi-inspector').value = q.inspector||''; document.getElementById('qi-notes').value = q.notes||'';
-  document.getElementById('qi-link').value = q.link||''; document.getElementById('qi-modal').style.display = 'flex';
+  editingQiId = id;
+  document.getElementById('qi-modal-title').textContent = '編輯抽驗記錄';
+  document.getElementById('qi-type').value        = q.type || '材料抽驗';
+  document.getElementById('qi-item').value        = q.item || '';
+  document.getElementById('qi-self-check').value  = q.selfCheck || '0';
+  document.getElementById('qi-self-no').value     = q.selfNo || '';
+  document.getElementById('qi-self-date').value   = q.selfDate || '';
+  document.getElementById('qi-req-check').value   = q.reqCheck || '0';
+  document.getElementById('qi-req-no').value      = q.reqNo || '';
+  document.getElementById('qi-req-date').value    = q.reqDate || '';
+  document.getElementById('qi-insp-check').value  = q.inspCheck || '0';
+  document.getElementById('qi-date').value        = q.inspDate || q.date || '';
+  document.getElementById('qi-progress').value    = q.progress || '製作中';
+  document.getElementById('qi-inspector').value   = q.inspector || '';
+  document.getElementById('qi-record-no').value   = q.recordNo || '';
+  document.getElementById('qi-report-no').value   = q.reportNo || '';
+  document.getElementById('qi-notice-no').value   = q.noticeNo || '';
+  document.getElementById('qi-deadline').value    = q.deadline || '';
+  document.getElementById('qi-notes').value       = q.notes || '';
+  document.getElementById('qi-modal').style.display = 'flex';
 }
 function closeQiModal() { document.getElementById('qi-modal').style.display = 'none'; }
 function saveQi() {
-  var item = document.getElementById('qi-item').value.trim(); if (!item) { alert('請填寫工項'); return; }
-  var payload = { date:document.getElementById('qi-date').value, result:document.getElementById('qi-result').value, item, standard:document.getElementById('qi-standard').value.trim(), inspector:document.getElementById('qi-inspector').value.trim(), notes:document.getElementById('qi-notes').value.trim(), link:document.getElementById('qi-link').value.trim() };
-  if (editingQiId) { var idx = qualityItems.findIndex(function(q) { return q.id === editingQiId; }); if (idx !== -1) qualityItems[idx] = Object.assign({}, qualityItems[idx], payload); }
-  else { qualityItems.push(Object.assign({ id:uid() }, payload)); }
+  var item = document.getElementById('qi-item').value.trim(); if (!item) { alert('請填寫項目名稱'); return; }
+  var payload = {
+    type:       document.getElementById('qi-type').value,
+    item:       item,
+    selfCheck:  document.getElementById('qi-self-check').value,
+    selfNo:     document.getElementById('qi-self-no').value.trim(),
+    selfDate:   document.getElementById('qi-self-date').value,
+    reqCheck:   document.getElementById('qi-req-check').value,
+    reqNo:      document.getElementById('qi-req-no').value.trim(),
+    reqDate:    document.getElementById('qi-req-date').value,
+    inspCheck:  document.getElementById('qi-insp-check').value,
+    inspDate:   document.getElementById('qi-date').value,
+    progress:   document.getElementById('qi-progress').value,
+    inspector:  document.getElementById('qi-inspector').value.trim(),
+    recordNo:   document.getElementById('qi-record-no').value.trim(),
+    reportNo:   document.getElementById('qi-report-no').value.trim(),
+    noticeNo:   document.getElementById('qi-notice-no').value.trim(),
+    deadline:   document.getElementById('qi-deadline').value,
+    notes:      document.getElementById('qi-notes').value.trim(),
+    // keep date for compatibility
+    date:       document.getElementById('qi-date').value,
+    result:     document.getElementById('qi-progress').value === 'Completed' ? 'pass' : 'recheck',
+  };
+  if (editingQiId) {
+    var idx = qualityItems.findIndex(function(q) { return q.id === editingQiId; });
+    if (idx !== -1) qualityItems[idx] = Object.assign({}, qualityItems[idx], payload);
+  } else {
+    qualityItems.push(Object.assign({ id: uid() }, payload));
+  }
   qiSave(); closeQiModal(); populateQiMonthFilter(); renderQi(); updateQiFailCount(); renderDashboard();
 }
 async function deleteQi(id) {
@@ -1691,10 +1927,17 @@ function exportDefectsCSV() {
   downloadCSV(rows, '改善事項通知單追蹤_' + todayStr() + '.csv');
 }
 function exportQiCSV() {
-  var rows = [['抽驗日期','工項','檢驗規範／標準','抽驗人員','抽驗結果','備註','照片連結']];
-  var rl = { pass:'合格', fail:'不合格', recheck:'待複驗' };
-  qualityItems.slice().sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); }).forEach(function(q) {
-    rows.push([q.date||'',q.item||'',q.standard||'',q.inspector||'',rl[q.result]||q.result,q.notes||'',q.link||'']);
+  var rows = [['N','材料進場或施工','項目名稱','自檢','自檢編號','自檢日期','申請者','申請編號','申請日期','抽查紀錄','抽驗日期','辦理進度','抽驗紀錄表號','抽驗報告號','抽驗人','改善通知單','改善期限','備註']];
+  var chk = function(v) { return v == '1' ? '☑' : '☐'; };
+  qualityItems.slice().sort(function(a,b) { return (a.inspDate||a.date||'').localeCompare(b.inspDate||b.date||''); }).forEach(function(q, i) {
+    rows.push([
+      i+1, q.type||'', q.item||'',
+      chk(q.selfCheck), q.selfNo||'', q.selfDate||'',
+      chk(q.reqCheck), q.reqNo||'', q.reqDate||'',
+      chk(q.inspCheck), q.inspDate||q.date||'', q.progress||'',
+      q.recordNo||'', q.reportNo||'', q.inspector||'',
+      q.noticeNo||'', q.deadline||'', q.notes||''
+    ]);
   });
   downloadCSV(rows, '品質抽驗記錄_' + todayStr() + '.csv');
 }
