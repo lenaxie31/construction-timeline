@@ -742,8 +742,23 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <div class="modal-body">
         <input type="hidden" id="ver-doc-id"><input type="hidden" id="ver-edit-idx" value="-1">
         <div class="field-row">
+          <div class="field"><label>版次</label>
+            <select id="ver-revision">
+              <option value="">—</option>
+              <option value="A版">A版</option>
+              <option value="B版">B版</option>
+              <option value="C版">C版</option>
+              <option value="D版">D版</option>
+              <option value="E版">E版</option>
+              <option value="0版">0版</option>
+              <option value="0A版">0A版</option>
+            </select>
+          </div>
           <div class="field"><label>送審日期</label><input type="date" id="ver-date"></div>
-          <div class="field"><label>審查結果</label><select id="ver-result">
+        </div>
+        <div class="field-row">
+          </div><!-- close field-row -->
+        <div class="field"><label>審查結果</label><select id="ver-result">
               <option value="pending">未送</option>
               <option value="sent">已送</option>
               <option value="reviewing">審查中</option>
@@ -752,7 +767,6 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
               <option value="approved_after">修正後核定</option>
               <option value="rejected">退回修正</option>
             </select></div>
-        </div>
         <div class="field"><label>實際回覆日期（選填）</label><input type="date" id="ver-reply-date"></div>
         <div class="field"><label>審查意見／備註</label><textarea id="ver-comment" placeholder="退件原因、核定條件、補件要求…"></textarea></div>
         <div class="field"><label>附件連結（選填）</label><input type="text" id="ver-link" placeholder="https://drive.google.com/…"></div>
@@ -1667,7 +1681,7 @@ function renderDocs() {
       return '<div class="ver-row">' +
         '<div class="ver-dot ' + v.result + '"></div>' +
         '<div class="ver-top">' +
-          '<span class="ver-no">第 ' + (vi+1) + ' 次</span>' +
+          '<span class="ver-no">第 ' + (vi+1) + ' 次</span>' + (v.revision ? '<span class="badge" style="background:var(--c-blue-bg);color:var(--c-blue);border:1px solid var(--c-blue-border);font-size:10px;padding:1px 7px;border-radius:8px;margin-left:2px;">' + esc(v.revision) + '</span>' : '') +
           '<span class="ver-date">送審 ' + v.date + '</span>' +
           '<span class="ver-deadline ' + (isOver?'overdue':'ok') + '">' + dlLabel + '</span>' +
           '<span class="ver-result ' + v.result + '">' + (VER_RESULT_LABEL[v.result]||v.result) + '</span>' +
@@ -1736,15 +1750,15 @@ function openAddVerModal(docId) {
   document.getElementById('ver-modal-title').textContent = '新增送審版次';
   document.getElementById('ver-doc-id').value = docId; document.getElementById('ver-edit-idx').value = '-1';
   document.getElementById('ver-date').value = todayStr(); document.getElementById('ver-reply-date').value = '';
-  document.getElementById('ver-result').value = 'pending'; document.getElementById('ver-comment').value = ''; document.getElementById('ver-link').value = '';
+  document.getElementById('ver-revision').value = ''; document.getElementById('ver-result').value = 'pending'; document.getElementById('ver-comment').value = ''; document.getElementById('ver-link').value = '';
   document.getElementById('ver-modal').style.display = 'flex';
 }
 function editVersion(docId, idx) {
   var doc = docs.find(function(d) { return d.id === docId; }); if (!doc) return; var v = doc.versions[idx];
   document.getElementById('ver-modal-title').textContent = '編輯送審版次';
   document.getElementById('ver-doc-id').value = docId; document.getElementById('ver-edit-idx').value = idx;
-  document.getElementById('ver-date').value = v.date||''; document.getElementById('ver-reply-date').value = v.replyDate||'';
-  document.getElementById('ver-result').value = v.result||'reviewing'; document.getElementById('ver-comment').value = v.comment||''; document.getElementById('ver-link').value = v.link||'';
+  document.getElementById('ver-revision').value = v.revision||''; document.getElementById('ver-date').value = v.date||''; document.getElementById('ver-reply-date').value = v.replyDate||'';
+  document.getElementById('ver-result').value = v.result||'pending'; document.getElementById('ver-comment').value = v.comment||''; document.getElementById('ver-link').value = v.link||'';
   document.getElementById('ver-modal').style.display = 'flex';
 }
 function closeVerModal() { document.getElementById('ver-modal').style.display = 'none'; }
@@ -1752,7 +1766,7 @@ function saveVersion() {
   var docId = document.getElementById('ver-doc-id').value, editIdx = parseInt(document.getElementById('ver-edit-idx').value);
   var date = document.getElementById('ver-date').value; if (!date) { alert('請填寫送審日期'); return; }
   var doc = docs.find(function(d) { return d.id === docId; }); if (!doc) return;
-  var ver = { date, replyDate:document.getElementById('ver-reply-date').value||'', result:document.getElementById('ver-result').value, comment:document.getElementById('ver-comment').value.trim(), link:document.getElementById('ver-link').value.trim() };
+  var ver = { revision:document.getElementById('ver-revision').value, date, replyDate:document.getElementById('ver-reply-date').value||'', result:document.getElementById('ver-result').value, comment:document.getElementById('ver-comment').value.trim(), link:document.getElementById('ver-link').value.trim() };
   if (editIdx >= 0) { doc.versions[editIdx] = ver; } else { doc.versions.push(ver); }
   docsSave(); closeVerModal(); renderDocs(); updateDocPendingCount();
   var card = document.getElementById('doccard-'+docId); if (card && !card.classList.contains('open')) card.classList.add('open');
