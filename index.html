@@ -389,6 +389,17 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .dtype-subplan{background:var(--c-teal-bg);color:var(--c-teal);border-color:var(--c-teal-border);}
 .dtype-other{background:#F1F5F9;color:#475569;border-color:#cbd5e1;}
 
+
+/* VERSION REORDER */
+.ver-row { cursor: default; }
+.ver-row.dragging { opacity: 0.4; background: var(--c-blue-bg); border-radius: 6px; }
+.ver-row.drag-over { border-top: 2px solid var(--c-blue); }
+.btn-move { font-size: 13px; padding: 2px 6px; border-radius: var(--radius-sm); cursor: grab;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text-muted);
+  line-height: 1; user-select: none; }
+.btn-move:hover { background: var(--border-light); color: var(--text-primary); }
+.btn-move:active { cursor: grabbing; }
+
 /* MOBILE */
 .sidebar-toggle{display:none;}
 @media(max-width:720px){
@@ -1664,6 +1675,8 @@ function renderDocs() {
         (v.comment ? '<div class="ver-comment">💬 ' + esc(v.comment).replace(/\n/g,'<br>') + '</div>' : '') +
         (v.link ? '<a class="ver-link" href="' + esc(v.link) + '" target="_blank" rel="noopener">📎 附件連結</a>' : '') +
         '<div class="ver-actions">' +
+          '<button class="btn-move" onclick="moveVersion(\'' + doc.id + '\',' + vi + ',-1)" title="上移" ' + (vi===0?'disabled style="opacity:.3"':'') + '>↑</button>' +
+          '<button class="btn-move" onclick="moveVersion(\'' + doc.id + '\',' + vi + ',1)" title="下移" ' + (vi===(doc.versions.length-1)?'disabled style="opacity:.3"':'') + '>↓</button>' +
           '<button class="btn-sm edit" onclick="editVersion(\'' + doc.id + '\',' + vi + ')">編輯</button>' +
           '<button class="btn-sm del" onclick="deleteVersion(\'' + doc.id + '\',' + vi + ')">刪除版次</button>' +
         '</div>' +
@@ -1748,6 +1761,24 @@ async function deleteVersion(docId, idx) {
   if (!await toastConfirm('確定要刪除此送審版次？')) return;
   var doc = docs.find(function(d) { return d.id === docId; }); if (!doc) return;
   doc.versions.splice(idx, 1); docsSave(); renderDocs(); updateDocPendingCount();
+}
+
+// ── 送審版次順序調整 ──
+function moveVersion(docId, idx, dir) {
+  var doc = docs.find(function(d) { return d.id === docId; });
+  if (!doc || !doc.versions) return;
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= doc.versions.length) return;
+  // swap
+  var tmp = doc.versions[idx];
+  doc.versions[idx] = doc.versions[newIdx];
+  doc.versions[newIdx] = tmp;
+  docsSave();
+  // re-render and keep card open
+  renderDocs();
+  updateDocPendingCount();
+  var card = document.getElementById('doccard-' + docId);
+  if (card && !card.classList.contains('open')) card.classList.add('open');
 }
 
 // ── QUALITY ──
