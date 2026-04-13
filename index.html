@@ -400,6 +400,129 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .btn-move:hover { background: var(--border-light); color: var(--text-primary); }
 .btn-move:active { cursor: grabbing; }
 
+
+/* 預定/實際進度卡 */
+.schedule-progress-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.schedule-progress-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--c-blue), var(--c-teal));
+}
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media(max-width:600px){ .schedule-grid { grid-template-columns: 1fr; } }
+.schedule-col-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.schedule-col-title.planned { border-color: var(--c-blue); color: var(--c-blue); }
+.schedule-col-title.actual  { border-color: var(--c-teal); color: var(--c-teal); }
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.schedule-row-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 52px;
+  flex-shrink: 0;
+}
+.schedule-row-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.schedule-row-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .8s cubic-bezier(0.4,0,0.2,1);
+}
+.schedule-row-fill.planned-1  { background: linear-gradient(90deg,#2563eb,#60a5fa); }
+.schedule-row-fill.planned-2  { background: linear-gradient(90deg,#7c3aed,#a78bfa); }
+.schedule-row-fill.planned-total { background: linear-gradient(90deg,#1e40af,#3b82f6); }
+.schedule-row-fill.actual-1   { background: linear-gradient(90deg,#0d9488,#2dd4bf); }
+.schedule-row-fill.actual-2   { background: linear-gradient(90deg,#0891b2,#22d3ee); }
+.schedule-row-fill.actual-total { background: linear-gradient(90deg,#065f46,#10b981); }
+.schedule-row-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  width: 58px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.schedule-pct-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.schedule-pct-input {
+  width: 62px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  text-align: center;
+  outline: none;
+  color: var(--text-primary);
+}
+.schedule-pct-input:focus { border-color: var(--text-primary); background: #fff; }
+.schedule-deviation {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.schedule-dev-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.schedule-dev-label { color: var(--text-secondary); }
+.schedule-dev-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+.schedule-dev-value.ahead { color: var(--c-green); }
+.schedule-dev-value.behind { color: var(--c-red); }
+.schedule-dev-value.on-track { color: var(--c-blue); }
+
 /* MOBILE */
 .sidebar-toggle{display:none;}
 @media(max-width:720px){
@@ -541,6 +664,76 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
             <span style="font-size:11px;color:var(--text-muted);">%</span>
           </div>
         </div>
+        <!-- 預定/實際進度 -->
+        <div class="schedule-progress-card" id="schedule-progress-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">預定進度 vs 實際進度</div>
+              <div style="font-size:11px;color:var(--text-muted);">輸入各合約進度百分比，自動計算偏差</div>
+            </div>
+          </div>
+          <div class="schedule-grid">
+            <!-- 預定進度 -->
+            <div>
+              <div class="schedule-col-title planned">📋 預定進度（%）</div>
+              <div class="schedule-row">
+                <div class="schedule-row-label">合約一</div>
+                <div class="schedule-row-bar"><div class="schedule-row-fill planned-1" id="sp-bar-p1" style="width:0%"></div></div>
+                <div class="schedule-pct-input-wrap">
+                  <input class="schedule-pct-input" id="sp-p1" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
+                  <span style="font-size:11px;color:var(--text-muted);">%</span>
+                </div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-row-label">合約二</div>
+                <div class="schedule-row-bar"><div class="schedule-row-fill planned-2" id="sp-bar-p2" style="width:0%"></div></div>
+                <div class="schedule-pct-input-wrap">
+                  <input class="schedule-pct-input" id="sp-p2" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
+                  <span style="font-size:11px;color:var(--text-muted);">%</span>
+                </div>
+              </div>
+              <div class="schedule-row" style="margin-bottom:0;">
+                <div class="schedule-row-label" style="font-weight:700;color:var(--text-primary);">總進度</div>
+                <div class="schedule-row-bar"><div class="schedule-row-fill planned-total" id="sp-bar-pt" style="width:0%"></div></div>
+                <div class="schedule-pct-input-wrap">
+                  <input class="schedule-pct-input" id="sp-pt" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()" style="font-weight:700;">
+                  <span style="font-size:11px;color:var(--text-muted);">%</span>
+                </div>
+              </div>
+            </div>
+            <!-- 實際進度 -->
+            <div>
+              <div class="schedule-col-title actual">✅ 實際進度（%）</div>
+              <div class="schedule-row">
+                <div class="schedule-row-label">合約一</div>
+                <div class="schedule-row-bar"><div class="schedule-row-fill actual-1" id="sp-bar-a1" style="width:0%"></div></div>
+                <div class="schedule-pct-input-wrap">
+                  <input class="schedule-pct-input" id="sp-a1" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
+                  <span style="font-size:11px;color:var(--text-muted);">%</span>
+                </div>
+              </div>
+              <div class="schedule-row">
+                <div class="schedule-row-label">合約二</div>
+                <div class="schedule-row-bar"><div class="schedule-row-fill actual-2" id="sp-bar-a2" style="width:0%"></div></div>
+                <div class="schedule-pct-input-wrap">
+                  <input class="schedule-pct-input" id="sp-a2" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
+                  <span style="font-size:11px;color:var(--text-muted);">%</span>
+                </div>
+              </div>
+              <div class="schedule-row" style="margin-bottom:0;">
+                <div class="schedule-row-label" style="font-weight:700;color:var(--text-primary);">總進度</div>
+                <div class="schedule-row-bar"><div class="schedule-row-fill actual-total" id="sp-bar-at" style="width:0%"></div></div>
+                <div class="schedule-pct-input-wrap">
+                  <input class="schedule-pct-input" id="sp-at" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()" style="font-weight:700;">
+                  <span style="font-size:11px;color:var(--text-muted);">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 偏差摘要 -->
+          <div class="schedule-deviation" id="schedule-deviation" style="display:none;"></div>
+        </div>
+
         <div class="stat-grid" id="stat-grid"></div>
         <div class="dash-row">
           <div class="dash-box"><h3>工項狀態分布</h3><div id="bar-chart"></div></div>
@@ -881,7 +1074,8 @@ var LOCAL_KEY   = 'construction_tl_v3';
 var DEFECT_KEY  = 'construction_defects_v1';
 var DOCS_KEY    = 'construction_docs_v1';
 var QI_KEY      = 'construction_qi_v2';
-var PROGRESS_KEY= 'construction_progress_v1';
+var PROGRESS_KEY  = 'construction_progress_v1';
+var SCHEDULE_KEY  = 'construction_schedule_v1';
 
 var BADGE       = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
 var DOC_TYPE_LABEL = { plan:'計畫書', drawing:'細部設計圖說', subplan:'分項計畫書', other:'其他' };
@@ -968,6 +1162,69 @@ function qiSave() { try { localStorage.setItem(QI_KEY, JSON.stringify(qualityIte
 function qiLoad() { try { var r = localStorage.getItem(QI_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
 function progressSave(pct) { try { localStorage.setItem(PROGRESS_KEY, String(pct)); } catch(e) {} }
 function progressLoad() { try { return parseInt(localStorage.getItem(PROGRESS_KEY) || '0') || 0; } catch(e) { return 0; } }
+function scheduleSave(data) { try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(data)); } catch(e) {} }
+function scheduleLoad() {
+  try {
+    var r = localStorage.getItem(SCHEDULE_KEY);
+    return r ? JSON.parse(r) : { p1:'', p2:'', pt:'', a1:'', a2:'', at:'' };
+  } catch(e) { return { p1:'', p2:'', pt:'', a1:'', a2:'', at:'' }; }
+}
+
+// ── 預定/實際進度邏輯 ──
+function updateSchedule(save) {
+  var fields = ['p1','p2','pt','a1','a2','at'];
+  var vals = {};
+  fields.forEach(function(f) {
+    var el = document.getElementById('sp-' + f);
+    vals[f] = el ? (parseFloat(el.value) || 0) : 0;
+  });
+
+  // Update bars
+  fields.forEach(function(f) {
+    var bar = document.getElementById('sp-bar-' + f);
+    if (bar) bar.style.width = Math.min(100, vals[f]) + '%';
+  });
+
+  // Deviation summary
+  var devEl = document.getElementById('schedule-deviation');
+  if (devEl) {
+    var devs = [
+      { label:'合約一偏差', val: vals.a1 - vals.p1 },
+      { label:'合約二偏差', val: vals.a2 - vals.p2 },
+      { label:'總進度偏差', val: vals.at - vals.pt },
+    ];
+    devEl.style.display = 'flex';
+    devEl.innerHTML = devs.map(function(d) {
+      var cls = d.val > 0.005 ? 'ahead' : d.val < -0.005 ? 'behind' : 'on-track';
+      var sign = d.val > 0.005 ? '+' : '';
+      var label = d.val > 0.005 ? '超前' : d.val < -0.005 ? '落後' : '準時';
+      return '<div class="schedule-dev-item">' +
+        '<span class="schedule-dev-label">' + d.label + '：</span>' +
+        '<span class="schedule-dev-value ' + cls + '">' + sign + d.val.toFixed(2) + '% （' + label + '）</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Auto-save
+  if (save !== false) {
+    var saveData = {};
+    fields.forEach(function(f) {
+      var el = document.getElementById('sp-' + f);
+      saveData[f] = el ? el.value : '';
+    });
+    scheduleSave(saveData);
+  }
+}
+
+function loadScheduleUI() {
+  var data = scheduleLoad();
+  var fields = ['p1','p2','pt','a1','a2','at'];
+  fields.forEach(function(f) {
+    var el = document.getElementById('sp-' + f);
+    if (el && data[f] !== undefined) el.value = data[f];
+  });
+  updateSchedule(false);
+}
 
 function sanitizeEntry(raw) {
   function get(obj) {
@@ -1041,6 +1298,7 @@ async function init() {
     if (fDate) fDate.value = todayStr();
 
     updateProgress(progressLoad(), false);
+    loadScheduleUI();
     populateMonthFilter();
     renderDashboard();
     render();
