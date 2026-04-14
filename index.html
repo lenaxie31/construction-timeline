@@ -526,117 +526,144 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 
 
 /* 表單追蹤 */
-.form-track-section {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
+.form-track-panel {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8faff 0%, #f4f3ef 100%);
+  border-top: 2px solid var(--c-blue-border);
+  animation: slideDown .18s ease;
 }
-.form-track-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .6px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.form-track-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.form-track-row {
+@keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.form-track-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
-  background: var(--bg);
-  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+}
+.form-track-header-icon {
+  width: 28px; height: 28px;
+  background: var(--c-blue);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.form-track-header-text { flex: 1; }
+.form-track-header-text h4 {
+  font-size: 12px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 1px;
+}
+.form-track-header-text p {
+  font-size: 11px; color: var(--text-muted);
+}
+.form-track-progress-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
   border: 1px solid var(--border-light);
-  flex-wrap: wrap;
+}
+.form-track-progress-bar {
+  flex: 1; height: 6px;
+  background: var(--border-light);
+  border-radius: 3px; overflow: hidden;
+}
+.form-track-progress-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--c-blue), var(--c-green));
+  transition: width .5s cubic-bezier(0.4,0,0.2,1);
+}
+.form-track-progress-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-secondary); white-space: nowrap;
+}
+.form-track-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.form-track-row {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  transition: box-shadow .15s, border-color .15s;
+}
+.form-track-row:hover { box-shadow: var(--shadow); border-color: var(--border); }
+.form-track-row.status-approved { border-left: 3px solid var(--c-green); }
+.form-track-row.status-reviewing { border-left: 3px solid var(--c-blue); }
+.form-track-row.status-filling { border-left: 3px solid var(--c-amber); }
+.form-track-row.status-unfilled { border-left: 3px solid #cbd5e1; }
+.form-track-row-main {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; flex-wrap: wrap;
 }
 .form-track-name {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px; font-weight: 700;
   color: var(--text-primary);
-  min-width: 100px;
-  flex-shrink: 0;
+  min-width: 64px; flex-shrink: 0;
 }
 .form-track-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  flex: 1;
-  min-width: 0;
+  font-size: 12px; color: var(--text-secondary);
+  flex: 1; min-width: 120px;
 }
 .form-track-status-btns {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-.fts-btn {
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all .12s;
-  white-space: nowrap;
-}
-.fts-btn:hover { opacity: .8; }
-.fts-btn.active-unfilled { background: #F1F5F9; color: #475569; border-color: #cbd5e1; }
-.fts-btn.active-filling  { background: var(--c-amber-bg); color: var(--c-amber); border-color: var(--c-amber-border); }
-.fts-btn.active-reviewing{ background: var(--c-blue-bg);  color: var(--c-blue);  border-color: var(--c-blue-border); }
-.fts-btn.active-approved { background: var(--c-green-bg); color: var(--c-green); border-color: var(--c-green-border); }
-.form-track-note {
-  width: 100%;
-  margin-top: 4px;
-  font-family: inherit;
-  font-size: 11px;
-  padding: 5px 8px;
+  display: flex; gap: 0; flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: #fff;
-  color: var(--text-primary);
-  outline: none;
-  resize: none;
-  min-height: 30px;
-  line-height: 1.4;
-  display: none;
+  overflow: hidden;
+  background: var(--bg);
 }
-.form-track-note.show { display: block; }
-.form-track-note:focus { border-color: var(--c-blue); }
+.fts-btn {
+  font-family: inherit; font-size: 11px; font-weight: 600;
+  padding: 5px 11px;
+  border: none; border-right: 1px solid var(--border);
+  background: transparent; color: var(--text-muted);
+  cursor: pointer; transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+.fts-btn:last-child { border-right: none; }
+.fts-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.fts-btn.active-unfilled { background: #e2e8f0; color: #334155; }
+.fts-btn.active-filling  { background: var(--c-amber-bg); color: var(--c-amber); }
+.fts-btn.active-reviewing { background: var(--c-blue-bg); color: var(--c-blue); }
+.fts-btn.active-approved { background: var(--c-green-bg); color: var(--c-green); }
+.form-track-note-wrap { padding: 0 14px 10px; }
+.form-track-note {
+  width: 100%;
+  font-family: inherit; font-size: 12px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-primary);
+  outline: none; resize: none; min-height: 34px; line-height: 1.5;
+}
+.form-track-note:focus { border-color: var(--c-blue); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.07); }
 .form-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
 .form-status-dot.unfilled  { background: #94a3b8; }
 .form-status-dot.filling   { background: var(--c-amber); }
 .form-status-dot.reviewing { background: var(--c-blue); }
 .form-status-dot.approved  { background: var(--c-green); }
+/* condition tag */
+.form-cond-tag {
+  font-size: 9px; font-weight: 700;
+  padding: 1px 6px; border-radius: 4px;
+  background: var(--c-amber-bg); color: var(--c-amber);
+  border: 1px solid var(--c-amber-border);
+  flex-shrink: 0;
+}
 /* Summary badge on table row */
 .form-summary-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 8px;
-  border: 1px solid;
-  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 8px; border-radius: 10px; border: 1px solid;
+  cursor: pointer; transition: opacity .12s; white-space: nowrap;
 }
+.form-summary-badge:hover { opacity: .8; }
 .form-summary-badge.all-done  { background: var(--c-green-bg);  color: var(--c-green);  border-color: var(--c-green-border); }
 .form-summary-badge.has-issue { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
-.form-summary-badge.not-started { background: #F1F5F9; color: #475569; border-color: #cbd5e1; }
+.form-summary-badge.not-started { background: #F1F5F9; color: #64748b; border-color: #e2e8f0; }
 
 
 /* SIDEBAR COLLAPSE */
@@ -2325,7 +2352,7 @@ function renderQi() {
   renderQiStats();
   var tbody = document.getElementById('qi-tbody'); if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="19" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(function(q, idx) {
@@ -2368,9 +2395,19 @@ function renderQi() {
       '</td>' +
     '</tr>' +
     '<tr id="forms-wrap-' + q.id + '" style="display:none;">' +
-      '<td colspan="18" style="padding:0 10px 10px 10px;background:var(--bg);">' +
-        '<div class="form-track-section">' +
-          '<div class="form-track-title">📋 對應表單填寫狀態（' + esc(q.type||'') + '）</div>' +
+      '<td colspan="19" style="padding:0;">' +
+        '<div class="form-track-panel" id="forms-panel-' + q.id + '">' +
+          '<div class="form-track-header">' +
+            '<div class="form-track-header-icon">📋</div>' +
+            '<div class="form-track-header-text">' +
+              '<h4>對應表單填寫狀態</h4>' +
+              '<p>' + esc(q.type||'') + '　項目：' + esc(q.item||'') + '</p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-track-progress-row" id="forms-progress-' + q.id + '">' +
+            '<div class="form-track-progress-bar"><div class="form-track-progress-fill" style="width:0%"></div></div>' +
+            '<div class="form-track-progress-label">0 / 0 已核定</div>' +
+          '</div>' +
           '<div class="form-track-list" id="forms-' + q.id + '"></div>' +
         '</div>' +
       '</td>' +
@@ -2614,9 +2651,7 @@ function setFormStatus(qiId, formId, status) {
   if (!qi.forms[formId]) qi.forms[formId] = {};
   qi.forms[formId].status = status;
   qiSave();
-  // re-render just this row's form section
   renderFormSection(qiId);
-  // update summary badge in table
   updateFormSummaryBadge(qiId);
 }
 
@@ -2636,31 +2671,60 @@ function renderFormSection(qiId) {
   var qi = qualityItems.find(function(q) { return q.id === qiId; });
   if (!qi) return;
   var forms = getFormsForQi(qi);
-  if (!forms.length) { container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0;">此類型無對應表單</div>'; return; }
+  if (!forms.length) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;text-align:center;">此類型無對應表單</div>';
+    return;
+  }
+
+  // Update progress bar
+  var approved = forms.filter(function(f) { return f.status === 'approved'; }).length;
+  var total = forms.length;
+  var pct = total ? Math.round(approved / total * 100) : 0;
+  var progRow = document.getElementById('forms-progress-' + qiId);
+  if (progRow) {
+    var fill = progRow.querySelector('.form-track-progress-fill');
+    var label = progRow.querySelector('.form-track-progress-label');
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = approved + ' / ' + total + ' 已核定';
+    // Color
+    var color = approved === total ? 'linear-gradient(90deg,var(--c-green),#4ade80)'
+      : approved > 0 ? 'linear-gradient(90deg,var(--c-blue),var(--c-teal))'
+      : 'linear-gradient(90deg,#94a3b8,#cbd5e1)';
+    if (fill) fill.style.background = color;
+  }
+
+  var STATUS_ICONS = { unfilled:'○', filling:'◑', reviewing:'◕', approved:'●' };
 
   container.innerHTML = forms.map(function(f) {
-    var dotCls = f.status;
-    var condTag = f.conditionLabel ? '<span style="font-size:9px;background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);padding:1px 5px;border-radius:4px;">' + esc(f.conditionLabel) + '</span> ' : '';
     var statusBtns = ['unfilled','filling','reviewing','approved'].map(function(s) {
       var isActive = f.status === s;
       var cls = 'fts-btn' + (isActive ? ' active-' + s : '');
-      // Use data attributes + event delegation via inline handler with escaped args
+      var labels = { unfilled:'未填', filling:'填寫中', reviewing:'審查中', approved:'已核定' };
       return '<button class="' + cls + '" ' +
         'data-qi="' + esc(qiId) + '" data-form="' + esc(f.id) + '" data-status="' + s + '" ' +
         'onclick="setFormStatus(this.dataset.qi,this.dataset.form,this.dataset.status)">' +
-        FORM_STATUS_LABELS[s] + '</button>';
+        labels[s] + '</button>';
     }).join('');
-    var noteShow = f.note ? ' show' : '';
-    return '<div class="form-track-row">' +
-      '<div class="form-status-dot ' + dotCls + '"></div>' +
-      '<div class="form-track-name">' + esc(f.name) + '</div>' +
-      '<div class="form-track-desc">' + condTag + esc(f.desc) + '</div>' +
-      '<div class="form-track-status-btns">' + statusBtns + '</div>' +
-      '<textarea class="form-track-note' + noteShow + '" ' +
-        'data-qi="' + esc(qiId) + '" data-form="' + esc(f.id) + '" ' +
-        'placeholder="備註（負責人、日期等）" ' +
-        'oninput="setFormNote(this.dataset.qi,this.dataset.form,this.value)" ' +
-        '>' + esc(f.note) + '</textarea>' +
+
+    var condTag = f.conditionLabel
+      ? '<span class="form-cond-tag">' + esc(f.conditionLabel) + '</span>'
+      : '';
+
+    return '<div class="form-track-row status-' + f.status + '">' +
+      '<div class="form-track-row-main">' +
+        '<div class="form-status-dot ' + f.status + '"></div>' +
+        '<div class="form-track-name">' + esc(f.name) + '</div>' +
+        (condTag ? condTag : '') +
+        '<div class="form-track-desc">' + esc(f.desc) + '</div>' +
+        '<div class="form-track-status-btns">' + statusBtns + '</div>' +
+      '</div>' +
+      '<div class="form-track-note-wrap">' +
+        '<textarea class="form-track-note" ' +
+          'data-qi="' + esc(qiId) + '" data-form="' + esc(f.id) + '" ' +
+          'placeholder="備註（負責人、日期等）…" rows="1" ' +
+          'oninput="setFormNote(this.dataset.qi,this.dataset.form,this.value)" ' +
+          '>' + esc(f.note) + '</textarea>' +
+      '</div>' +
     '</div>';
   }).join('');
 }
