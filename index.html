@@ -523,6 +523,120 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .schedule-dev-value.behind { color: var(--c-red); }
 .schedule-dev-value.on-track { color: var(--c-blue); }
 
+
+/* 表單追蹤 */
+.form-track-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.form-track-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-track-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  flex-wrap: wrap;
+}
+.form-track-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+.form-track-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+}
+.form-track-status-btns {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.fts-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .12s;
+  white-space: nowrap;
+}
+.fts-btn:hover { opacity: .8; }
+.fts-btn.active-unfilled { background: #F1F5F9; color: #475569; border-color: #cbd5e1; }
+.fts-btn.active-filling  { background: var(--c-amber-bg); color: var(--c-amber); border-color: var(--c-amber-border); }
+.fts-btn.active-reviewing{ background: var(--c-blue-bg);  color: var(--c-blue);  border-color: var(--c-blue-border); }
+.fts-btn.active-approved { background: var(--c-green-bg); color: var(--c-green); border-color: var(--c-green-border); }
+.form-track-note {
+  width: 100%;
+  margin-top: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text-primary);
+  outline: none;
+  resize: none;
+  min-height: 30px;
+  line-height: 1.4;
+  display: none;
+}
+.form-track-note.show { display: block; }
+.form-track-note:focus { border-color: var(--c-blue); }
+.form-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.form-status-dot.unfilled  { background: #94a3b8; }
+.form-status-dot.filling   { background: var(--c-amber); }
+.form-status-dot.reviewing { background: var(--c-blue); }
+.form-status-dot.approved  { background: var(--c-green); }
+/* Summary badge on table row */
+.form-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid;
+  cursor: pointer;
+}
+.form-summary-badge.all-done  { background: var(--c-green-bg);  color: var(--c-green);  border-color: var(--c-green-border); }
+.form-summary-badge.has-issue { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
+.form-summary-badge.not-started { background: #F1F5F9; color: #475569; border-color: #cbd5e1; }
+
 /* MOBILE */
 .sidebar-toggle{display:none;}
 @media(max-width:720px){
@@ -858,6 +972,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
                 <th>抽驗人</th>
                 <th>改善通知單</th>
                 <th>改善期限</th>
+                <th>表單狀態</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -1309,6 +1424,7 @@ async function init() {
     populateQiMonthFilter();
     renderQi();
     updateQiFailCount();
+    initAllFormBadges();
   } catch(e) {
     console.error('init failed:', e);
     showErrBanner('初始化失敗：' + e.message);
@@ -2134,7 +2250,23 @@ function renderQi() {
       '<td style="font-size:11px;">' + esc(q.inspector||'—') + '</td>' +
       '<td>' + noticeCell + '</td>' +
       '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.deadline||'—') + '</td>' +
-      '<td><button class="btn-sm edit" onclick="editQi(\'' + q.id + '\')">編輯</button> <button class="btn-sm del" onclick="deleteQi(\'' + q.id + '\')">刪</button></td>' +
+      '<td>' +
+        '<span class="form-summary-badge not-started" id="form-badge-' + q.id + '" ' +
+          'onclick="toggleFormSection(this.dataset.id)" data-id="' + esc(q.id) + '" ' +
+          'style="cursor:pointer;" title="點擊展開表單追蹤">📋 表單未開始</span>' +
+      '</td>' +
+      '<td>' +
+        '<button class="btn-sm edit" onclick="editQi(\'' + q.id + '\')">編輯</button> ' +
+        '<button class="btn-sm del" onclick="deleteQi(\'' + q.id + '\')">刪</button>' +
+      '</td>' +
+    '</tr>' +
+    '<tr id="forms-wrap-' + q.id + '" style="display:none;">' +
+      '<td colspan="18" style="padding:0 10px 10px 10px;background:var(--bg);">' +
+        '<div class="form-track-section">' +
+          '<div class="form-track-title">📋 對應表單填寫狀態（' + esc(q.type||'') + '）</div>' +
+          '<div class="form-track-list" id="forms-' + q.id + '"></div>' +
+        '</div>' +
+      '</td>' +
     '</tr>';
   }).join('');
 }
@@ -2207,11 +2339,13 @@ function saveQi() {
     qualityItems.push(Object.assign({ id: uid() }, payload));
   }
   qiSave(); closeQiModal(); populateQiMonthFilter(); renderQi(); updateQiFailCount(); renderDashboard();
+  initAllFormBadges();
 }
 async function deleteQi(id) {
   if (!await toastConfirm('確定要刪除此抽驗記錄？')) return;
   qualityItems = qualityItems.filter(function(q) { return q.id !== id; });
   qiSave(); populateQiMonthFilter(); renderQi(); updateQiFailCount(); renderDashboard();
+  initAllFormBadges();
 }
 
 // ── EXPORT ──
@@ -2302,6 +2436,160 @@ function forceReload() {
   showErrBanner('已強制重新讀取！defects:' + defects.length + ' docs:' + docs.length + ' qi:' + qualityItems.length);
 }
 
+
+// ══════════════════════════════════════
+// ── 表單追蹤系統 ──
+// ══════════════════════════════════════
+
+// 各抽驗類型對應的表單定義
+var FORM_TEMPLATES = {
+  '材料抽驗': [
+    { id:'5-3',  name:'表5-3', desc:'材料管理標準', required: true },
+    { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
+    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
+  ],
+  '施工抽查': [
+    { id:'7-9',  name:'表7-9', desc:'不定期抽驗紀錄表', required: true },
+    { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
+    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
+  ],
+  '不定期抽查': [
+    { id:'7-8',  name:'表7-8', desc:'抽驗紀錄表', required: true },
+    { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
+    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
+    { id:'5-7',  name:'表5-7', desc:'工程抽查驗申請單', required: true },
+  ],
+};
+
+var FORM_STATUS_LABELS = {
+  'unfilled':  '未填',
+  'filling':   '填寫中',
+  'reviewing': '審查中',
+  'approved':  '已核定',
+};
+
+// 取得某筆抽驗記錄的表單清單（附帶狀態）
+function getFormsForQi(qi) {
+  var templates = FORM_TEMPLATES[qi.type] || FORM_TEMPLATES['材料抽驗'];
+  var saved = qi.forms || {};
+  // 決定 5-6 是否顯示：不合格 or 有改善通知單
+  var hasIssue = (qi.progress !== 'Completed') || qi.noticeNo;
+  return templates.filter(function(t) {
+    if (t.condition === 'notpass') return hasIssue;
+    return true;
+  }).map(function(t) {
+    var key = t.id;
+    return {
+      id: key,
+      name: t.name,
+      desc: t.desc,
+      required: t.required,
+      condition: t.condition || null,
+      conditionLabel: t.conditionLabel || null,
+      status: (saved[key] && saved[key].status) || 'unfilled',
+      note:   (saved[key] && saved[key].note)   || '',
+    };
+  });
+}
+
+// 更新某筆記錄的某張表單狀態
+function setFormStatus(qiId, formId, status) {
+  var qi = qualityItems.find(function(q) { return q.id === qiId; });
+  if (!qi) return;
+  if (!qi.forms) qi.forms = {};
+  if (!qi.forms[formId]) qi.forms[formId] = {};
+  qi.forms[formId].status = status;
+  qiSave();
+  // re-render just this row's form section
+  renderFormSection(qiId);
+  // update summary badge in table
+  updateFormSummaryBadge(qiId);
+}
+
+function setFormNote(qiId, formId, note) {
+  var qi = qualityItems.find(function(q) { return q.id === qiId; });
+  if (!qi) return;
+  if (!qi.forms) qi.forms = {};
+  if (!qi.forms[formId]) qi.forms[formId] = {};
+  qi.forms[formId].note = note;
+  qiSave();
+}
+
+// 渲染某筆記錄的表單追蹤區塊
+function renderFormSection(qiId) {
+  var container = document.getElementById('forms-' + qiId);
+  if (!container) return;
+  var qi = qualityItems.find(function(q) { return q.id === qiId; });
+  if (!qi) return;
+  var forms = getFormsForQi(qi);
+  if (!forms.length) { container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0;">此類型無對應表單</div>'; return; }
+
+  container.innerHTML = forms.map(function(f) {
+    var dotCls = f.status;
+    var condTag = f.conditionLabel ? '<span style="font-size:9px;background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);padding:1px 5px;border-radius:4px;">' + esc(f.conditionLabel) + '</span> ' : '';
+    var statusBtns = ['unfilled','filling','reviewing','approved'].map(function(s) {
+      var isActive = f.status === s;
+      var cls = 'fts-btn' + (isActive ? ' active-' + s : '');
+      // Use data attributes + event delegation via inline handler with escaped args
+      return '<button class="' + cls + '" ' +
+        'data-qi="' + esc(qiId) + '" data-form="' + esc(f.id) + '" data-status="' + s + '" ' +
+        'onclick="setFormStatus(this.dataset.qi,this.dataset.form,this.dataset.status)">' +
+        FORM_STATUS_LABELS[s] + '</button>';
+    }).join('');
+    var noteShow = f.note ? ' show' : '';
+    return '<div class="form-track-row">' +
+      '<div class="form-status-dot ' + dotCls + '"></div>' +
+      '<div class="form-track-name">' + esc(f.name) + '</div>' +
+      '<div class="form-track-desc">' + condTag + esc(f.desc) + '</div>' +
+      '<div class="form-track-status-btns">' + statusBtns + '</div>' +
+      '<textarea class="form-track-note' + noteShow + '" ' +
+        'data-qi="' + esc(qiId) + '" data-form="' + esc(f.id) + '" ' +
+        'placeholder="備註（負責人、日期等）" ' +
+        'oninput="setFormNote(this.dataset.qi,this.dataset.form,this.value)" ' +
+        '>' + esc(f.note) + '</textarea>' +
+    '</div>';
+  }).join('');
+}
+
+// 計算並更新 summary badge
+function updateFormSummaryBadge(qiId) {
+  var badge = document.getElementById('form-badge-' + qiId);
+  if (!badge) return;
+  var qi = qualityItems.find(function(q) { return q.id === qiId; });
+  if (!qi) return;
+  var forms = getFormsForQi(qi);
+  if (!forms.length) { badge.style.display = 'none'; return; }
+  var approved = forms.filter(function(f) { return f.status === 'approved'; }).length;
+  var total = forms.length;
+  var cls, label;
+  if (approved === total) {
+    cls = 'all-done'; label = '📋 表單全數核定';
+  } else if (approved > 0 || forms.some(function(f) { return f.status !== 'unfilled'; })) {
+    cls = 'has-issue'; label = '📋 ' + approved + '/' + total + ' 已核定';
+  } else {
+    cls = 'not-started'; label = '📋 表單未開始';
+  }
+  badge.className = 'form-summary-badge ' + cls;
+  badge.textContent = label;
+  badge.style.display = 'inline-flex';
+}
+
+// 初始化所有 summary badges
+function initAllFormBadges() {
+  qualityItems.forEach(function(q) { updateFormSummaryBadge(q.id); });
+}
+
+// 切換展開/收起表單追蹤區
+function toggleFormSection(qiId) {
+  var container = document.getElementById('forms-' + qiId);
+  if (!container) return;
+  var wrap = document.getElementById('forms-wrap-' + qiId);
+  if (!wrap) return;
+  var isHidden = wrap.style.display === 'none' || !wrap.style.display;
+  wrap.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) renderFormSection(qiId);
+}
+
 // ── BOOT ──
 if (sessionStorage.getItem('tl_auth') === '1') {
   document.getElementById('lock-screen').style.display = 'none';
@@ -2310,4 +2598,4 @@ if (sessionStorage.getItem('tl_auth') === '1') {
 }
 </script>
 </body>
-</html>
+        '>' + esc(f.note) + '</textarea>' +
