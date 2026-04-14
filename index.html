@@ -2454,10 +2454,10 @@ var FORM_TEMPLATES = {
     { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
   ],
   '不定期抽查': [
-    { id:'7-8',  name:'表7-8', desc:'查驗紀錄表', required: true },
-    { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
+    // 隨機(不定期)抽查驗不需填寫自主檢查/申請流程表單，只需查驗後記錄
+    { id:'7-9',  name:'表7-9', desc:'不定期查驗紀錄表', required: true },
+    { id:'5-5',  name:'表5-5', desc:'材料設備查驗/施工抽查報告', required: true },
     { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
-    { id:'5-7',  name:'表5-7', desc:'工程抽查驗申請單', required: true },
   ],
 };
 
@@ -2474,10 +2474,17 @@ function getFormsForQi(qi) {
   var saved = qi.forms || {};
   // 決定 5-6 是否顯示：不合格 or 有改善通知單
   var hasIssue = (qi.progress !== 'Completed') || qi.noticeNo;
-  return templates.filter(function(t) {
+  var activeTemplates = templates.filter(function(t) {
     if (t.condition === 'notpass') return hasIssue;
     return true;
-  }).map(function(t) {
+  });
+  // ★ 清除不屬於此類型的舊表單 key（避免舊資料殘留顯示）
+  var validIds = {};
+  activeTemplates.forEach(function(t) { validIds[t.id] = true; });
+  Object.keys(saved).forEach(function(k) {
+    if (!validIds[k]) { delete saved[k]; }
+  });
+  return activeTemplates.map(function(t) {
     var key = t.id;
     return {
       id: key,
@@ -2598,3 +2605,4 @@ if (sessionStorage.getItem('tl_auth') === '1') {
 }
 </script>
 </body>
+        '>' + esc(f.note) + '</textarea>' +
