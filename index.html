@@ -701,7 +701,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
     <button class="tab-btn" onclick="switchTab('timeline')">時間軸</button>
     <button class="tab-btn" onclick="switchTab('defects')">改善事項追蹤 <span class="tab-badge" id="open-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('docs')">文件送審 <span class="tab-badge" id="doc-pending-count" style="display:none">0</span></button>
-    <button class="tab-btn" onclick="switchTab('quality')">品質抽驗 <span class="tab-badge" id="qi-fail-count" style="display:none">0</span></button>
+    <button class="tab-btn" onclick="switchTab('quality')">監造查驗 <span class="tab-badge" id="qi-fail-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出</button>
   </div>
 
@@ -727,7 +727,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
           </select>
         </div>
         <div class="field"><label>一、工程進行情況</label><textarea id="f-title-1" placeholder="描述本日工程進行情況…" style="min-height:56px;"></textarea></div>
-        <div class="field"><label>二、品質抽查驗工作項目</label><textarea id="f-title-2" placeholder="描述品質抽查驗相關工作…" style="min-height:56px;"></textarea></div>
+        <div class="field"><label>二、品質查驗工作項目</label><textarea id="f-title-2" placeholder="描述品質抽查驗相關工作…" style="min-height:56px;"></textarea></div>
         <div class="field"><label>三、督導環保及職安衛事項</label><textarea id="f-title-3" placeholder="描述環保、職業安全衛生督導情況…" style="min-height:56px;"></textarea></div>
         <div class="field"><label>四、其他重要事項</label><textarea id="f-title-4" placeholder="其他重要事項…" style="min-height:48px;"></textarea></div>
         <div class="field">
@@ -929,8 +929,8 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <!-- Quality -->
       <div class="tab-panel" id="panel-quality">
         <div class="qi-header">
-          <h2>品質抽驗記錄</h2>
-          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增抽驗記錄</button>
+          <h2>監造查驗紀錄</h2>
+          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增查驗紀錄</button>
         </div>
         <!-- 統計卡 -->
         <div class="stat-grid" id="qi-stat-grid" style="margin-bottom:16px;"></div>
@@ -965,11 +965,11 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
                 <th>申請編號</th>
                 <th>申請日期</th>
                 <th>抽查紀錄☑</th>
-                <th>抽驗日期</th>
+                <th>查驗日期</th>
                 <th>辦理進度</th>
-                <th>抽驗紀錄表號</th>
-                <th>抽驗報告號</th>
-                <th>抽驗人</th>
+                <th>查驗紀錄表號</th>
+                <th>查驗報告號</th>
+                <th>查驗人</th>
                 <th>改善通知單</th>
                 <th>改善期限</th>
                 <th>表單狀態</th>
@@ -998,11 +998,11 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
           <button class="btn-export csv" onclick="exportDefectsCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載改善事項通知單 CSV</button>
         </div>
         <div class="export-section">
-          <h3>🔬 品質抽驗記錄 CSV</h3><p>匯出所有品質抽驗記錄，包含工項、規範、結果及備註。</p>
-          <button class="btn-export csv" onclick="exportQiCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載品質抽驗 CSV</button>
+          <h3>🔬 監造查驗紀錄 CSV</h3><p>匯出所有監造查驗紀錄，包含工項、規範、結果及備註。</p>
+          <button class="btn-export csv" onclick="exportQiCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載監造查驗 CSV</button>
         <div class="export-section">
           <h3>🔧 資料診斷 / 手動還原</h3>
-          <p>如果改善事項、文件送審、品質抽驗資料消失，請先點擊「診斷」確認 localStorage 狀態，再點「強制重新讀取」。</p>
+          <p>如果改善事項、文件送審、監造查驗資料消失，請先點擊「診斷」確認 localStorage 狀態，再點「強制重新讀取」。</p>
           <div id="storage-diag-result" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:12px;line-height:1.9;display:none;"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn-export csv" onclick="diagStorage()" style="font-size:12px;padding:8px 14px;">🔍 診斷 localStorage</button>
@@ -1088,7 +1088,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 
   <div class="modal-overlay" id="qi-modal" style="display:none">
     <div class="modal" style="max-width:600px;">
-      <div class="modal-header"><h3 id="qi-modal-title">新增抽驗記錄</h3><button class="modal-close" onclick="closeQiModal()">×</button></div>
+      <div class="modal-header"><h3 id="qi-modal-title">新增查驗紀錄</h3><button class="modal-close" onclick="closeQiModal()">×</button></div>
       <div class="modal-body">
         <div class="field-row">
           <div class="field"><label>材料進場或施工類型</label>
@@ -1120,7 +1120,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
           <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">抽查（驗）紀錄</div>
           <div class="field-row">
             <div class="field"><label>抽查完成</label><select id="qi-insp-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
-            <div class="field"><label>抽驗日期</label><input type="date" id="qi-date"></div>
+            <div class="field"><label>查驗日期</label><input type="date" id="qi-date"></div>
           </div>
           <div class="field-row">
             <div class="field"><label>辦理進度</label>
@@ -1129,11 +1129,11 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
                 <option value="Completed">Completed</option>
               </select>
             </div>
-            <div class="field"><label>抽驗人</label><input type="text" id="qi-inspector" placeholder="例：王中平"></div>
+            <div class="field"><label>查驗人</label><input type="text" id="qi-inspector" placeholder="例：王中平"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>抽驗紀錄表號</label><input type="text" id="qi-record-no" placeholder="例：MESCR-10490817_001.1a"></div>
-            <div class="field"><label>抽驗報告號</label><input type="text" id="qi-report-no" placeholder="例：MESR-10490817_001.1a"></div>
+            <div class="field"><label>查驗紀錄表號</label><input type="text" id="qi-record-no" placeholder="例：MESCR-10490817_001.1a"></div>
+            <div class="field"><label>查驗報告號</label><input type="text" id="qi-report-no" placeholder="例：MESR-10490817_001.1a"></div>
           </div>
         </div>
         <div class="field-row">
@@ -1568,7 +1568,7 @@ async function submitEntry() {
   // 組合成結構化工項說明
   var titleParts = [];
   if (t1) titleParts.push('一、工程進行情況\n' + t1);
-  if (t2) titleParts.push('二、品質抽查驗工作項目\n' + t2);
+  if (t2) titleParts.push('二、品質查驗工作項目\n' + t2);
   if (t3) titleParts.push('三、督導環保及職安衛事項\n' + t3);
   if (t4) titleParts.push('四、其他重要事項\n' + t4);
   var title = titleParts.join('\n\n');
@@ -1681,7 +1681,7 @@ function formatDate(d) {
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function parseTitle(raw) {
-  var HDRS = ['一、工程進行情況','二、品質抽查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
+  var HDRS = ['一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
   var result = ['','','',''];
   if (!raw) return result;
   // 新格式：含有標題行
@@ -1708,7 +1708,7 @@ function parseTitle(raw) {
 function formatTitle(raw) {
   if (!raw) return '';
   var lines = raw.split('\n');
-  var headers = ['一、工程進行情況','二、品質抽查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
+  var headers = ['一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
   return lines.map(function(line) {
     var trimmed = line.trim();
     var isHeader = headers.some(function(h) { return trimmed === h; });
@@ -1818,7 +1818,7 @@ function renderDashboard() {
     '<div class="stat-card amber"><div class="stat-label">未結案缺失</div><div class="stat-value">' + openDef + '</div><div class="stat-sub">缺失單</div></div>' +
     '<div class="stat-card blue"><div class="stat-label">累計出工</div><div class="stat-value">' + st.workers + '</div><div class="stat-sub">人次</div></div>' +
     '<div class="stat-card green"><div class="stat-label">里程碑</div><div class="stat-value">' + st.milestones + '</div><div class="stat-sub">個進展</div></div>' +
-    '<div class="stat-card teal"><div class="stat-label">品質合格率</div><div class="stat-value">' + qiRate + '</div><div class="stat-sub">' + qiPend + ' 筆待追蹤</div></div>';
+    '<div class="stat-card teal"><div class="stat-label">查驗合格率</div><div class="stat-value">' + qiRate + '</div><div class="stat-sub">' + qiPend + ' 筆待追蹤</div></div>';
 
   // Fix 11: 直接用 st.counts，不重複遍歷
   var countsOrder = ['normal','milestone','warn','pending','issue'];
@@ -2218,7 +2218,7 @@ function renderQi() {
   renderQiStats();
   var tbody = document.getElementById('qi-tbody'); if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有抽驗記錄</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(function(q, idx) {
@@ -2272,7 +2272,7 @@ function renderQi() {
 }
 function openAddQiModal() {
   editingQiId = null;
-  document.getElementById('qi-modal-title').textContent = '新增抽驗記錄';
+  document.getElementById('qi-modal-title').textContent = '新增查驗紀錄';
   var ids = ['qi-item','qi-self-no','qi-req-no','qi-record-no','qi-report-no','qi-inspector','qi-notice-no','qi-notes'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
   var dates = ['qi-date','qi-self-date','qi-req-date','qi-deadline'];
@@ -2287,7 +2287,7 @@ function openAddQiModal() {
 function editQi(id) {
   var q = qualityItems.find(function(x) { return x.id === id; }); if (!q) return;
   editingQiId = id;
-  document.getElementById('qi-modal-title').textContent = '編輯抽驗記錄';
+  document.getElementById('qi-modal-title').textContent = '編輯查驗紀錄';
   document.getElementById('qi-type').value        = q.type || '材料抽驗';
   document.getElementById('qi-item').value        = q.item || '';
   document.getElementById('qi-self-check').value  = q.selfCheck || '0';
@@ -2342,7 +2342,7 @@ function saveQi() {
   initAllFormBadges();
 }
 async function deleteQi(id) {
-  if (!await toastConfirm('確定要刪除此抽驗記錄？')) return;
+  if (!await toastConfirm('確定要刪除此查驗紀錄？')) return;
   qualityItems = qualityItems.filter(function(q) { return q.id !== id; });
   qiSave(); populateQiMonthFilter(); renderQi(); updateQiFailCount(); renderDashboard();
   initAllFormBadges();
@@ -2367,7 +2367,7 @@ function exportDefectsCSV() {
   downloadCSV(rows, '改善事項通知單追蹤_' + todayStr() + '.csv');
 }
 function exportQiCSV() {
-  var rows = [['N','材料進場或施工','項目名稱','自檢','自檢編號','自檢日期','申請者','申請編號','申請日期','抽查紀錄','抽驗日期','辦理進度','抽驗紀錄表號','抽驗報告號','抽驗人','改善通知單','改善期限','備註']];
+  var rows = [['N','材料進場或施工','項目名稱','自檢','自檢編號','自檢日期','申請者','申請編號','申請日期','抽查紀錄','查驗日期','辦理進度','查驗紀錄表號','查驗報告號','查驗人','改善通知單','改善期限','備註']];
   var chk = function(v) { return v == '1' ? '☑' : '☐'; };
   qualityItems.slice().sort(function(a,b) { return (a.inspDate||a.date||'').localeCompare(b.inspDate||b.date||''); }).forEach(function(q, i) {
     rows.push([
@@ -2379,7 +2379,7 @@ function exportQiCSV() {
       q.noticeNo||'', q.deadline||'', q.notes||''
     ]);
   });
-  downloadCSV(rows, '品質抽驗記錄_' + todayStr() + '.csv');
+  downloadCSV(rows, '監造查驗紀錄_' + todayStr() + '.csv');
 }
 function downloadCSV(rows, filename) {
   var csv = '\uFEFF' + rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
@@ -2399,7 +2399,7 @@ function diagStorage() {
     { name: '施工時間軸', key: LOCAL_KEY },
     { name: '改善事項通知單', key: DEFECT_KEY },
     { name: '文件送審', key: DOCS_KEY },
-    { name: '品質抽驗', key: QI_KEY },
+    { name: '監造查驗', key: QI_KEY },
     { name: '工程進度', key: PROGRESS_KEY },
   ];
   var lines = ['<strong>localStorage 診斷結果：</strong><br>'];
@@ -2449,12 +2449,12 @@ var FORM_TEMPLATES = {
     { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
   ],
   '施工抽查': [
-    { id:'7-9',  name:'表7-9', desc:'不定期抽驗紀錄表', required: true },
+    { id:'7-9',  name:'表7-9', desc:'不定期查驗紀錄表', required: true },
     { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
     { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
   ],
   '不定期抽查': [
-    { id:'7-8',  name:'表7-8', desc:'抽驗紀錄表', required: true },
+    { id:'7-8',  name:'表7-8', desc:'查驗紀錄表', required: true },
     { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
     { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
     { id:'5-7',  name:'表5-7', desc:'工程抽查驗申請單', required: true },
@@ -2468,7 +2468,7 @@ var FORM_STATUS_LABELS = {
   'approved':  '已核定',
 };
 
-// 取得某筆抽驗記錄的表單清單（附帶狀態）
+// 取得某筆查驗紀錄的表單清單（附帶狀態）
 function getFormsForQi(qi) {
   var templates = FORM_TEMPLATES[qi.type] || FORM_TEMPLATES['材料抽驗'];
   var saved = qi.forms || {};
