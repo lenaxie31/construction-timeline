@@ -72,7 +72,8 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 
 /* LAYOUT */
 .layout{display:flex;min-height:calc(100vh - 105px);}
-.sidebar{width:280px;min-width:280px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;transition:transform .25s;}
+.sidebar{width:300px;min-width:300px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;transition:width .25s cubic-bezier(0.4,0,0.2,1),min-width .25s cubic-bezier(0.4,0,0.2,1);position:relative;}
+.sidebar.collapsed{width:0;min-width:0;overflow:hidden;border-right:none;}
 .sidebar-inner{padding:16px;display:flex;flex-direction:column;gap:14px;flex:1;}
 .sidebar-section-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding-bottom:10px;border-bottom:1px solid var(--border-light);}
 .field{display:flex;flex-direction:column;gap:5px;}
@@ -637,10 +638,84 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .form-summary-badge.has-issue { background: var(--c-amber-bg);  color: var(--c-amber);  border-color: var(--c-amber-border); }
 .form-summary-badge.not-started { background: #F1F5F9; color: #475569; border-color: #cbd5e1; }
 
+
+/* SIDEBAR COLLAPSE */
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: var(--shadow);
+  transition: background .15s, transform .15s;
+  color: var(--text-secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.sidebar-collapse-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.sidebar.collapsed + .main .sidebar-float-btn { display: flex; }
+.sidebar-float-btn {
+  display: none;
+  position: fixed;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  background: var(--text-primary);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 150;
+  box-shadow: var(--shadow-md);
+  font-size: 14px;
+  transition: opacity .15s;
+}
+.sidebar-float-btn:hover { opacity: .85; }
+
+/* IMPROVED SIDEBAR INNER */
+.sidebar-inner { padding: 14px 14px 20px; gap: 10px; }
+.sidebar-section-title {
+  font-size: 12px; font-weight: 700; color: var(--text-primary);
+  text-transform: uppercase; letter-spacing: .6px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--text-primary);
+  margin-bottom: 2px;
+}
+.field label { font-size: 11px; font-weight: 600; color: var(--text-secondary); letter-spacing: .3px; }
+.field input, .field select, .field textarea {
+  font-size: 13px; padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--c-blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+}
+.btn-primary {
+  background: var(--text-primary);
+  border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  padding: 11px 16px;
+}
+.btn-secondary { border-radius: 8px; }
+
 /* MOBILE */
-.sidebar-toggle{display:none;}
+.sidebar-toggle{display:flex;}
 @media(max-width:720px){
-  .sidebar{position:fixed;top:105px;left:0;bottom:0;z-index:200;transform:translateX(-100%);width:280px;}
+  .sidebar{position:fixed;top:105px;left:0;bottom:0;z-index:200;transform:translateX(-100%);width:300px;transition:transform .25s cubic-bezier(0.4,0,0.2,1)!important;}
+  .sidebar.collapsed{width:300px;overflow:auto;}
   .sidebar.open{transform:none;box-shadow:var(--shadow-md);}
   .sidebar-toggle{display:flex;}
   .layout{position:relative;}
@@ -687,7 +762,10 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
     <div class="header-title"><h1>施工及監造工作回報</h1><p>減碳A標</p></div>
     <div class="header-actions">
       <span class="sync-badge sync-local" id="sync-badge">本機模式</span>
-      <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="新增工項">
+      <button class="btn-icon" onclick="toggleSidebarCollapse()" title="展開/收起工項表單" id="header-toggle-btn" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="18"/><line x1="14" y1="9" x2="21" y2="9"/><line x1="14" y1="15" x2="21" y2="15"/></svg>
+      </button>
+      <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" title="新增工項（行動版）">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <button class="btn-icon" onclick="lockApp()" title="登出">
@@ -709,6 +787,9 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 
   <div class="layout">
     <div class="sidebar" id="sidebar">
+      <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="收起側欄">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
       <div class="sidebar-inner">
         <div class="sidebar-section-title" id="form-title">新增工項</div>
         <div class="field-row">
@@ -752,6 +833,9 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
     </div>
 
     <div class="main">
+      <button class="sidebar-float-btn" id="sidebar-float-btn" onclick="toggleSidebarCollapse()" title="展開新增工項">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
       <div class="print-header">
         <h2 style="font-size:18px;font-weight:700;">施工及監造工作回報 — 減碳A標</h2>
         <p style="font-size:12px;color:#888;margin-top:4px;">列印時間：<span id="print-time"></span></p>
@@ -1521,6 +1605,7 @@ function switchTab(tab) {
   closeSidebar();
 }
 
+// Mobile: slide-in panel
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay-bg').classList.toggle('show');
@@ -1528,6 +1613,28 @@ function toggleSidebar() {
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay-bg').classList.remove('show');
+}
+
+// Desktop: collapse/expand sidebar
+var _sidebarCollapsed = false;
+function toggleSidebarCollapse() {
+  _sidebarCollapsed = !_sidebarCollapsed;
+  var sidebar = document.getElementById('sidebar');
+  var icon    = document.getElementById('collapse-icon');
+  var floatBtn= document.getElementById('sidebar-float-btn');
+  sidebar.classList.toggle('collapsed', _sidebarCollapsed);
+  // Flip arrow direction
+  if (icon) icon.setAttribute('points', _sidebarCollapsed ? '9 18 15 12 9 6' : '15 18 9 12 15 6');
+  // Show float button when collapsed
+  if (floatBtn) floatBtn.style.display = _sidebarCollapsed ? 'flex' : 'none';
+  // Save preference
+  try { localStorage.setItem('sidebar_collapsed', _sidebarCollapsed ? '1' : '0'); } catch(e) {}
+}
+function initSidebarState() {
+  try {
+    var saved = localStorage.getItem('sidebar_collapsed');
+    if (saved === '1') toggleSidebarCollapse();
+  } catch(e) {}
 }
 
 // ── FORM ──
@@ -2598,6 +2705,7 @@ function toggleFormSection(qiId) {
 }
 
 // ── BOOT ──
+initSidebarState();
 if (sessionStorage.getItem('tl_auth') === '1') {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -2605,3 +2713,4 @@ if (sessionStorage.getItem('tl_auth') === '1') {
 }
 </script>
 </body>
+        '>' + esc(f.note) + '</textarea>' +
