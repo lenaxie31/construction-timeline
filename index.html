@@ -2588,8 +2588,9 @@ function forceReload() {
 // 各抽驗類型對應的表單定義
 var FORM_TEMPLATES = {
   '材料抽驗': [
-    { id:'5-3',  name:'表5-3', desc:'材料管理標準', required: true },
     { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
+    { id:'7-8',  name:'表7-8', desc:'施工抽查紀錄表', required: true },
+    { id:'5-7',  name:'表5-7', desc:'工程抽查驗申請單', required: true },
     { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
   ],
   '施工抽查': [
@@ -2777,3 +2778,4 @@ if (sessionStorage.getItem('tl_auth') === '1') {
 }
 </script>
 </body>
+        '>' + esc(f.note) + '</textarea>' +
