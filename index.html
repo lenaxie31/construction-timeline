@@ -739,6 +739,52 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 }
 .btn-secondary { border-radius: 8px; }
 
+
+/* 時間軸工項分區 */
+.card-sections { display: flex; flex-direction: column; gap: 6px; margin-bottom: 3px; }
+.card-section {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.card-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+.card-section-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.card-section-body {
+  padding: 5px 8px 6px 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+/* 各區顏色 */
+.cs-1 { background: #F0F7FF; }
+.cs-1 .card-section-header { background: #DBEAFE; color: #1E40AF; }
+.cs-1 .card-section-dot { background: #2563EB; }
+.cs-2 { background: #F0FDF4; }
+.cs-2 .card-section-header { background: #DCFCE7; color: #166534; }
+.cs-2 .card-section-dot { background: #16A34A; }
+.cs-3 { background: #FFFBEB; }
+.cs-3 .card-section-header { background: #FEF3C7; color: #92400E; }
+.cs-3 .card-section-dot { background: #D97706; }
+.cs-alert { background: var(--c-red-bg); border-left: 3px solid var(--c-red); border-radius: var(--radius-sm); }
+.cs-alert-head { display: flex; align-items: center; gap: 5px; padding: 4px 8px; font-size: 10px; font-weight: 700; color: var(--c-red); text-transform: uppercase; letter-spacing: .3px; }
+.cs-alert-body { padding: 4px 8px 7px; font-size: 12px; color: #7F1D1D; line-height: 1.6; white-space: pre-wrap; }
+.cs-alert-warn { background: var(--c-amber-bg); border-left: 3px solid var(--c-amber); border-radius: var(--radius-sm); }
+.cs-alert-warn .cs-alert-head { color: var(--c-amber); }
+.cs-alert-warn .cs-alert-body { color: #78350F; }
+
 /* MOBILE */
 .sidebar-toggle{display:flex;}
 @media(max-width:720px){
@@ -1842,14 +1888,37 @@ function parseTitle(raw) {
 
 function formatTitle(raw) {
   if (!raw) return '';
-  var lines = raw.split('\n');
-  var headers = ['一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
-  return lines.map(function(line) {
-    var trimmed = line.trim();
-    var isHeader = headers.some(function(h) { return trimmed === h; });
-    if (isHeader) return '<span style="font-weight:700;color:var(--text-primary)">' + esc(trimmed) + '</span>';
-    return esc(line);
-  }).join('<br>');
+  var HDRS = ['一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
+  var CLS  = ['cs-1','cs-2','cs-3',''];
+  var ICONS = ['🏗','🔍','🌿','📌'];
+  var fields = parseTitle(raw);
+  var html = '<div class="card-sections">';
+  fields.forEach(function(text, i) {
+    if (!text || i === 3) return; // skip empty and 四 (handled separately)
+    html += '<div class="card-section ' + CLS[i] + '">' +
+      '<div class="card-section-header">' +
+        '<div class="card-section-dot"></div>' +
+        esc(HDRS[i]) +
+      '</div>' +
+      '<div class="card-section-body">' + esc(text) + '</div>' +
+    '</div>';
+  });
+  // 四、其他重要事項 (index 3) - 紅色
+  if (fields[3]) {
+    html += '<div class="card-section" style="background:#FEF2F2;">' +
+      '<div class="card-section-header" style="background:#FECACA;color:#991B1B;">' +
+        '<div class="card-section-dot" style="background:#DC2626;"></div>' +
+        '四、其他重要事項' +
+      '</div>' +
+      '<div class="card-section-body" style="color:#7F1D1D;">' + esc(fields[3]) + '</div>' +
+    '</div>';
+  }
+  html += '</div>';
+  // Fallback: if no structured content, show raw text
+  if (!fields.some(function(f){ return f; })) {
+    return '<div class="card-section-body" style="padding:0;">' + esc(raw).replace(/\n/g,'<br>') + '</div>';
+  }
+  return html;
 }
 
 function render() {
@@ -1905,8 +1974,11 @@ function render() {
             '</div>' +
           '</div>' +
           '<div class="card-title">' + formatTitle(e.title) + '</div>' +
-          (e.sub   ? '<div class="card-sub">' + esc(e.sub) + '</div>' : '') +
-          (e.alert ? '<div class="card-alert ' + alertCls + '">' + esc(e.alert).replace(/\n/g,'<br>') + '</div>' : '') +
+          (e.sub   ? '<div class="card-sub" style="margin-top:6px;">' + esc(e.sub) + '</div>' : '') +
+          (e.alert ? '<div style="margin-top:6px;background:#F1F5F9;border-left:3px solid #94A3B8;border-radius:var(--radius-sm);">' +
+            '<div style="display:flex;align-items:center;gap:5px;padding:4px 8px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.3px;">📝 備註</div>' +
+            '<div style="padding:4px 8px 7px;font-size:12px;color:#334155;line-height:1.6;white-space:pre-wrap;">' + esc(e.alert).replace(/\n/g,'<br>') + '</div>' +
+          '</div>' : '') +
         '</div>' +
       '</div>';
     }).join('');
