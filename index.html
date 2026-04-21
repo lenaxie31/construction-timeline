@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>施工及監造工作回報 — 減碳A標</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
@@ -1096,21 +1097,21 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <!-- Export -->
       <div class="tab-panel" id="panel-export">
         <div class="export-section">
-          <h3>📄 匯出 CSV</h3><p>將施工時間軸資料匯出為 CSV 格式，可直接用 Excel 或 Google Sheets 開啟。</p>
+          <h3>📊 匯出時間軸 Excel</h3><p>將施工時間軸資料匯出為格式化的 Excel 檔，含顏色分類、適當留白。</p>
           <div class="export-options"><label class="export-opt"><input type="checkbox" id="exp-all" checked> 全部記錄</label><label class="export-opt"><input type="checkbox" id="exp-issues"> 僅異常記錄</label></div>
-          <button class="btn-export csv" onclick="exportCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載 CSV</button>
+          <button class="btn-export csv" onclick="exportTimelineXLSX()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載 Excel</button>
         </div>
         <div class="export-section">
           <h3>🖨 列印 / 匯出 PDF</h3><p>點擊下方按鈕將開啟列印視窗，可選擇「另存為 PDF」來儲存監造月報。列印時僅顯示時間軸內容。</p>
           <button class="btn-export print" onclick="printReport()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>列印 / PDF</button>
         </div>
         <div class="export-section">
-          <h3>📋 改善事項通知單 CSV</h3><p>匯出所有改善事項通知單記錄，包含狀態與追蹤備註。</p>
-          <button class="btn-export csv" onclick="exportDefectsCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載改善事項通知單 CSV</button>
+          <h3>📋 匯出改善事項 Excel</h3><p>匯出所有改善事項通知單記錄，含狀態顏色標示。</p>
+          <button class="btn-export csv" onclick="exportDefectsXLSX()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載改善事項 Excel</button>
         </div>
         <div class="export-section">
-          <h3>🔬 監造查驗紀錄 CSV</h3><p>匯出所有監造查驗紀錄，包含工項、規範、結果及備註。</p>
-          <button class="btn-export csv" onclick="exportQiCSV()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載監造查驗 CSV</button>
+          <h3>🔬 匯出監造查驗 Excel</h3><p>匯出所有監造查驗紀錄，含進度顏色、自動欄寬。</p>
+          <button class="btn-export csv" onclick="exportQiXLSX()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載監造查驗 Excel</button>
         <div class="export-section">
           <h3>🔧 資料診斷 / 手動還原</h3>
           <p>如果改善事項、文件送審、監造查驗資料消失，請先點擊「診斷」確認 localStorage 狀態，再點「強制重新讀取」。</p>
@@ -2492,29 +2493,226 @@ async function deleteQi(id) {
   initAllFormBadges();
 }
 
-// ── EXPORT ──
-function exportCSV() {
+// ── EXPORT (XLSX) ──
+
+// Helper: download workbook
+function downloadXLSX(wb, filename) {
+  var wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+  var blob = new Blob([wbout], { type:'application/octet-stream' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
+
+// Helper: apply style to a range of cells
+function styleRange(ws, startRow, endRow, startCol, endCol, style) {
+  for (var r = startRow; r <= endRow; r++) {
+    for (var c = startCol; c <= endCol; c++) {
+      var addr = XLSX.utils.encode_cell({ r: r, c: c });
+      if (!ws[addr]) ws[addr] = { v: '', t: 's' };
+      ws[addr].s = style;
+    }
+  }
+}
+
+// ── 時間軸 XLSX ──
+function exportTimelineXLSX() {
   var onlyIssues = document.getElementById('exp-issues').checked && !document.getElementById('exp-all').checked;
   var data = onlyIssues ? entries.filter(function(e) { return e.status === 'issue'; }) : entries;
   var sorted = data.slice().sort(function(a,b) { return a.date.localeCompare(b.date); });
-  var rows = [['日期','天氣','狀態','工項說明','出工人數','異常備註','缺失單號']];
   var B2 = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
-  sorted.forEach(function(e) { rows.push([e.date,e.weather||'',B2[e.status]||e.status,e.title,e.sub||'',e.alert||'',e.defectNo||'']); });
-  downloadCSV(rows, '施工時間軸_' + todayStr() + '.csv');
-}
-function exportDefectsCSV() {
-  var rows = [['改善事項通知單號','缺失說明','相關日期','狀態','追蹤備註']];
-  var sMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
-  defects.slice().sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); }).forEach(function(d) {
-    rows.push([d.no||'',d.title,d.date||'',sMap[d.status]||d.status,d.notes||'']);
+
+  var wb = XLSX.utils.book_new();
+  var wsData = [];
+
+  // Title row
+  wsData.push(['施工及監造工作回報 — 減碳A標　施工時間軸']);
+  wsData.push(['匯出時間：' + new Date().toLocaleString('zh-TW')]);
+  wsData.push([]); // blank
+
+  // Header
+  wsData.push(['日期','天氣','狀態','一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項','出工人數','異常備註','缺失單號']);
+
+  var STATUS_COLOR = {
+    normal:    { bg: 'DBEAFE', fg: '1E40AF' }, // blue
+    milestone: { bg: 'DCFCE7', fg: '166534' }, // green
+    warn:      { bg: 'FEF3C7', fg: '92400E' }, // amber
+    pending:   { bg: 'F3E8FF', fg: '6B21A8' }, // purple
+    issue:     { bg: 'FEE2E2', fg: '991B1B' }, // red
+  };
+
+  sorted.forEach(function(e) {
+    var fields = parseTitle(e.title || '');
+    var sc = STATUS_COLOR[e.status] || STATUS_COLOR.normal;
+    wsData.push([
+      e.date, e.weather||'', B2[e.status]||e.status,
+      fields[0]||'', fields[1]||'', fields[2]||'', fields[3]||'',
+      e.sub||'', e.alert||'', e.defectNo||''
+    ]);
   });
-  downloadCSV(rows, '改善事項通知單追蹤_' + todayStr() + '.csv');
+
+  var ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:12},{wch:8},{wch:10},{wch:36},{wch:30},{wch:28},{wch:24},{wch:22},{wch:28},{wch:16}
+  ];
+
+  // Merge title
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:9} },
+    { s:{r:1,c:0}, e:{r:1,c:9} },
+  ];
+
+  // Apply styles via XLSX-js-style compatible format
+  // Note: basic XLSX.utils does not support rich styles; we encode them manually
+  var headerRowIdx = 3;
+  var dataStartIdx = 4;
+
+  // Style cells manually (SheetJS CE supports limited styling)
+  // We encode style as cell property .s
+  // Title styling
+  var titleCell = ws['A1'] || (ws['A1'] = { v: wsData[0][0], t:'s' });
+  titleCell.s = { font:{ bold:true, sz:14, color:{rgb:'1C1B18'} }, fill:{fgColor:{rgb:'F4F3EF'}} };
+
+  // Header row styling
+  var hdrCols = ['A','B','C','D','E','F','G','H','I','J'];
+  hdrCols.forEach(function(col) {
+    var addr = col + (headerRowIdx+1);
+    if (ws[addr]) ws[addr].s = {
+      font: { bold:true, sz:10, color:{rgb:'FFFFFF'} },
+      fill: { fgColor:{ rgb:'1C1B18' } },
+      alignment: { wrapText:true, vertical:'center' },
+      border: { bottom:{ style:'thin', color:{rgb:'444444'} } }
+    };
+  });
+
+  // Data rows
+  sorted.forEach(function(e, i) {
+    var rowIdx = dataStartIdx + i;
+    var sc = STATUS_COLOR[e.status] || STATUS_COLOR.normal;
+    var isAlt = i % 2 === 1;
+    var baseBg = isAlt ? 'F8F9FA' : 'FFFFFF';
+
+    // Status cell (col C = index 2)
+    var statusAddr = XLSX.utils.encode_cell({r: rowIdx, c: 2});
+    if (ws[statusAddr]) ws[statusAddr].s = {
+      font: { bold:true, sz:10, color:{rgb: sc.fg} },
+      fill: { fgColor:{ rgb: sc.bg } },
+      alignment: { horizontal:'center', vertical:'center' }
+    };
+
+    // Other cells
+    [0,1,3,4,5,6,7,8,9].forEach(function(ci) {
+      var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
+      if (ws[addr]) ws[addr].s = {
+        font: { sz:10 },
+        fill: { fgColor:{ rgb: baseBg } },
+        alignment: { wrapText:true, vertical:'top' }
+      };
+    });
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, '施工時間軸');
+  downloadXLSX(wb, '施工時間軸_' + todayStr() + '.xlsx');
 }
-function exportQiCSV() {
-  var rows = [['N','材料進場或施工','項目名稱','自檢','自檢編號','自檢日期','申請者','申請編號','申請日期','抽查紀錄','查驗日期','辦理進度','查驗紀錄表號','查驗報告號','查驗人','改善通知單','改善期限','備註']];
+
+// ── 改善事項 XLSX ──
+function exportDefectsXLSX() {
+  var wb = XLSX.utils.book_new();
+  var wsData = [];
+
+  wsData.push(['改善事項通知單追蹤 — 減碳A標']);
+  wsData.push(['匯出時間：' + new Date().toLocaleString('zh-TW')]);
+  wsData.push([]);
+  wsData.push(['通知單號','缺失說明','相關日期','狀態','追蹤備註']);
+
+  var sMap = { open:'未結案', replied:'承商已回覆', closed:'已結案' };
+  var STATUS_BG = { open:'FEE2E2', replied:'FEF3C7', closed:'DCFCE7' };
+  var STATUS_FG = { open:'991B1B', replied:'92400E', closed:'166534' };
+
+  var sorted = defects.slice().sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); });
+  sorted.forEach(function(d) {
+    wsData.push([d.no||'', d.title||'', d.date||'', sMap[d.status]||d.status, d.notes||'']);
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:18},{wch:40},{wch:12},{wch:12},{wch:44}];
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:4} },
+    { s:{r:1,c:0}, e:{r:1,c:4} },
+  ];
+
+  // Title
+  if (ws['A1']) ws['A1'].s = { font:{bold:true,sz:14}, fill:{fgColor:{rgb:'F4F3EF'}} };
+
+  // Header
+  ['A','B','C','D','E'].forEach(function(col) {
+    var addr = col + '4';
+    if (ws[addr]) ws[addr].s = {
+      font:{bold:true,sz:10,color:{rgb:'FFFFFF'}},
+      fill:{fgColor:{rgb:'1C1B18'}},
+      alignment:{horizontal:'center',vertical:'center'}
+    };
+  });
+
+  // Data rows
+  sorted.forEach(function(d, i) {
+    var rowIdx = 4 + i; // 0-based: header is row 3
+    var bg = STATUS_BG[d.status] || 'F1F5F9';
+    var fg = STATUS_FG[d.status] || '334155';
+    var isAlt = i % 2 === 1;
+    var baseBg = isAlt ? 'F8FAFC' : 'FFFFFF';
+
+    // Status cell (col D = index 3)
+    var statusAddr = XLSX.utils.encode_cell({r: rowIdx, c: 3});
+    if (ws[statusAddr]) ws[statusAddr].s = {
+      font:{bold:true,sz:10,color:{rgb:fg}},
+      fill:{fgColor:{rgb:bg}},
+      alignment:{horizontal:'center',vertical:'center'}
+    };
+
+    [0,1,2,4].forEach(function(ci) {
+      var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
+      if (ws[addr]) ws[addr].s = {
+        font:{sz:10},
+        fill:{fgColor:{rgb:baseBg}},
+        alignment:{wrapText:true,vertical:'top'}
+      };
+    });
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, '改善事項通知單');
+  downloadXLSX(wb, '改善事項通知單_' + todayStr() + '.xlsx');
+}
+
+// ── 監造查驗 XLSX ──
+function exportQiXLSX() {
+  var wb = XLSX.utils.book_new();
+  var wsData = [];
+
+  wsData.push(['監造查驗紀錄 — 減碳A標']);
+  wsData.push(['匯出時間：' + new Date().toLocaleString('zh-TW')]);
+  wsData.push([]);
+  wsData.push([
+    'N','材料進場或施工','項目名稱',
+    '自檢☑','自檢編號','自檢日期',
+    '申請者☑','申請編號','申請日期',
+    '抽查紀錄☑','查驗日期','辦理進度',
+    '查驗紀錄表號','查驗報告號','查驗人',
+    '改善通知單','改善期限','備註'
+  ]);
+
   var chk = function(v) { return v == '1' ? '☑' : '☐'; };
-  qualityItems.slice().sort(function(a,b) { return (a.inspDate||a.date||'').localeCompare(b.inspDate||b.date||''); }).forEach(function(q, i) {
-    rows.push([
+  var TYPE_BG  = { '材料抽驗':'DBEAFE', '施工抽查':'DCFCE7', '不定期抽查':'F3E8FF' };
+  var TYPE_FG  = { '材料抽驗':'1E40AF', '施工抽查':'166534', '不定期抽查':'6B21A8' };
+  var PROG_BG  = { 'Completed':'DCFCE7', '製作中':'FEF3C7' };
+  var PROG_FG  = { 'Completed':'166534', '製作中':'92400E' };
+
+  var sorted = qualityItems.slice().sort(function(a,b) {
+    return (a.inspDate||a.date||'').localeCompare(b.inspDate||b.date||'');
+  });
+
+  sorted.forEach(function(q, i) {
+    wsData.push([
       i+1, q.type||'', q.item||'',
       chk(q.selfCheck), q.selfNo||'', q.selfDate||'',
       chk(q.reqCheck), q.reqNo||'', q.reqDate||'',
@@ -2523,12 +2721,93 @@ function exportQiCSV() {
       q.noticeNo||'', q.deadline||'', q.notes||''
     ]);
   });
-  downloadCSV(rows, '監造查驗紀錄_' + todayStr() + '.csv');
+
+  var ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [
+    {wch:5},{wch:12},{wch:22},
+    {wch:7},{wch:16},{wch:12},
+    {wch:7},{wch:16},{wch:12},
+    {wch:8},{wch:12},{wch:10},
+    {wch:22},{wch:22},{wch:10},
+    {wch:16},{wch:12},{wch:28}
+  ];
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:17} },
+    { s:{r:1,c:0}, e:{r:1,c:17} },
+  ];
+
+  // Title
+  if (ws['A1']) ws['A1'].s = { font:{bold:true,sz:14}, fill:{fgColor:{rgb:'F4F3EF'}} };
+
+  // Header row (row index 3)
+  for (var ci = 0; ci < 18; ci++) {
+    var addr = XLSX.utils.encode_cell({r:3, c:ci});
+    if (ws[addr]) ws[addr].s = {
+      font:{bold:true,sz:9,color:{rgb:'FFFFFF'}},
+      fill:{fgColor:{rgb:'1C1B18'}},
+      alignment:{horizontal:'center',vertical:'center',wrapText:true}
+    };
+  }
+
+  // Data rows (starting at row index 4)
+  sorted.forEach(function(q, i) {
+    var rowIdx = 4 + i;
+    var isAlt = i % 2 === 1;
+    var baseBg = isAlt ? 'F8FAFC' : 'FFFFFF';
+    var typeBg = TYPE_BG[q.type] || 'EFF6FF';
+    var typeFg = TYPE_FG[q.type] || '1E40AF';
+    var progBg = PROG_BG[q.progress] || 'FEF3C7';
+    var progFg = PROG_FG[q.progress] || '92400E';
+    var hasNotice = q.noticeNo ? true : false;
+
+    for (var ci = 0; ci < 18; ci++) {
+      var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
+      if (!ws[addr]) ws[addr] = {v:'', t:'s'};
+      var cellStyle = {
+        font:{sz:9},
+        fill:{fgColor:{rgb:baseBg}},
+        alignment:{vertical:'top', wrapText:ci===2||ci===17}
+      };
+
+      // Type column (col 1)
+      if (ci === 1) {
+        cellStyle.font = {sz:9, bold:true, color:{rgb:typeFg}};
+        cellStyle.fill = {fgColor:{rgb:typeBg}};
+        cellStyle.alignment = {horizontal:'center', vertical:'center'};
+      }
+      // Progress column (col 11)
+      if (ci === 11) {
+        cellStyle.font = {sz:9, bold:true, color:{rgb:progFg}};
+        cellStyle.fill = {fgColor:{rgb:progBg}};
+        cellStyle.alignment = {horizontal:'center', vertical:'center'};
+      }
+      // Notice column (col 15) - red if has notice
+      if (ci === 15 && hasNotice) {
+        cellStyle.font = {sz:9, bold:true, color:{rgb:'991B1B'}};
+        cellStyle.fill = {fgColor:{rgb:'FEE2E2'}};
+        cellStyle.alignment = {horizontal:'center', vertical:'center'};
+      }
+      // Checkbox columns - center aligned
+      if (ci === 3 || ci === 6 || ci === 9) {
+        cellStyle.alignment = {horizontal:'center', vertical:'center'};
+        cellStyle.font = {sz:11};
+      }
+
+      ws[addr].s = cellStyle;
+    }
+  });
+
+  // Freeze panes at row 5 (below header)
+  ws['!freeze'] = { xSplit: 0, ySplit: 4 };
+
+  XLSX.utils.book_append_sheet(wb, ws, '監造查驗紀錄');
+  downloadXLSX(wb, '監造查驗紀錄_' + todayStr() + '.xlsx');
 }
-function downloadCSV(rows, filename) {
-  var csv = '\uFEFF' + rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
-  var blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
-  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+
+function printReport() {
+  document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
+  switchTab('timeline');
+  setTimeout(function() { window.print(); }, 200);
 }
 function printReport() {
   document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
@@ -2591,18 +2870,19 @@ var FORM_TEMPLATES = {
     { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
     { id:'7-8',  name:'表7-8', desc:'施工抽查紀錄表', required: true },
     { id:'5-7',  name:'表5-7', desc:'工程抽查驗申請單', required: true },
-    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
+    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時才顯示' },
   ],
   '施工抽查': [
-    { id:'7-9',  name:'表7-9', desc:'不定期查驗紀錄表', required: true },
     { id:'5-5',  name:'表5-5', desc:'材料設備抽驗/施工抽查報告', required: true },
-    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
+    { id:'7-8',  name:'表7-8', desc:'施工抽查紀錄表', required: true },
+    { id:'5-7',  name:'表5-7', desc:'工程抽查驗申請單', required: true },
+    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時才顯示' },
   ],
   '不定期抽查': [
     // 隨機(不定期)抽查驗不需填寫自主檢查/申請流程表單，只需查驗後記錄
-    { id:'7-9',  name:'表7-9', desc:'不定期查驗紀錄表', required: true },
+    { id:'7-9',  name:'表7-9', desc:'不定期抽驗紀錄表', required: true },
     { id:'5-5',  name:'表5-5', desc:'材料設備查驗/施工抽查報告', required: true },
-    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時' },
+    { id:'5-6',  name:'表5-6', desc:'工程抽查(驗)改善事項通知單', required: false, condition:'notpass', conditionLabel:'不合格時才顯示' },
   ],
 };
 
@@ -2778,3 +3058,4 @@ if (sessionStorage.getItem('tl_auth') === '1') {
 }
 </script>
 </body>
+        '>' + esc(f.note) + '</textarea>' +
