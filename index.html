@@ -1548,10 +1548,38 @@ async function init() {
     if (API_URL) {
       setSync('載入中…', 'sync-busy');
       try {
+        // 同步時間軸
         var data = await apiCall({ action: 'getAll' });
         var raw = Array.isArray(data.entries) ? data.entries : [];
         entries = raw.map(sanitizeEntry).filter(function(e) { return e.date; });
         localSave();
+
+        // 同步其他三個模組
+        var cloudDefects = await cloudLoadAll('defects');
+        if (cloudDefects && cloudDefects.length > 0) {
+          defects = cloudDefects;
+          try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); } catch(e) {}
+        } else if (defects.length > 0) {
+          // 雲端是空的但本機有資料 → 上傳本機資料
+          await cloudSaveAll('defects', defects);
+        }
+
+        var cloudDocs = await cloudLoadAll('docs');
+        if (cloudDocs && cloudDocs.length > 0) {
+          docs = cloudDocs;
+          try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {}
+        } else if (docs.length > 0) {
+          await cloudSaveAll('docs', docs);
+        }
+
+        var cloudQi = await cloudLoadAll('qi');
+        if (cloudQi && cloudQi.length > 0) {
+          qualityItems = cloudQi;
+          try { localStorage.setItem(QI_KEY, JSON.stringify(qualityItems)); } catch(e) {}
+        } else if (qualityItems.length > 0) {
+          await cloudSaveAll('qi', qualityItems);
+        }
+
         setSync('已同步 ✓ (' + entries.length + ' 筆)', 'sync-ok');
       } catch(e) {
         setSync('離線，使用本機', 'sync-err');
@@ -3119,6 +3147,64 @@ function toggleFormSection(qiId) {
   var isHidden = wrap.style.display === 'none' || !wrap.style.display;
   wrap.style.display = isHidden ? 'block' : 'none';
   if (isHidden) renderFormSection(qiId);
+}
+
+// ════════════════════════════════
+// ── 雲端同步：改善事項 / 文件送審 / 監造查驗 ──
+// ════════════════════════════════
+
+async function cloudSaveAll(module, dataArr) {
+  if (!API_URL) return;
+  var json = JSON.stringify(dataArr);
+  // GET 長度有限，改用 fetch POST-like via URL params with encoded json
+  // Apps Script doGet 只支援 GET，所以用 encodeURIComponent 傳
+  var url = API_URL + '?module=' + module + '&action=saveAll&json=' + encodeURIComponent(json);
+  try {
+    var res = await fetch(url);
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+  } catch(e) {
+    console.warn('雲端儲存失敗 [' + module + ']:', e.message);
+    throw e;
+  }
+}
+
+async function cloudLoadAll(module) {
+  if (!API_URL) return null;
+  var url = API_URL + '?module=' + module + '&action=getAll';
+  var res = await fetch(url);
+  var data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return Array.isArray(data.data) ? data.data : [];
+}
+
+// ── 覆寫 defectSave / docsSave / qiSave 加入雲端同步 ──
+var _defectSaveTimer = null;
+function defectSave() {
+  try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); } catch(e) {}
+  // 防抖：500ms 後才上傳，避免連續操作打太多 request
+  clearTimeout(_defectSaveTimer);
+  _defectSaveTimer = setTimeout(function() {
+    cloudSaveAll('defects', defects).catch(function(){});
+  }, 500);
+}
+
+var _docsSaveTimer = null;
+function docsSave() {
+  try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {}
+  clearTimeout(_docsSaveTimer);
+  _docsSaveTimer = setTimeout(function() {
+    cloudSaveAll('docs', docs).catch(function(){});
+  }, 500);
+}
+
+var _qiSaveTimer = null;
+function qiSave() {
+  try { localStorage.setItem(QI_KEY, JSON.stringify(qualityItems)); } catch(e) {}
+  clearTimeout(_qiSaveTimer);
+  _qiSaveTimer = setTimeout(function() {
+    cloudSaveAll('qi', qualityItems).catch(function(){});
+  }, 500);
 }
 
 // ── BOOT ──
