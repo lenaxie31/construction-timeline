@@ -1424,14 +1424,11 @@ function localLoad() {
   try { var r = localStorage.getItem(LOCAL_KEY); if (!r) return null; var p = JSON.parse(r); return Array.isArray(p) ? p : null; }
   catch(e) { try { localStorage.removeItem(LOCAL_KEY); } catch(e2) {} return null; }
 }
-function defectSave() { try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); } catch(e) {} }
 function defectLoad() {
   try { var r = localStorage.getItem(DEFECT_KEY); if (!r) return []; var p = JSON.parse(r); return Array.isArray(p) ? p : []; }
   catch(e) { return []; }
 }
-function docsSave() { try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {} }
 function docsLoad() { try { var r = localStorage.getItem(DOCS_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
-function qiSave() { try { localStorage.setItem(QI_KEY, JSON.stringify(qualityItems)); } catch(e) {} }
 function qiLoad() { try { var r = localStorage.getItem(QI_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
 function progressSave(pct) { try { localStorage.setItem(PROGRESS_KEY, String(pct)); } catch(e) {} }
 function progressLoad() { try { return parseInt(localStorage.getItem(PROGRESS_KEY) || '0') || 0; } catch(e) { return 0; } }
@@ -3156,16 +3153,31 @@ function toggleFormSection(qiId) {
 async function cloudSaveAll(module, dataArr) {
   if (!API_URL) return;
   var json = JSON.stringify(dataArr);
-  // GET 長度有限，改用 fetch POST-like via URL params with encoded json
-  // Apps Script doGet 只支援 GET，所以用 encodeURIComponent 傳
-  var url = API_URL + '?module=' + module + '&action=saveAll&json=' + encodeURIComponent(json);
+  // 使用 POST 避免 GET URL 長度限制
+  // Apps Script 需要部署 doPost 才能接收
   try {
-    var res = await fetch(url);
+    var res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ module: module, action: 'saveAll', json: json })
+    });
     var data = await res.json();
     if (data.error) throw new Error(data.error);
   } catch(e) {
-    console.warn('雲端儲存失敗 [' + module + ']:', e.message);
-    throw e;
+    // POST 失敗時 fallback 到 GET（適合小資料）
+    try {
+      var encoded = encodeURIComponent(json);
+      if (encoded.length < 6000) { // 只在資料小的時候用 GET
+        var url = API_URL + '?module=' + module + '&action=saveAll&json=' + encoded;
+        var res2 = await fetch(url);
+        var data2 = await res2.json();
+        if (data2.error) throw new Error(data2.error);
+      } else {
+        console.warn('雲端儲存跳過 [' + module + ']: 資料太大且 POST 失敗');
+      }
+    } catch(e2) {
+      console.warn('雲端儲存失敗 [' + module + ']:', e2.message);
+    }
   }
 }
 
