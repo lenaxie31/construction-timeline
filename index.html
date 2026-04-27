@@ -123,7 +123,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .bar-label{width:72px;color:var(--text-secondary);flex-shrink:0;}
 .bar-track{flex:1;height:8px;background:var(--border-light);border-radius:4px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(0.4,0,0.2,1);}
-.bar-count{width:28px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);}
+.bar-count{width:28px;text-align:right;font-size:11px;color:var(--text-secondary);}
 .bar-pct{width:36px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);}
 .doc-progress-summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;box-shadow:var(--shadow);}
 .doc-progress-summary h3{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;}
@@ -236,7 +236,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .defects-list{display:flex;flex-direction:column;gap:10px;}
 .defect-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
 .defect-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.defect-no{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--text-muted);}
+.defect-no{font-family:monospace;font-size:11px;font-weight:500;color:var(--text-muted);}
 .defect-title{font-size:14px;font-weight:600;flex:1;}
 .defect-body{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px;}
 .defect-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);}
@@ -306,8 +306,8 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .ver-dot.pending{background:#94a3b8;box-shadow:0 0 0 2px #cbd5e1;}
 .ver-dot.sent{background:var(--c-purple);box-shadow:0 0 0 2px var(--c-purple-border);}
 .ver-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
-.ver-no{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:var(--text-muted);}
-.ver-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);}
+.ver-no{font-family:monospace;font-size:11px;font-weight:600;color:var(--text-muted);}
+.ver-date{font-size:11px;color:var(--text-secondary);}
 .ver-deadline{font-size:11px;}
 .ver-deadline.overdue{color:var(--c-red);font-weight:600;}
 .ver-deadline.ok{color:var(--text-muted);}
@@ -785,6 +785,56 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .cs-alert-warn .cs-alert-head { color: var(--c-amber); }
 .cs-alert-warn .cs-alert-body { color: #78350F; }
 
+
+/* 監造查驗增強 */
+.qi-group-row td {
+  background: #1C1B18 !important;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  letter-spacing: .4px;
+}
+.qi-group-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.qi-group-contract { background: #2563EB; color: #fff; }
+.qi-group-vol      { background: #7C3AED; color: #fff; }
+
+/* 齊件燈號 */
+.doc-pill {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.dp-ok    { background: #DCFCE7; color: #166534; }
+.dp-pend  { background: #FEF3C7; color: #92400E; }
+.dp-no    { background: #F1F5F9; color: #64748B; }
+.dp-fix   { background: #FEE2E2; color: #991B1B; }
+
+/* 整體狀態 badge */
+.os-done   { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+.os-pend   { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+.os-none   { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+.os-wip    { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+.overall-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
 /* MOBILE */
 .sidebar-toggle{display:flex;}
 @media(max-width:720px){
@@ -1095,15 +1145,17 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
         <!-- 篩選 -->
         <div class="qi-filter-bar">
           <select class="filter-select" id="qi-filter-type" onchange="renderQi()">
-            <option value="">全部進場類型</option>
+            <option value="">全部分類</option>
             <option value="材料抽驗">材料抽驗</option>
             <option value="施工抽查">施工抽查</option>
             <option value="不定期抽查">不定期抽查</option>
           </select>
-          <select class="filter-select" id="qi-filter-progress" onchange="renderQi()">
-            <option value="">全部進度</option>
-            <option value="Completed">Completed</option>
-            <option value="製作中">製作中</option>
+          <select class="filter-select" id="qi-filter-overall" onchange="renderQi()">
+            <option value="">全部狀態</option>
+            <option value="完成">✅ 完成</option>
+            <option value="文件待補">⚠️ 文件待補</option>
+            <option value="製作中">🔄 製作中</option>
+            <option value="未開始">○ 未開始</option>
           </select>
           <select class="filter-select" id="qi-filter-month" onchange="renderQi()"><option value="">全部月份</option></select>
           <span class="filter-count" id="qi-count"></span>
@@ -1114,8 +1166,10 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
             <thead>
               <tr>
                 <th>N</th>
-                <th>材料進場或施工</th>
-                <th>項目名稱</th>
+                <th>分類</th>
+                <th>抽驗項目</th>
+                <th style="min-width:120px;">齊件狀態</th>
+                <th>整體狀態</th>
                 <th>自檢☑</th>
                 <th>自檢編號</th>
                 <th>自檢日期</th>
@@ -1161,10 +1215,12 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
         <div class="export-section">
           <h3>🔧 資料診斷 / 手動還原</h3>
           <p>如果改善事項、文件送審、監造查驗資料消失，請先點擊「診斷」確認 localStorage 狀態，再點「強制重新讀取」。</p>
-          <div id="storage-diag-result" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:12px;line-height:1.9;display:none;"></div>
+          <div id="storage-diag-result" style="font-size:11px;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:12px;line-height:1.9;display:none;"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn-export csv" onclick="diagStorage()" style="font-size:12px;padding:8px 14px;">🔍 診斷 localStorage</button>
             <button class="btn-export csv" onclick="forceReload()" style="font-size:12px;padding:8px 14px;background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);">🔄 強制重新讀取</button>
+            <button class="btn-export csv" onclick="rescueUpload()" style="font-size:12px;padding:8px 14px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">⬆️ 本機→雲端救援</button>
+            <button class="btn-export csv" onclick="rescueDownload()" style="font-size:12px;padding:8px 14px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">⬇️ 雲端→本機救援</button>
           </div>
         </div>
         </div>
@@ -1347,6 +1403,7 @@ var LOCAL_KEY   = 'construction_tl_v3';
 var DEFECT_KEY  = 'construction_defects_v1';
 var DOCS_KEY    = 'construction_docs_v1';
 var QI_KEY      = 'construction_qi_v2';
+var QI_PRELOAD  = [{"id": "001b4aqzw", "type": "材料抽驗", "item": "材料進場及測量放樣", "group": "圍籬（含大門及單扇門）", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-01-19", "progress": "Completed", "inspector": "王中平", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "甲種圍籬材料", "date": "2026-01-19", "result": "pass", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "已收", "docReport": "已收", "docImprove": "不需要", "overallStatus": "完成", "lastChaseDate": "2026-01-19", "chaseNote": "甲種圍籬材料"}, {"id": "002ze49q9", "type": "施工抽查", "item": "柱腳基座開挖及墩座澆置", "group": "圍籬（含大門及單扇門）", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-03-11", "progress": "Completed", "inspector": "劉錦華", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "圍籬放樣（含墩座）", "date": "2026-03-11", "result": "pass", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "已收", "docReport": "已收", "docImprove": "不需要", "overallStatus": "完成", "lastChaseDate": "2026-03-11", "chaseNote": "圍籬放樣（含墩座）"}, {"id": "0034sf3qa", "type": "不定期抽查", "item": "防溢座設置", "group": "圍籬（含大門及單扇門）", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-03-20", "progress": "Completed", "inspector": "劉錦華", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "不定期抽查，改善單已開", "date": "2026-03-20", "result": "pass", "docSelfCheck": "不需要", "docReqForm": "不需要", "docRecord": "已收", "docReport": "已收", "docImprove": "改善中", "overallStatus": "完成", "lastChaseDate": "2026-03-20", "chaseNote": "不定期抽查，改善單已開"}, {"id": "004alnwyv", "type": "材料抽驗", "item": "大門及單扇門設置", "group": "圍籬（含大門及單扇門）", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "2026-03-02", "progress": "製作中", "inspector": "王中平", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": " 紀錄表及報告尚未出具", "date": "2026-03-02", "result": "recheck", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "文件待補", "lastChaseDate": "2026-03-02", "chaseNote": " 紀錄表及報告尚未出具"}, {"id": "005rybe4e", "type": "材料抽驗", "item": "材料進場及測量放樣", "group": "臨時辦公室（含甲乙方）", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-04-20", "progress": "Completed", "inspector": "劉錦華", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "組合屋牆面、點焊鋼線網、C型鋼、測量放樣", "date": "2026-04-20", "result": "pass", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "已收", "docReport": "已收", "docImprove": "不需要", "overallStatus": "完成", "lastChaseDate": "2026-04-20", "chaseNote": "組合屋牆面、點焊鋼線網、C型鋼、測量放樣"}, {"id": "006sv01va", "type": "材料抽驗", "item": "水電系統埋設", "group": "臨時辦公室（含甲乙方）", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-04-08", "progress": "Completed", "inspector": "王中平", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "臨時用水用電材料", "date": "2026-04-08", "result": "pass", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "已收", "docReport": "已收", "docImprove": "不需要", "overallStatus": "完成", "lastChaseDate": "2026-04-08", "chaseNote": "臨時用水用電材料"}, {"id": "00771pe46", "type": "施工抽查", "item": "地坪及基礎土台施作澆置", "group": "臨時辦公室（含甲乙方）", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "0084sneof", "type": "施工抽查", "item": "水電及消防設備安裝", "group": "臨時辦公室（含甲乙方）", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "009k8ypq9", "type": "施工抽查", "item": "材料進場及測量放樣", "group": "告示牌", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "2026-03-03", "progress": "製作中", "inspector": "王中平", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "挖坑，申請單已送，紀錄表尚未出具", "date": "2026-03-03", "result": "recheck", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "文件待補", "lastChaseDate": "2026-03-03", "chaseNote": "挖坑，申請單已送，紀錄表尚未出具"}, {"id": "010bonkro", "type": "施工抽查", "item": "安裝查驗", "group": "告示牌", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-03-25", "progress": "Completed", "inspector": "劉錦華", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "工程告示牌尺寸", "date": "2026-03-25", "result": "pass", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "已收", "docReport": "已收", "docImprove": "不需要", "overallStatus": "完成", "lastChaseDate": "2026-03-25", "chaseNote": "工程告示牌尺寸"}, {"id": "011tmn753", "type": "材料抽驗", "item": "材料進場及測量放樣", "group": "洗車台", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "012hgs9jc", "type": "施工抽查", "item": "RC地坪澆置", "group": "洗車台", "contractItem": true, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-03-27", "progress": "Completed", "inspector": "劉錦華", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "洗車台底座模板組立", "date": "2026-03-27", "result": "pass", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "已收", "docReport": "已收", "docImprove": "不需要", "overallStatus": "完成", "lastChaseDate": "2026-03-27", "chaseNote": "洗車台底座模板組立"}, {"id": "013r9q3j6", "type": "材料抽驗", "item": "材料進場", "group": "沉砂池", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "014jw67p9", "type": "施工抽查", "item": "混凝土墊層鋪設", "group": "沉砂池", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "015zdewks", "type": "施工抽查", "item": "鋼筋綁紮", "group": "沉砂池", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "承商尚未自檢，優先催自檢表", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "文件待補", "lastChaseDate": "", "chaseNote": "承商尚未自檢，優先催自檢表"}, {"id": "016aj6w1d", "type": "施工抽查", "item": "模板組立", "group": "沉砂池", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "0179lffzd", "type": "施工抽查", "item": "混凝土澆置", "group": "沉砂池", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "01850h4m0", "type": "材料抽驗", "item": "材料進場", "group": "監視系統、臨時照明", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "019jo5jus", "type": "施工抽查", "item": "迴路導通及絕緣測試", "group": "監視系統、臨時照明", "contractItem": true, "selfCheck": "0", "selfNo": "", "selfDate": "", "reqCheck": "0", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "", "progress": "製作中", "inspector": "", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "", "date": "", "result": "recheck", "docSelfCheck": "待補", "docReqForm": "待補", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "未開始", "lastChaseDate": "", "chaseNote": ""}, {"id": "020tfblqb", "type": "施工抽查", "item": "圍籬放樣（距圍牆大於2M）", "group": "圍籬", "contractItem": false, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "1", "inspDate": "2026-03-11", "progress": "Completed", "inspector": "劉錦華", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "No.2 與No.3重複，承商自主多送", "date": "2026-03-11", "result": "pass", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "已收", "docReport": "已收", "docImprove": "不需要", "overallStatus": "完成", "lastChaseDate": "2026-03-11", "chaseNote": "No.2 與No.3重複，承商自主多送"}, {"id": "021boedp2", "type": "施工抽查", "item": "防溢座灌漿（第一次）", "group": "圍籬", "contractItem": false, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "2026-03-13", "progress": "製作中", "inspector": "劉錦華", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "No.13 與墩座澆置視為不同工序", "date": "2026-03-13", "result": "recheck", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "製作中", "lastChaseDate": "2026-03-13", "chaseNote": "No.13 與墩座澆置視為不同工序"}, {"id": "022xqkdf1", "type": "施工抽查", "item": "防溢座灌漿（第二次）", "group": "圍籬", "contractItem": false, "selfCheck": "1", "selfNo": "", "selfDate": "", "reqCheck": "1", "reqNo": "", "reqDate": "", "inspCheck": "0", "inspDate": "2026-03-17", "progress": "製作中", "inspector": "王中平", "recordNo": "", "reportNo": "", "noticeNo": "", "deadline": "", "notes": "No.14 與墩座澆置視為不同工序", "date": "2026-03-17", "result": "recheck", "docSelfCheck": "已收", "docReqForm": "已收", "docRecord": "待補", "docReport": "待補", "docImprove": "不需要", "overallStatus": "製作中", "lastChaseDate": "2026-03-17", "chaseNote": "No.14 與墩座澆置視為不同工序"}];
 var PROGRESS_KEY  = 'construction_progress_v1';
 var SCHEDULE_KEY  = 'construction_schedule_v1';
 
@@ -1429,7 +1486,24 @@ function defectLoad() {
   catch(e) { return []; }
 }
 function docsLoad() { try { var r = localStorage.getItem(DOCS_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
-function qiLoad() { try { var r = localStorage.getItem(QI_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
+function qiLoad() {
+  try {
+    var r = localStorage.getItem(QI_KEY);
+    if (r) {
+      var saved = JSON.parse(r);
+      // 如果 localStorage 有資料就用，並把 preload 中有但 saved 中沒有的補進去
+      var savedIds = {};
+      saved.forEach(function(q) { savedIds[q.id] = true; });
+      var merged = saved.slice();
+      QI_PRELOAD.forEach(function(p) {
+        if (!savedIds[p.id]) merged.push(p);
+      });
+      return merged;
+    }
+    // localStorage 是空的 → 用 preload 資料
+    return QI_PRELOAD.slice();
+  } catch(e) { return QI_PRELOAD.slice(); }
+}
 function progressSave(pct) { try { localStorage.setItem(PROGRESS_KEY, String(pct)); } catch(e) {} }
 function progressLoad() { try { return parseInt(localStorage.getItem(PROGRESS_KEY) || '0') || 0; } catch(e) { return 0; } }
 function scheduleSave(data) { try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(data)); } catch(e) {} }
@@ -2436,11 +2510,13 @@ function renderQi() {
   var typeF    = document.getElementById('qi-filter-type')     ? document.getElementById('qi-filter-type').value     : '';
   var progF    = document.getElementById('qi-filter-progress') ? document.getElementById('qi-filter-progress').value : '';
   var monthF   = document.getElementById('qi-filter-month')    ? document.getElementById('qi-filter-month').value    : '';
+  var overallF = document.getElementById('qi-filter-overall') ? document.getElementById('qi-filter-overall').value : '';
   var filtered = qualityItems.filter(function(q) {
     var dateKey = q.inspDate || q.date || '';
-    return (!typeF  || q.type === typeF) &&
-           (!progF  || q.progress === progF) &&
-           (!monthF || dateKey.startsWith(monthF));
+    return (!typeF    || q.type === typeF) &&
+           (!progF    || q.progress === progF) &&
+           (!monthF   || dateKey.startsWith(monthF)) &&
+           (!overallF || (q.overallStatus||'未開始') === overallF);
   }).sort(function(a,b) {
     var da = a.inspDate || a.date || '';
     var db = b.inspDate || b.date || '';
@@ -2450,50 +2526,94 @@ function renderQi() {
   renderQiStats();
   var tbody = document.getElementById('qi-tbody'); if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="19" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
     return;
   }
-  tbody.innerHTML = filtered.map(function(q, idx) {
+  // 群組分組顯示
+  var TYPE_BG  = { '材料抽驗':'#DBEAFE', '施工抽查':'#F3E8FF', '不定期抽查':'#FEF3C7' };
+  var TYPE_FG  = { '材料抽驗':'#1E40AF', '施工抽查':'#6B21A8', '不定期抽查':'#92400E' };
+
+  function docPill(val) {
+    if (!val || val === '待補') return '<span class="doc-pill dp-pend">待補</span>';
+    if (val === '已收') return '<span class="doc-pill dp-ok">已收</span>';
+    if (val === '不需要') return '<span class="doc-pill dp-no">不需要</span>';
+    if (val === '改善中') return '<span class="doc-pill dp-fix">改善中</span>';
+    return '<span class="doc-pill dp-pend">' + esc(val) + '</span>';
+  }
+
+  function overallBadge(val) {
+    var cls = val==='完成'?'os-done': val==='文件待補'?'os-pend': val==='未開始'?'os-none':'os-wip';
+    var icon = val==='完成'?'✅': val==='文件待補'?'⚠️': val==='未開始'?'○':'🔄';
+    return '<span class="overall-badge ' + cls + '">' + icon + ' ' + esc(val||'未開始') + '</span>';
+  }
+
+  var rows = '';
+  var lastGroup = null;
+  var rowNum = 0;
+
+  filtered.forEach(function(q) {
+    var group = q.group || '';
+    var isContract = q.contractItem !== false;
+
+    // 群組標題列
+    if (group !== lastGroup) {
+      lastGroup = group;
+      var tag = isContract
+        ? '<span class="qi-group-tag qi-group-contract">契約19項</span>'
+        : '<span class="qi-group-tag qi-group-vol">承商自主加做</span>';
+      rows += '<tr class="qi-group-row"><td colspan="21">' + esc(group) + tag + '</td></tr>';
+    }
+
+    rowNum++;
     var rowClass = q.progress === 'Completed' ? 'row-completed' : '';
-    var hasIssue = !q.selfCheck || !q.reqCheck;
-    var itemCls  = hasIssue ? 'item-red' : 'item-normal';
     var chk = function(v) { return v == '1' ? '<span class="qi-check-yes">☑</span>' : '<span class="qi-check-no">☐</span>'; };
+    var typeBg = TYPE_BG[q.type] || '#F1F5F9';
+    var typeFg = TYPE_FG[q.type] || '#475569';
     var progBadge = q.progress === 'Completed'
       ? '<span class="qi-progress-done">Completed</span>'
       : '<span class="qi-progress-wip">製作中</span>';
     var noticeCell = q.noticeNo
       ? '<span class="qi-notice">' + esc(q.noticeNo) + '</span>'
       : '<span style="color:var(--text-muted)">—</span>';
-    return '<tr class="' + rowClass + '">' +
-      '<td style="color:var(--text-muted);font-family:\'DM Mono\',monospace;">' + (idx+1) + '</td>' +
-      '<td><span class="badge" style="background:var(--bg);color:var(--text-secondary);border:1px solid var(--border)">' + esc(q.type||'—') + '</span></td>' +
-      '<td class="' + itemCls + '" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="' + esc(q.item||'') + '">' + esc(q.item||'—') + '</td>' +
+    var docCells =
+      docPill(q.docSelfCheck) + ' ' + docPill(q.docReqForm) + '<br>' +
+      docPill(q.docRecord)    + ' ' + docPill(q.docReport);
+
+    rows += '<tr class="' + rowClass + '">' +
+      '<td style="color:var(--text-muted);font-size:11px;">' + rowNum + '</td>' +
+      '<td><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:' + typeBg + ';color:' + typeFg + ';">' + esc(q.type||'—') + '</span></td>' +
+      '<td style="max-width:160px;font-weight:600;font-size:12px;">' +
+        esc(q.item||'—') +
+        (q.chaseNote ? '<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;white-space:normal;">' + esc(q.chaseNote) + '</div>' : '') +
+      '</td>' +
+      '<td style="line-height:1.8;">' + docCells + '</td>' +
+      '<td>' + overallBadge(q.overallStatus) + '</td>' +
       '<td style="text-align:center;">' + chk(q.selfCheck) + '</td>' +
-      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text-secondary);">' + esc(q.selfNo||'—') + '</td>' +
-      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.selfDate||'—') + '</td>' +
+      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.selfNo||'—') + '</td>' +
+      '<td style="font-family:monospace;font-size:11px;">' + (q.selfDate||'—') + '</td>' +
       '<td style="text-align:center;">' + chk(q.reqCheck) + '</td>' +
-      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text-secondary);">' + esc(q.reqNo||'—') + '</td>' +
-      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.reqDate||'—') + '</td>' +
+      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.reqNo||'—') + '</td>' +
+      '<td style="font-family:monospace;font-size:11px;">' + (q.reqDate||'—') + '</td>' +
       '<td style="text-align:center;">' + chk(q.inspCheck) + '</td>' +
-      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.inspDate||'—') + '</td>' +
+      '<td style="font-family:monospace;font-size:11px;">' + (q.inspDate||'—') + '</td>' +
       '<td>' + progBadge + '</td>' +
-      '<td style="font-size:11px;color:var(--text-secondary);">' + esc(q.recordNo||'—') + '</td>' +
-      '<td style="font-size:11px;color:var(--text-secondary);">' + esc(q.reportNo||'—') + '</td>' +
+      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.recordNo||'—') + '</td>' +
+      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.reportNo||'—') + '</td>' +
       '<td style="font-size:11px;">' + esc(q.inspector||'—') + '</td>' +
       '<td>' + noticeCell + '</td>' +
-      '<td style="font-family:\'DM Mono\',monospace;font-size:11px;">' + (q.deadline||'—') + '</td>' +
+      '<td style="font-family:monospace;font-size:11px;">' + (q.deadline||'—') + '</td>' +
       '<td>' +
         '<span class="form-summary-badge not-started" id="form-badge-' + q.id + '" ' +
           'onclick="toggleFormSection(this.dataset.id)" data-id="' + esc(q.id) + '" ' +
-          'style="cursor:pointer;" title="點擊展開表單追蹤">📋 表單未開始</span>' +
+          'style="cursor:pointer;">📋 表單未開始</span>' +
       '</td>' +
       '<td>' +
-        '<button class="btn-sm edit" onclick="editQi(\'' + q.id + '\')">編輯</button> ' +
-        '<button class="btn-sm del" onclick="deleteQi(\'' + q.id + '\')">刪</button>' +
+        '<button class="btn-sm edit" data-id="' + esc(q.id) + '" onclick="editQi(this.dataset.id)">編輯</button> ' +
+        '<button class="btn-sm del" data-id="' + esc(q.id) + '" onclick="deleteQi(this.dataset.id)">刪</button>' +
       '</td>' +
     '</tr>' +
     '<tr id="forms-wrap-' + q.id + '" style="display:none;">' +
-      '<td colspan="19" style="padding:0;">' +
+      '<td colspan="21" style="padding:0;">' +
         '<div class="form-track-panel" id="forms-panel-' + q.id + '">' +
           '<div class="form-track-header">' +
             '<div class="form-track-header-icon">📋</div>' +
@@ -2510,7 +2630,8 @@ function renderQi() {
         '</div>' +
       '</td>' +
     '</tr>';
-  }).join('');
+  });
+  tbody.innerHTML = rows;
 }
 function openAddQiModal() {
   editingQiId = null;
@@ -2956,6 +3077,80 @@ function forceReload() {
   showErrBanner('已強制重新讀取！defects:' + defects.length + ' docs:' + docs.length + ' qi:' + qualityItems.length);
 }
 
+// ── 雲端資料救援：把本機 localStorage 資料強制上傳覆蓋雲端 ──
+async function rescueUpload() {
+  var diag = document.getElementById('storage-diag-result');
+  diag.style.display = 'block';
+  diag.innerHTML = '⏳ 正在從本機救援資料，上傳至雲端…';
+
+  defects = defectLoad();
+  docs = docsLoad();
+  qualityItems = qiLoad();
+
+  var results = [];
+  try {
+    await cloudSaveAll('defects', defects);
+    results.push('✅ 改善事項：' + defects.length + ' 筆已上傳');
+  } catch(e) { results.push('❌ 改善事項上傳失敗：' + e.message); }
+
+  try {
+    await cloudSaveAll('docs', docs);
+    results.push('✅ 文件送審：' + docs.length + ' 份已上傳');
+  } catch(e) { results.push('❌ 文件送審上傳失敗：' + e.message); }
+
+  try {
+    await cloudSaveAll('qi', qualityItems);
+    results.push('✅ 監造查驗：' + qualityItems.length + ' 筆已上傳');
+  } catch(e) { results.push('❌ 監造查驗上傳失敗：' + e.message); }
+
+  diag.innerHTML = results.join('<br>') + '<br><br>完成！請重新整理頁面確認。';
+  renderDefects(); updateOpenCount();
+  renderDocs(); updateDocPendingCount();
+  populateQiMonthFilter(); renderQi(); updateQiFailCount();
+  renderDashboard();
+}
+
+// ── 從雲端拉回資料（覆蓋本機）──
+async function rescueDownload() {
+  var diag = document.getElementById('storage-diag-result');
+  diag.style.display = 'block';
+  diag.innerHTML = '⏳ 正在從雲端拉回資料…';
+
+  var results = [];
+  try {
+    var d = await cloudLoadAll('defects');
+    if (d && d.length > 0) {
+      defects = d;
+      try { localStorage.setItem(DEFECT_KEY, JSON.stringify(defects)); } catch(e) {}
+      results.push('✅ 改善事項：從雲端取回 ' + defects.length + ' 筆');
+    } else { results.push('⚠️ 改善事項：雲端無資料'); }
+  } catch(e) { results.push('❌ 改善事項拉取失敗：' + e.message); }
+
+  try {
+    var d2 = await cloudLoadAll('docs');
+    if (d2 && d2.length > 0) {
+      docs = d2;
+      try { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); } catch(e) {}
+      results.push('✅ 文件送審：從雲端取回 ' + docs.length + ' 份');
+    } else { results.push('⚠️ 文件送審：雲端無資料'); }
+  } catch(e) { results.push('❌ 文件送審拉取失敗：' + e.message); }
+
+  try {
+    var d3 = await cloudLoadAll('qi');
+    if (d3 && d3.length > 0) {
+      qualityItems = d3;
+      try { localStorage.setItem(QI_KEY, JSON.stringify(qualityItems)); } catch(e) {}
+      results.push('✅ 監造查驗：從雲端取回 ' + qualityItems.length + ' 筆');
+    } else { results.push('⚠️ 監造查驗：雲端無資料'); }
+  } catch(e) { results.push('❌ 監造查驗拉取失敗：' + e.message); }
+
+  diag.innerHTML = results.join('<br>');
+  renderDefects(); updateOpenCount();
+  renderDocs(); updateDocPendingCount();
+  populateQiMonthFilter(); renderQi(); updateQiFailCount();
+  renderDashboard();
+}
+
 
 // ══════════════════════════════════════
 // ── 表單追蹤系統 ──
@@ -3228,3 +3423,4 @@ if (sessionStorage.getItem('tl_auth') === '1') {
 }
 </script>
 </body>
+        '>' + esc(f.note) + '</textarea>' +
