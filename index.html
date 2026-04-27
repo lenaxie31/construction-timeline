@@ -1184,7 +1184,6 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
                 <th>查驗人</th>
                 <th>改善通知單</th>
                 <th>改善期限</th>
-                <th>表單狀態</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -2526,7 +2525,7 @@ function renderQi() {
   renderQiStats();
   var tbody = document.getElementById('qi-tbody'); if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
     return;
   }
   // 群組分組顯示
@@ -2561,7 +2560,7 @@ function renderQi() {
       var tag = isContract
         ? '<span class="qi-group-tag qi-group-contract">契約19項</span>'
         : '<span class="qi-group-tag qi-group-vol">承商自主加做</span>';
-      rows += '<tr class="qi-group-row"><td colspan="21">' + esc(group) + tag + '</td></tr>';
+      rows += '<tr class="qi-group-row"><td colspan="20">' + esc(group) + tag + '</td></tr>';
     }
 
     rowNum++;
@@ -2602,32 +2601,10 @@ function renderQi() {
       '<td style="font-size:11px;">' + esc(q.inspector||'—') + '</td>' +
       '<td>' + noticeCell + '</td>' +
       '<td style="font-family:monospace;font-size:11px;">' + (q.deadline||'—') + '</td>' +
-      '<td>' +
-        '<span class="form-summary-badge not-started" id="form-badge-' + q.id + '" ' +
-          'onclick="toggleFormSection(this.dataset.id)" data-id="' + esc(q.id) + '" ' +
-          'style="cursor:pointer;">📋 表單未開始</span>' +
-      '</td>' +
+
       '<td>' +
         '<button class="btn-sm edit" data-id="' + esc(q.id) + '" onclick="editQi(this.dataset.id)">編輯</button> ' +
         '<button class="btn-sm del" data-id="' + esc(q.id) + '" onclick="deleteQi(this.dataset.id)">刪</button>' +
-      '</td>' +
-    '</tr>' +
-    '<tr id="forms-wrap-' + q.id + '" style="display:none;">' +
-      '<td colspan="21" style="padding:0;">' +
-        '<div class="form-track-panel" id="forms-panel-' + q.id + '">' +
-          '<div class="form-track-header">' +
-            '<div class="form-track-header-icon">📋</div>' +
-            '<div class="form-track-header-text">' +
-              '<h4>對應表單填寫狀態</h4>' +
-              '<p>' + esc(q.type||'') + '　項目：' + esc(q.item||'') + '</p>' +
-            '</div>' +
-          '</div>' +
-          '<div class="form-track-progress-row" id="forms-progress-' + q.id + '">' +
-            '<div class="form-track-progress-bar"><div class="form-track-progress-fill" style="width:0%"></div></div>' +
-            '<div class="form-track-progress-label">0 / 0 已核定</div>' +
-          '</div>' +
-          '<div class="form-track-list" id="forms-' + q.id + '"></div>' +
-        '</div>' +
       '</td>' +
     '</tr>';
   });
@@ -3423,4 +3400,3 @@ if (sessionStorage.getItem('tl_auth') === '1') {
 }
 </script>
 </body>
-        '>' + esc(f.note) + '</textarea>' +
