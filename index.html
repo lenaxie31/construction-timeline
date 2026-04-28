@@ -304,9 +304,9 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .ver-dot.approved_mod{background:#0d7a5a;box-shadow:0 0 0 2px #6ee7b7;}
 .ver-dot.approved_after{background:#166534;box-shadow:0 0 0 2px #bbf7d0;}
 .ver-dot.rejected{background:var(--c-red);box-shadow:0 0 0 2px var(--c-red-border);}
-.ver-dot.reviewing{background:var(--c-blue);box-shadow:0 0 0 2px var(--c-blue-border);}
+.ver-dot.reviewing{background:var(--c-amber);box-shadow:0 0 0 2px var(--c-amber-border);}
 .ver-dot.pending{background:#94a3b8;box-shadow:0 0 0 2px #cbd5e1;}
-.ver-dot.sent{background:var(--c-purple);box-shadow:0 0 0 2px var(--c-purple-border);}
+.ver-dot.sent{background:var(--c-blue);box-shadow:0 0 0 2px var(--c-blue-border);}
 .ver-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
 .ver-no{font-family:monospace;font-size:11px;font-weight:600;color:var(--text-muted);}
 .ver-date{font-size:11px;color:var(--text-secondary);}
@@ -318,9 +318,9 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .ver-result.approved_mod{background:#ecfdf5;color:#0d7a5a;border-color:#6ee7b7;}
 .ver-result.approved_after{background:#f0fdf4;color:#166534;border-color:#bbf7d0;}
 .ver-result.rejected{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
-.ver-result.reviewing{background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);}
+.ver-result.reviewing{background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
 .ver-result.pending{background:#F1F5F9;color:#475569;border-color:#cbd5e1;}
-.ver-result.sent{background:var(--c-purple-bg);color:var(--c-purple);border-color:var(--c-purple-border);}
+.ver-result.sent{background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);}
 .ver-comment{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:3px;}
 .ver-link{font-size:11px;color:var(--c-blue);text-decoration:none;margin-top:3px;display:inline-block;}
 .ver-link:hover{text-decoration:underline;}
@@ -1729,7 +1729,7 @@ var SCHEDULE_KEY  = 'construction_schedule_v1';
 var BADGE       = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
 var DOC_TYPE_LABEL = { plan:'計畫書', drawing:'細部設計圖說', subplan:'分項計畫書', other:'其他' };
 var DOC_TYPE_CLS   = { plan:'dtype-plan', drawing:'dtype-drawing', subplan:'dtype-subplan', other:'dtype-other' };
-var VER_RESULT_LABEL = { approved:'核定', approved_mod:'審查認可但有修正處', approved_after:'修正後核定', rejected:'退回修正', reviewing:'審查中', pending:'未送', sent:'已送' };
+var VER_RESULT_LABEL = { approved:'核定', approved_mod:'審查認可但有修正處', approved_after:'修正後核定', rejected:'退回修正', reviewing:'審查中／修正中', pending:'未送', sent:'已送（審查中）' };
 var VALID_STATUS = { normal:1, milestone:1, warn:1, pending:1, issue:1 };
 // Fix 10: TAB_IDS 放在函式外
 var TAB_IDS = ['dashboard','timeline','defects','docs','quality','export'];
@@ -2586,15 +2586,48 @@ function saveDefect() {
 }
 
 // ── DOCUMENTS ──
-function docLatestVersion(doc) { return (doc.versions && doc.versions.length) ? doc.versions[doc.versions.length-1] : null; }
-function docOverallStatus(doc) { var v = docLatestVersion(doc); return v ? v.result : 'pending'; }
+function docLatestVersion(doc) {
+  return (doc.versions && doc.versions.length) ? doc.versions[doc.versions.length-1] : null;
+}
+
+// 整體狀態邏輯：
+// 1. 有任何版次是「核定類」→ approved（整份文件核定）
+// 2. 最後一筆是 reviewing / sent → 審查中
+// 3. 最後一筆是 rejected → 退回修正（等廠商修正）
+// 4. 完全沒版次 → pending（未送）
+function docOverallStatus(doc) {
+  if (!doc.versions || !doc.versions.length) return 'pending';
+  var APPROVED = { approved:1, approved_mod:1, approved_after:1 };
+  // 找最後一個有意義結果的版次
+  var last = doc.versions[doc.versions.length - 1];
+  // 如果最後版次已核定 → 整份核定
+  if (APPROVED[last.result]) return last.result;
+  // 如果最後版次是審查中 → reviewing
+  if (last.result === 'reviewing') return 'reviewing';
+  // 如果最後版次已送但尚未回覆 → sent（審查中）
+  if (last.result === 'sent') return 'sent';
+  // 如果最後版次退回 → rejected（等廠商修正）
+  if (last.result === 'rejected') return 'rejected';
+  // pending 或空的
+  return last.result || 'pending';
+}
+
 function isDocOverdue(doc) {
-  var v = docLatestVersion(doc);
-  if (!v) return false;
-  var approvedStates = { approved:1, approved_mod:1, approved_after:1 };
-  if (approvedStates[v.result]) return false;
-  if (v.result === 'pending' || v.result === 'sent') return false;
-  return todayStr() > addDays(v.date, doc.reviewDays||14) && !v.replyDate;
+  if (!doc.versions || !doc.versions.length) return false;
+  var APPROVED = { approved:1, approved_mod:1, approved_after:1 };
+  var last = doc.versions[doc.versions.length - 1];
+  // 已核定 → 不逾期
+  if (APPROVED[last.result]) return false;
+  // 未送、退回（等廠商）、審查中（等業主）→ 不計逾期
+  if (!last.date) return false;
+  if (last.result === 'pending') return false;
+  if (last.result === 'rejected') return false;   // 廠商修正中，不算業主逾期
+  if (last.result === 'reviewing') return false;   // 已知在審查中，不算逾期
+  // 已送（sent）→ 計算審查天數是否超過
+  if (last.result === 'sent' && !last.replyDate) {
+    return todayStr() > addDays(last.date, doc.reviewDays || 14);
+  }
+  return false;
 }
 
 // Fix 3: 只計未核定文件
