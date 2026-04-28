@@ -1372,8 +1372,8 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
           <select class="filter-select" id="doc-filter-status" onchange="renderDocs()">
             <option value="">全部狀態</option>
             <option value="pending">未送</option>
-            <option value="sent">已送</option>
-            <option value="reviewing">審查中</option>
+            <option value="sent">已送（業主審查中）</option>
+            <option value="reviewing">廠商修正中</option>
             <option value="approved">核定</option>
             <option value="approved_mod">審查認可但有修正處</option>
             <option value="approved_after">修正後核定</option>
@@ -2632,8 +2632,9 @@ function isDocOverdue(doc) {
 
 // Fix 3: 只計未核定文件
 function updateDocPendingCount() {
+  // tab badge = 未核定的數量（提醒尚在進行中的文件）
   var approvedStates = { approved:1, approved_mod:1, approved_after:1 };
-  var n = docs.filter(function(d) { return !approvedStates[docOverallStatus(d)]; }).length;
+  var n = docs.filter(function(d) { return !approvedStates[docOverallStatus(d)] && docOverallStatus(d) !== 'pending'; }).length;
   var el = document.getElementById('doc-pending-count');
   if (el) { el.textContent = n; el.style.display = n ? 'inline-flex' : 'none'; }
 }
@@ -2649,6 +2650,7 @@ function renderDocProgress() {
   var reviewing = docs.filter(function(d) { return docOverallStatus(d) === 'reviewing'; }).length;
   var rejected  = docs.filter(function(d) { return docOverallStatus(d) === 'rejected'; }).length;
   var sent      = docs.filter(function(d) { return docOverallStatus(d) === 'sent'; }).length;
+  var inReview  = reviewing + sent;  // 審查中 = 廠商修正中 + 已送業主審查
   var pending   = docs.filter(function(d) { return docOverallStatus(d) === 'pending'; }).length;
   var pct = Math.round(approved/total*100);
   var fill = document.getElementById('doc-progress-fill');
@@ -2659,11 +2661,11 @@ function renderDocProgress() {
   var segs = document.getElementById('doc-progress-segments');
   if (segs) {
     var items = [
-      { label:'核定（各類）', count:approved,  color:'var(--c-green)',  bg:'#16a34a' },
-      { label:'審查中',       count:reviewing, color:'var(--c-blue)',   bg:'#2563eb' },
-      { label:'退回修正',     count:rejected,  color:'var(--c-red)',    bg:'#dc2626' },
-      { label:'已送',         count:sent,      color:'var(--c-purple)', bg:'#7c3aed' },
-      { label:'未送',         count:pending,   color:'var(--text-muted)', bg:'#94a3b8' },
+      { label:'已核定',      count:approved,   color:'var(--c-green)',  bg:'#16a34a' },
+      { label:'已送審查中',   count:sent,       color:'var(--c-blue)',   bg:'#2563eb' },
+      { label:'廠商修正中',   count:reviewing,  color:'var(--c-amber)',  bg:'#d97706' },
+      { label:'退回修正',     count:rejected,   color:'var(--c-red)',    bg:'#dc2626' },
+      { label:'未送',         count:pending,    color:'var(--text-muted)', bg:'#94a3b8' },
     ].filter(function(x) { return x.count > 0; });
     segs.innerHTML = '<span style="font-size:13px;font-weight:600;color:var(--c-green)">' + pct + '% 核定</span>' +
       items.map(function(x) {
@@ -2689,6 +2691,7 @@ function renderDocDashboard() {
     var reviewing= catDocs.filter(function(d) { return docOverallStatus(d) === 'reviewing'; }).length;
     var rejected = catDocs.filter(function(d) { return docOverallStatus(d) === 'rejected'; }).length;
     var sent     = catDocs.filter(function(d) { return docOverallStatus(d) === 'sent'; }).length;
+    var inReview = reviewing + sent;
     var pending  = catDocs.filter(function(d) { return docOverallStatus(d) === 'pending'; }).length;
     var pct = total ? Math.round(approved/total*100) : 0;
     var overdueN = catDocs.filter(isDocOverdue).length;
@@ -2699,8 +2702,8 @@ function renderDocDashboard() {
         '<div class="doc-cat-stats">' +
           '<div class="doc-cat-pct" style="color:' + cat.pctColor + '">' + pct + '%</div>' +
           '<div class="doc-cat-detail">' +
-            '核定 ' + approved + ' ／ 審查中 ' + reviewing + '<br>' +
-            '退件 ' + rejected + ' ／ 已送 ' + sent + ' ／ 未送 ' + pending +
+            '已核定 ' + approved + ' ／ 已送(審查中) ' + sent + '<br>' +
+            '廠商修正中 ' + reviewing + ' ／ 退件 ' + rejected + ' ／ 未送 ' + pending +
             (overdueN ? '<br><span style="color:var(--c-red);font-weight:600;">⚠ 逾期 ' + overdueN + '</span>' : '') +
           '</div>' +
         '</div>'
