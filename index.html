@@ -1715,7 +1715,7 @@ function showErrBanner(msg) {
 }
 
 // ── 常數 ──
-var PASSWORD    = 'dnvccs2026';
+// 密碼已移至 Apps Script 伺服器端驗證，原始碼中不存放密碼
 var API_URL     = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
 var LOCAL_KEY   = 'construction_tl_v3';
 var DEFECT_KEY  = 'construction_defects_v1';
@@ -1773,22 +1773,40 @@ function normalizeDate(raw) {
 }
 
 // ── AUTH ──
-function checkPw() {
-  var val = document.getElementById('pw-input').value;
+async function checkPw() {
+  var val = document.getElementById('pw-input').value.trim();
   var inp = document.getElementById('pw-input');
-  if (val === PASSWORD) {
-    sessionStorage.setItem('tl_auth','1');
-    document.getElementById('lock-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    init();
-  } else {
-    document.getElementById('pw-err').textContent = '密碼錯誤，請再試一次';
-    inp.classList.add('error'); inp.value = '';
-    setTimeout(function() { inp.classList.remove('error'); }, 500);
+  var errEl = document.getElementById('pw-err');
+  var btn = document.querySelector('.lock-btn');
+  if (!val) return;
+  btn.disabled = true;
+  btn.textContent = '驗證中…';
+  errEl.textContent = '';
+  try {
+    // 呼叫 Apps Script 驗證密碼，取回 token
+    var res = await fetch(API_URL + '?action=login&pw=' + encodeURIComponent(val));
+    var data = await res.json();
+    if (data.token) {
+      // 驗證成功：存 token 到 sessionStorage
+      sessionStorage.setItem('tl_auth', data.token);
+      sessionStorage.setItem('tl_auth_exp', data.expires);
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      init();
+    } else {
+      errEl.textContent = data.error || '密碼錯誤，請再試一次';
+      inp.classList.add('error'); inp.value = '';
+      setTimeout(function() { inp.classList.remove('error'); }, 500);
+    }
+  } catch(e) {
+    errEl.textContent = '連線失敗，請確認網路後再試';
   }
+  btn.disabled = false;
+  btn.textContent = '進入';
 }
 function lockApp() {
   sessionStorage.removeItem('tl_auth');
+  sessionStorage.removeItem('tl_auth_exp');
   document.getElementById('lock-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('pw-input').value = '';
@@ -1924,9 +1942,17 @@ function sanitizeEntry(raw) {
 }
 
 async function apiCall(params) {
+  // 帶 token 驗證每次 API 請求
+  var token = sessionStorage.getItem('tl_auth') || '';
+  params.token = token;
   var url = API_URL + '?' + new URLSearchParams(params).toString();
   var res = await fetch(url);
   var json = await res.json();
+  if (json.error === 'UNAUTHORIZED') {
+    // token 失效 → 強制重新登入
+    lockApp();
+    throw new Error('登入已逾期，請重新登入');
+  }
   if (json.error) throw new Error(json.error);
   return json;
 }
@@ -3735,7 +3761,7 @@ async function cloudSaveAll(module, dataArr) {
     var res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ module: module, action: 'saveAll', json: json })
+      body: JSON.stringify({ module: module, action: 'saveAll', json: json, token: sessionStorage.getItem('tl_auth') || '' })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -3759,9 +3785,11 @@ async function cloudSaveAll(module, dataArr) {
 
 async function cloudLoadAll(module) {
   if (!API_URL) return null;
-  var url = API_URL + '?module=' + module + '&action=getAll';
+  var token = sessionStorage.getItem('tl_auth') || '';
+  var url = API_URL + '?module=' + module + '&action=getAll&token=' + encodeURIComponent(token);
   var res = await fetch(url);
   var data = await res.json();
+  if (data.error === 'UNAUTHORIZED') { lockApp(); throw new Error('登入已逾期'); }
   if (data.error) throw new Error(data.error);
   return Array.isArray(data.data) ? data.data : [];
 }
@@ -3797,10 +3825,19 @@ function qiSave() {
 
 // ── BOOT ──
 initSidebarState();
-if (sessionStorage.getItem('tl_auth') === '1') {
-  document.getElementById('lock-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  init();
-}
+(function() {
+  var token = sessionStorage.getItem('tl_auth');
+  var exp   = sessionStorage.getItem('tl_auth_exp');
+  var now   = Date.now();
+  if (token && token.length > 8 && exp && now < parseInt(exp)) {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  } else {
+    // token 不存在或已過期
+    sessionStorage.removeItem('tl_auth');
+    sessionStorage.removeItem('tl_auth_exp');
+  }
+})();
 </script>
 </body>
