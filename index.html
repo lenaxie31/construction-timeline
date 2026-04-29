@@ -1424,16 +1424,12 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
                 <th style="min-width:120px;">齊件狀態</th>
                 <th>整體狀態</th>
                 <th>自檢☑</th>
-                <th>自檢編號</th>
                 <th>自檢日期</th>
                 <th>申請者☑</th>
-                <th>申請編號</th>
                 <th>申請日期</th>
                 <th>抽查紀錄☑</th>
                 <th>查驗日期</th>
                 <th>辦理進度</th>
-                <th>查驗紀錄表號</th>
-                <th>查驗報告號</th>
                 <th>查驗人</th>
                 <th>改善通知單</th>
                 <th>改善期限</th>
@@ -1568,17 +1564,15 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
           <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">自主檢查</div>
-          <div class="field-row">
-            <div class="field"><label>自檢完成</label><select id="qi-self-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
-            <div class="field"><label>自檢編號</label><input type="text" id="qi-self-no" placeholder="例：070101_01"></div>
+          <div class="field">
+            <label>自檢完成</label><select id="qi-self-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select>
           </div>
           <div class="field"><label>自檢日期</label><input type="date" id="qi-self-date"></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
           <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">申請抽驗</div>
-          <div class="field-row">
-            <div class="field"><label>申請完成</label><select id="qi-req-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
-            <div class="field"><label>申請編號</label><input type="text" id="qi-req-no" placeholder="例：070101_001"></div>
+          <div class="field">
+            <label>申請完成</label><select id="qi-req-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select>
           </div>
           <div class="field"><label>申請日期</label><input type="date" id="qi-req-date"></div>
         </div>
@@ -1597,10 +1591,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
             </div>
             <div class="field"><label>查驗人</label><input type="text" id="qi-inspector" placeholder="例：王中平"></div>
           </div>
-          <div class="field-row">
-            <div class="field"><label>查驗紀錄表號</label><input type="text" id="qi-record-no" placeholder="例：MESCR-10490817_001.1a"></div>
-            <div class="field"><label>查驗報告號</label><input type="text" id="qi-report-no" placeholder="例：MESR-10490817_001.1a"></div>
-          </div>
+
         </div>
         <div class="field-row">
           <div class="field"><label>改善通知單號（選填）</label><input type="text" id="qi-notice-no" placeholder="例：10490817_0002"></div>
@@ -2931,7 +2922,7 @@ function renderQi() {
   renderQiStats();
   var tbody = document.getElementById('qi-tbody'); if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>';
     return;
   }
   // 群組分組顯示
@@ -2966,7 +2957,7 @@ function renderQi() {
       var tag = isContract
         ? '<span class="qi-group-tag qi-group-contract">契約19項</span>'
         : '<span class="qi-group-tag qi-group-vol">承商自主加做</span>';
-      rows += '<tr class="qi-group-row"><td colspan="20">' + esc(group) + tag + '</td></tr>';
+      rows += '<tr class="qi-group-row"><td colspan="16">' + esc(group) + tag + '</td></tr>';
     }
 
     rowNum++;
@@ -2994,16 +2985,12 @@ function renderQi() {
       '<td style="line-height:1.8;">' + docCells + '</td>' +
       '<td>' + overallBadge(q.overallStatus) + '</td>' +
       '<td style="text-align:center;">' + chk(q.selfCheck) + '</td>' +
-      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.selfNo||'—') + '</td>' +
       '<td style="font-family:monospace;font-size:11px;">' + (q.selfDate||'—') + '</td>' +
       '<td style="text-align:center;">' + chk(q.reqCheck) + '</td>' +
-      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.reqNo||'—') + '</td>' +
       '<td style="font-family:monospace;font-size:11px;">' + (q.reqDate||'—') + '</td>' +
       '<td style="text-align:center;">' + chk(q.inspCheck) + '</td>' +
       '<td style="font-family:monospace;font-size:11px;">' + (q.inspDate||'—') + '</td>' +
       '<td>' + progBadge + '</td>' +
-      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.recordNo||'—') + '</td>' +
-      '<td style="font-size:10px;color:var(--text-secondary);">' + esc(q.reportNo||'—') + '</td>' +
       '<td style="font-size:11px;">' + esc(q.inspector||'—') + '</td>' +
       '<td>' + noticeCell + '</td>' +
       '<td style="font-family:monospace;font-size:11px;">' + (q.deadline||'—') + '</td>' +
@@ -3019,7 +3006,7 @@ function renderQi() {
 function openAddQiModal() {
   editingQiId = null;
   document.getElementById('qi-modal-title').textContent = '新增查驗紀錄';
-  var ids = ['qi-item','qi-self-no','qi-req-no','qi-record-no','qi-report-no','qi-inspector','qi-notice-no','qi-notes'];
+  var ids = ['qi-item','qi-inspector','qi-notice-no','qi-notes'];
   ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
   var dates = ['qi-date','qi-self-date','qi-req-date','qi-deadline'];
   dates.forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
@@ -3045,17 +3032,14 @@ function editQi(id) {
   document.getElementById('qi-type').value        = q.type || '材料抽驗';
   document.getElementById('qi-item').value        = q.item || '';
   document.getElementById('qi-self-check').value  = q.selfCheck || '0';
-  document.getElementById('qi-self-no').value     = q.selfNo || '';
   document.getElementById('qi-self-date').value   = q.selfDate || '';
   document.getElementById('qi-req-check').value   = q.reqCheck || '0';
-  document.getElementById('qi-req-no').value      = q.reqNo || '';
   document.getElementById('qi-req-date').value    = q.reqDate || '';
   document.getElementById('qi-insp-check').value  = q.inspCheck || '0';
   document.getElementById('qi-date').value        = q.inspDate || q.date || '';
   document.getElementById('qi-progress').value    = q.progress || '製作中';
   document.getElementById('qi-inspector').value   = q.inspector || '';
-  document.getElementById('qi-record-no').value   = q.recordNo || '';
-  document.getElementById('qi-report-no').value   = q.reportNo || '';
+
   document.getElementById('qi-notice-no').value   = q.noticeNo || '';
   document.getElementById('qi-deadline').value    = q.deadline || '';
   document.getElementById('qi-notes').value       = q.notes || '';
@@ -3076,17 +3060,14 @@ function saveQi() {
     type:       document.getElementById('qi-type').value,
     item:       item,
     selfCheck:  document.getElementById('qi-self-check').value,
-    selfNo:     document.getElementById('qi-self-no').value.trim(),
     selfDate:   document.getElementById('qi-self-date').value,
     reqCheck:   document.getElementById('qi-req-check').value,
-    reqNo:      document.getElementById('qi-req-no').value.trim(),
     reqDate:    document.getElementById('qi-req-date').value,
     inspCheck:  document.getElementById('qi-insp-check').value,
     inspDate:   document.getElementById('qi-date').value,
     progress:   document.getElementById('qi-progress').value,
     inspector:  document.getElementById('qi-inspector').value.trim(),
-    recordNo:   document.getElementById('qi-record-no').value.trim(),
-    reportNo:   document.getElementById('qi-report-no').value.trim(),
+
     noticeNo:   document.getElementById('qi-notice-no').value.trim(),
     deadline:   document.getElementById('qi-deadline').value,
     notes:      document.getElementById('qi-notes').value.trim(),
