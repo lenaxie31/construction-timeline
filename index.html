@@ -3665,7 +3665,7 @@ function exportAttXLSX() {
   ws1Data.push([
     '姓名', '職稱',
     '出勤天數', '半天次數', '公出天數', '請假天數', '例假天數',
-    '有效出勤', '本月工作日', '出勤率'
+    '總工作時數', '平均時數/天', '有效出勤', '本月工作日', '出勤率'
   ]);
 
   // 每個人的統計
@@ -3678,10 +3678,13 @@ function exportAttXLSX() {
     var holiday  = mRecs.filter(function(r){ return r.status==='holiday'; }).length;
     var effective = present + half * 0.5 + business;
     var rate = workdays > 0 ? (effective / workdays * 100).toFixed(1) + '%' : '—';
+    var totalMinXlsx = mRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+    var presentDays = present + half + business;
+    var avgMinXlsx = presentDays > 0 ? Math.round(totalMinXlsx / presentDays) : 0;
     ws1Data.push([
       m.name, m.role || '監造工程師',
       present, half, business, leave, holiday,
-      effective, workdays, rate
+      fmtMinutes(totalMinXlsx), fmtMinutes(avgMinXlsx), effective, workdays, rate
     ]);
   });
 
@@ -3690,7 +3693,7 @@ function exportAttXLSX() {
 
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
   ws1['!cols'] = [
-    {wch:10},{wch:14},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}
+    {wch:10},{wch:14},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10}
   ];
   ws1['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:9} },
@@ -3717,7 +3720,7 @@ function exportAttXLSX() {
   };
 
   // 表頭列（第5列，row index 4）
-  var hdrCols1 = ['A','B','C','D','E','F','G','H','I','J'];
+  var hdrCols1 = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   hdrCols1.forEach(function(col) {
     var addr = col + '5';
     if (ws1[addr]) ws1[addr].s = {
@@ -3748,7 +3751,7 @@ function exportAttXLSX() {
     hdrCols1.forEach(function(col, ci) {
       var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
       if (!ws1[addr]) ws1[addr] = {v:'', t:'s'};
-      var isRateCol = ci === 9;
+      var isRateCol = ci === 11;
       ws1[addr].s = {
         font: isRateCol
           ? {bold:true, sz:11, color:{rgb: rateColor}}
@@ -3772,7 +3775,7 @@ function exportAttXLSX() {
   ws2Data.push(['監造人員出勤明細　' + monthLabel]);
   ws2Data.push(['減碳A標']);
   ws2Data.push([]);
-  ws2Data.push(['日期', '星期', '姓名', '狀態', '到場時間', '離場時間', '備註']);
+  ws2Data.push(['日期', '星期', '姓名', '狀態', '到場時間', '離場時間', '工作時數', '備註']);
 
   var DAYS_TW = ['日','一','二','三','四','五','六'];
   var sorted = monthRecs.slice().sort(function(a,b){
@@ -3787,12 +3790,14 @@ function exportAttXLSX() {
     var dp = (r.date||'').split('-');
     var dateLabel = dp.length===3 ? y+'/'+(parseInt(dp[1]))+'/'+parseInt(dp[2]) : r.date;
     var dow = r.date ? DAYS_TW[new Date(r.date).getDay()] : '';
+    var wMin = calcWorkMinutes(r.timeIn, r.timeOut);
     ws2Data.push([
       dateLabel, '（' + dow + '）',
       m ? m.name : '—',
       STATUS_LABEL[r.status] || r.status,
       r.timeIn  || '—',
       r.timeOut || '—',
+      wMin ? fmtMinutes(wMin) : '—',
       r.note    || ''
     ]);
   });
@@ -3800,7 +3805,7 @@ function exportAttXLSX() {
   if (!sorted.length) ws2Data.push(['（本月無記錄）','','','','','','']);
 
   var ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-  ws2['!cols'] = [{wch:12},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:24}];
+  ws2['!cols'] = [{wch:12},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:24}];
   ws2['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:6} },
     { s:{r:1,c:0}, e:{r:1,c:6} },
@@ -3815,7 +3820,7 @@ function exportAttXLSX() {
   };
 
   // 表頭
-  ['A','B','C','D','E','F','G'].forEach(function(col) {
+  ['A','B','C','D','E','F','G','H'].forEach(function(col) {
     var addr = col + '4';
     if (ws2[addr]) ws2[addr].s = {
       font:{bold:true, sz:10, color:{rgb:'FFFFFF'}},
@@ -3832,7 +3837,7 @@ function exportAttXLSX() {
     var stBg = STATUS_BG[r.status] || 'F1F5F9';
     var stFg = STATUS_FG[r.status] || '475569';
 
-    for (var ci = 0; ci < 7; ci++) {
+    for (var ci = 0; ci < 8; ci++) {
       var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
       if (!ws2[addr]) ws2[addr] = {v:'', t:'s'};
       var isStatus = ci === 3;
@@ -4399,6 +4404,23 @@ var ATT_STATUS = {
   absent:   { label:'缺勤',   icon:'❌', cls:'att-status-absent'   },
 };
 
+
+// ── 計算工作時數（分鐘）──
+function calcWorkMinutes(timeIn, timeOut) {
+  if (!timeIn || !timeOut) return 0;
+  var ip = timeIn.split(':');
+  var op = timeOut.split(':');
+  var inMin  = parseInt(ip[0])*60 + parseInt(ip[1]);
+  var outMin = parseInt(op[0])*60 + parseInt(op[1]);
+  return Math.max(0, outMin - inMin);
+}
+function fmtMinutes(min) {
+  if (!min) return '—';
+  var h = Math.floor(min / 60);
+  var m = min % 60;
+  return h + 'h' + (m ? String(m).padStart(2,'0') + 'm' : '');
+}
+
 // ── 儲存 / 讀取 ──
 function attSave() {
   try { localStorage.setItem(ATT_KEY, JSON.stringify(attRecords)); } catch(e) {}
@@ -4599,7 +4621,7 @@ function renderAttSummary() {
   }
 
   var html = '<table class="att-summary-table"><thead><tr>' +
-    '<th>姓名</th><th>職稱</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>出勤率</th><th>操作</th>' +
+    '<th>姓名</th><th>職稱</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
     '</tr></thead><tbody>';
 
   activeM.forEach(function(m) {
@@ -4895,7 +4917,7 @@ function importPunchXLS(input) {
           timeIn:   timeIn,
           timeOut:  timeOut,
           status:   status,
-          note:     '打卡鐘匯入',
+          note:     '',
         });
       }
 
