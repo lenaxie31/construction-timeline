@@ -3663,7 +3663,7 @@ function exportAttXLSX() {
 
   // 表頭
   ws1Data.push([
-    '姓名', '職稱',
+    '姓名',
     '出勤天數', '半天次數', '公出天數', '請假天數', '例假天數',
     '總工作時數', '平均時數/天', '有效出勤', '本月工作日', '出勤率'
   ]);
@@ -3682,7 +3682,7 @@ function exportAttXLSX() {
     var presentDays = present + half + business;
     var avgMinXlsx = presentDays > 0 ? Math.round(totalMinXlsx / presentDays) : 0;
     ws1Data.push([
-      m.name, m.role || '監造工程師',
+      m.name,
       present, half, business, leave, holiday,
       fmtMinutes(totalMinXlsx), fmtMinutes(avgMinXlsx), effective, workdays, rate
     ]);
@@ -3693,7 +3693,7 @@ function exportAttXLSX() {
 
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
   ws1['!cols'] = [
-    {wch:10},{wch:14},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10}
+    {wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10}
   ];
   ws1['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:9} },
@@ -3720,7 +3720,7 @@ function exportAttXLSX() {
   };
 
   // 表頭列（第5列，row index 4）
-  var hdrCols1 = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  var hdrCols1 = ['A','B','C','D','E','F','G','H','I','J','K'];
   hdrCols1.forEach(function(col) {
     var addr = col + '5';
     if (ws1[addr]) ws1[addr].s = {
@@ -3751,7 +3751,7 @@ function exportAttXLSX() {
     hdrCols1.forEach(function(col, ci) {
       var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
       if (!ws1[addr]) ws1[addr] = {v:'', t:'s'};
-      var isRateCol = ci === 11;
+      var isRateCol = ci === 10;
       ws1[addr].s = {
         font: isRateCol
           ? {bold:true, sz:11, color:{rgb: rateColor}}
@@ -4444,14 +4444,14 @@ function memberLoad() {
 }
 function getDefaultMembers() {
   return [
-    { id:'m001', name:'王中平', role:'監造品管人員', active:true },
-    { id:'m002', name:'劉錦華', role:'監造品管人員', active:true },
-    { id:'m003', name:'謝庭蓁', role:'監造工務助理', active:true },
-    { id:'m004', name:'高君銓', role:'監造工程師', active:true },
-    { id:'m005', name:'林怡秀', role:'監造主管代理', active:true },
-    { id:'m006', name:'陳勤傑', role:'', active:true },
-    { id:'m007', name:'盧鵬宇', role:'', active:true },
-    { id:'m008', name:'林幸一', role:'', active:true },
+    { id:'m001', name:'王中平', active:true },
+    { id:'m002', name:'劉錦華', active:true },
+    { id:'m003', name:'謝庭蓁', active:true },
+    { id:'m004', name:'高君銓', active:true },
+    { id:'m005', name:'林怡秀', active:true },
+    { id:'m006', name:'陳勤傑', active:true },
+    { id:'m007', name:'盧鵬宇', active:true },
+    { id:'m008', name:'林幸一', active:true },
   ];
 }
 
@@ -4621,7 +4621,7 @@ function renderAttSummary() {
   }
 
   var html = '<table class="att-summary-table"><thead><tr>' +
-    '<th>姓名</th><th>職稱</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
+    '<th>姓名</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
     '</tr></thead><tbody>';
 
   activeM.forEach(function(m) {
@@ -4636,7 +4636,7 @@ function renderAttSummary() {
 
     html += '<tr>' +
       '<td style="font-weight:600;">' + esc(m.name) + '</td>' +
-      '<td style="font-size:11px;color:var(--text-muted);">' + esc(m.role||'—') + '</td>' +
+      
       '<td><span class="att-day-badge att-status-present">' + present + ' 天</span></td>' +
       '<td><span class="att-day-badge att-status-half">' + half + ' 次</span></td>' +
       '<td><span class="att-day-badge att-status-business">' + business + ' 天</span></td>' +
