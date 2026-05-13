@@ -128,6 +128,7 @@ body {
 .stat-card.amber::before  { background: #D97706; }
 .stat-card.purple::before { background: #7C3AED; }
 .stat-card.red::before    { background: #DC2626; }
+.stat-card.teal::before   { background: #0D9488; }
 .stat-card.gray::before   { background: #94A3B8; }
 .stat-label { font-size: 11px; font-weight: 700; color: #9C9A93; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 .stat-value { font-family: 'DM Mono', monospace; font-size: 30px; font-weight: 500; line-height: 1; }
@@ -136,6 +137,8 @@ body {
 .stat-card.amber  .stat-value { color: #D97706; }
 .stat-card.purple .stat-value { color: #7C3AED; }
 .stat-card.red    .stat-value { color: #DC2626; }
+.stat-card.teal   .stat-value { color: #0D9488; }
+.stat-card.gray   .stat-value { color: #94A3B8; }
 .stat-sub { font-size: 11px; color: #9C9A93; margin-top: 5px; }
 
 /* ── SECTION TITLE ── */
@@ -423,6 +426,7 @@ body {
         <th>狀態</th>
         <th>到場</th>
         <th>離場</th>
+        <th>工作時數</th>
         <th>備註</th>
       </tr>
     </thead>
@@ -438,6 +442,22 @@ var API_URL = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808
 var attRecords = [];
 var members    = [];
 var currentMonth = todayStr().slice(0,7);
+
+// ── 工時計算 ──
+function calcWorkMinutes(timeIn, timeOut) {
+  if (!timeIn || !timeOut) return 0;
+  var ip = timeIn.split(':');
+  var op = timeOut.split(':');
+  var inMin  = parseInt(ip[0])*60 + parseInt(ip[1]);
+  var outMin = parseInt(op[0])*60 + parseInt(op[1]);
+  return Math.max(0, outMin - inMin);
+}
+function fmtMinutes(min) {
+  if (!min) return '—';
+  var h = Math.floor(min / 60);
+  var m = min % 60;
+  return h + 'h' + (m ? String(m).padStart(2,'0') + 'm' : '');
+}
 
 var STATUS = {
   present:  { label:'出勤',   cls:'s-present',  badgeCls:'rp-present',  bar:'#16A34A' },
@@ -554,13 +574,17 @@ function renderStats(recs, workdays) {
   var business = recs.filter(function(r){ return r.status==='business'; }).length;
   var totalMembers = members.length;
 
+  var totalWorkMin = recs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+  var presentDays = present + half + business;
+  var avgMin = presentDays > 0 ? Math.round(totalWorkMin / presentDays) : 0;
+
   document.getElementById('stat-grid').innerHTML = [
-    { cls:'blue',   label:'本月工作日', value: workdays,      sub: '天' },
-    { cls:'green',  label:'出勤人次',   value: present,       sub: '人次' },
-    { cls:'',       label:'半天人次',   value: half,          sub: '人次' },
-    { cls:'purple', label:'公出人次',   value: business,      sub: '人次' },
-    { cls:'amber',  label:'請假人次',   value: leave,         sub: '人次' },
-    { cls:'gray',   label:'監造人員',   value: totalMembers,  sub: '人' },
+    { cls:'blue',   label:'本月工作日', value: workdays,               sub: '天' },
+    { cls:'green',  label:'出勤人次',   value: present,                sub: '人次' },
+    { cls:'',       label:'半天人次',   value: half,                   sub: '人次' },
+    { cls:'purple', label:'公出人次',   value: business,               sub: '人次' },
+    { cls:'amber',  label:'請假人次',   value: leave,                  sub: '人次' },
+    { cls:'teal',   label:'總工作時數', value: fmtMinutes(totalWorkMin), sub: '均 ' + fmtMinutes(avgMin) + '/人天' },
   ].map(function(s) {
     return '<div class="stat-card ' + s.cls + '">' +
       '<div class="stat-label">' + s.label + '</div>' +
@@ -588,6 +612,10 @@ function renderRateGrid(recs, workdays) {
     var barColor = rate >= 90 ? '#16A34A' : rate >= 70 ? '#D97706' : '#DC2626';
     var initials = m.name.slice(0,1);
 
+    var totalMinCard = mRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+    var presentDaysCard = present + half + business;
+    var avgMinCard = presentDaysCard > 0 ? Math.round(totalMinCard / presentDaysCard) : 0;
+
     return '<div class="rate-card">' +
       '<div class="rate-card-top">' +
         '<div class="rate-avatar">' + esc(initials) + '</div>' +
@@ -606,6 +634,11 @@ function renderRateGrid(recs, workdays) {
         (business ? '<span class="rate-pill rp-business">公出 ' + business + '</span>' : '') +
         (leave    ? '<span class="rate-pill rp-leave">請假 ' + leave + '</span>' : '') +
       '</div>' +
+      (totalMinCard ? '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #EAE7E0;display:flex;align-items:center;justify-content:space-between;">' +
+        '<span style="font-size:11px;color:#9C9A93;">工作時數</span>' +
+        '<span style="font-size:12px;font-weight:700;color:#0D9488;">⏱ ' + fmtMinutes(totalMinCard) + '</span>' +
+        (avgMinCard ? '<span style="font-size:10px;color:#9C9A93;">均 ' + fmtMinutes(avgMinCard) + '/天</span>' : '') +
+      '</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -654,7 +687,10 @@ function renderCalendar(y, mo, recs) {
         var m = members.find(function(x){ return x.id===r.memberId; });
         var st = STATUS[r.status] || STATUS.present;
         var name = m ? m.name.slice(0,2) : '—';
-        return '<div class="cal-pill ' + st.cls + '">' + esc(name) + ' ' + st.label + '</div>';
+        var wMin = calcWorkMinutes(r.timeIn, r.timeOut);
+        return '<div class="cal-pill ' + st.cls + '" title="' + esc(m?m.name:'') + (r.timeIn?' '+r.timeIn:'') + (r.timeOut?'~'+r.timeOut:'') + (wMin?' '+fmtMinutes(wMin):'') + '">' +
+          esc(name) + ' ' + st.label + (wMin ? ' ' + fmtMinutes(wMin) : '') +
+        '</div>';
       }).join('');
       if (dayRecs.length > maxShow) {
         pillsHtml += '<div class="cal-more">+' + (dayRecs.length - maxShow) + ' 筆</div>';
@@ -690,6 +726,7 @@ function renderTable(recs) {
     var name = m ? m.name : '（未知）';
     var dateP = r.date ? r.date.split('-') : ['','',''];
     var dateLabel = dateP.length===3 ? (dateP[1].replace(/^0/,'') + '/' + dateP[2].replace(/^0/,'')) : r.date;
+    var workMin = calcWorkMinutes(r.timeIn, r.timeOut);
 
     return '<tr>' +
       '<td><span style="font-family:monospace;font-size:12px;">' + esc(dateLabel) + '</span></td>' +
@@ -697,6 +734,7 @@ function renderTable(recs) {
       '<td><span class="status-badge cal-pill ' + st.cls + '">' + st.label + '</span></td>' +
       '<td><span class="time-chip">' + esc(r.timeIn||'—') + '</span></td>' +
       '<td><span class="time-chip">' + esc(r.timeOut||'—') + '</span></td>' +
+      '<td><span style="font-size:12px;font-weight:600;color:#0D9488;">' + fmtMinutes(workMin) + '</span></td>' +
       '<td style="color:#6B6860;font-size:12px;">' + esc(r.note||'—') + '</td>' +
     '</tr>';
   }).join('');
