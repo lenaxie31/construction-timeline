@@ -537,14 +537,14 @@ async function loadData() {
 
 function getDefaultMembers() {
   return [
-    { id:'m001', name:'王中平', role:'品管人員' },
-    { id:'m002', name:'劉錦華', role:'品管人員' },
-    { id:'m003', name:'謝庭蓁', role:'工務助理' },
-    { id:'m004', name:'高君銓', role:'監造工程師' },
-    { id:'m005', name:'林怡秀', role:'監造主管代理' },
-    { id:'m006', name:'陳勤傑', role:'' },
-    { id:'m007', name:'盧鵬宇', role:'' },
-    { id:'m008', name:'林幸一', role:'' },
+    { id:'m001', name:'王中平' },
+    { id:'m002', name:'劉錦華' },
+    { id:'m003', name:'謝庭蓁' },
+    { id:'m004', name:'高君銓' },
+    { id:'m005', name:'林怡秀' },
+    { id:'m006', name:'陳勤傑' },
+    { id:'m007', name:'盧鵬宇' },
+    { id:'m008', name:'林幸一' },
   ];
 }
 
@@ -621,7 +621,7 @@ function renderRateGrid(recs, workdays) {
         '<div class="rate-avatar">' + esc(initials) + '</div>' +
         '<div>' +
           '<div class="rate-name">' + esc(m.name) + '</div>' +
-          '<div class="rate-role">' + esc(m.role||'監造工程師') + '</div>' +
+          
         '</div>' +
       '</div>' +
       '<div class="rate-bar-wrap">' +
