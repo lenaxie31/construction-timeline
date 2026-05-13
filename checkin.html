@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>監造人員出勤打卡 — 減碳A標</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-serif;
+  background: #F4F3EF;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 36px 28px 32px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  text-align: center;
+}
+
+.logo {
+  width: 56px; height: 56px;
+  background: #1C1B18;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.logo svg { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+
+h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: #9C9A93; margin-bottom: 28px; }
+
+/* 時鐘 */
+.clock {
+  font-family: 'DM Mono', monospace;
+  font-size: 42px;
+  font-weight: 500;
+  letter-spacing: -1px;
+  color: #1C1B18;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.clock-date {
+  font-size: 13px;
+  color: #6B6860;
+  margin-bottom: 28px;
+}
+
+/* 選人 */
+.field { margin-bottom: 16px; text-align: left; }
+.field label { font-size: 11px; font-weight: 700; color: #6B6860; letter-spacing: .4px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.field select, .field input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 12px 14px;
+  border: 1.5px solid #DDD9D0;
+  border-radius: 10px;
+  background: #F4F3EF;
+  color: #1C1B18;
+  outline: none;
+  appearance: none;
+  transition: border-color .15s, background .15s;
+}
+.field select:focus, .field input:focus {
+  border-color: #1C1B18;
+  background: #fff;
+}
+
+/* 打卡按鈕 */
+.btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.btn-checkin {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 10px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: transform .1s, opacity .15s, box-shadow .15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.btn-checkin:active { transform: scale(0.97); }
+.btn-checkin:disabled { opacity: .4; cursor: not-allowed; }
+.btn-in  { background: #1C1B18; color: #fff; }
+.btn-out { background: #F4F3EF; color: #1C1B18; border: 1.5px solid #DDD9D0; }
+.btn-checkin .btn-icon-big { font-size: 22px; }
+.btn-checkin .btn-label { font-size: 13px; }
+.btn-checkin .btn-sub   { font-size: 10px; opacity: .7; font-weight: 500; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1C1B18; color: #fff;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: #16A34A; }
+.toast.error   { background: #DC2626; }
+
+/* 最近打卡記錄 */
+.recent { margin-top: 24px; padding-top: 20px; border-top: 1px solid #EAE7E0; text-align: left; }
+.recent-title { font-size: 11px; font-weight: 700; color: #9C9A93; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+.recent-list { display: flex; flex-direction: column; gap: 6px; }
+.recent-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: #F4F3EF;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.recent-item .ri-name { font-weight: 600; flex: 1; }
+.recent-item .ri-time { font-family: monospace; color: #6B6860; }
+.ri-in  { color: #16A34A; font-weight: 700; }
+.ri-out { color: #2563EB; font-weight: 700; }
+
+@media (max-width: 400px) {
+  .card { padding: 28px 20px 24px; }
+  .clock { font-size: 36px; }
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  </div>
+  <h1>監造人員打卡</h1>
+  <p class="subtitle">減碳A標施工現場</p>
+
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="clock-date" id="clock-date"></div>
+
+  <div class="field">
+    <label>選擇姓名</label>
+    <select id="member-select">
+      <option value="">— 請選擇 —</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>備註（選填）</label>
+    <input type="text" id="note" placeholder="如：外出、施工巡查…" maxlength="50">
+  </div>
+
+  <div class="btn-group">
+    <button class="btn-checkin btn-in" id="btn-in" onclick="doCheckin('in')" disabled>
+      <span class="btn-icon-big">🟢</span>
+      <span class="btn-label">到場打卡</span>
+      <span class="btn-sub" id="last-in-time">—</span>
+    </button>
+    <button class="btn-checkin btn-out" id="btn-out" onclick="doCheckin('out')" disabled>
+      <span class="btn-icon-big">🔵</span>
+      <span class="btn-label">離場打卡</span>
+      <span class="btn-sub" id="last-out-time">—</span>
+    </button>
+  </div>
+
+  <!-- 位置狀態 -->
+  <div id="geo-status" style="margin-top:14px;font-size:12px;color:#9C9A93;display:flex;align-items:center;justify-content:center;gap:5px;">
+    <span>📍</span><span id="geo-text">打卡時將自動定位</span>
+  </div>
+
+  <div class="recent" id="recent-section" style="display:none">
+    <div class="recent-title">今日打卡記錄</div>
+    <div class="recent-list" id="recent-list"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+var API_URL = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
+
+// ── 工地座標 & 打卡範圍 ──
+var SITE_LAT  = 24.219417;   // 工地緯度
+var SITE_LNG  = 120.474500;  // 工地經度
+var MAX_DIST  = 1000;         // 允許範圍（公尺）
+
+// ── 計算兩點距離（Haversine 公式）──
+function calcDistance(lat1, lng1, lat2, lng2) {
+  var R = 6371000; // 地球半徑（公尺）
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLng = (lng2 - lng1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── 取得目前位置 ──
+function getCurrentPosition() {
+  return new Promise(function(resolve, reject) {
+    if (!navigator.geolocation) {
+      reject(new Error('此瀏覽器不支援 GPS 定位'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, function(err) {
+      var msgs = {
+        1: '請允許位置存取權限才能打卡',
+        2: 'GPS 定位失敗，請確認 GPS 已開啟',
+        3: 'GPS 定位逾時，請重試',
+      };
+      reject(new Error(msgs[err.code] || 'GPS 定位失敗'));
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+  });
+}
+
+// 人員名單（與主系統同步，這裡也內建一份預設）
+var MEMBERS = [
+  { id:'m001', name:'王中平' },
+  { id:'m002', name:'劉錦華' },
+  { id:'m003', name:'謝庭蓁' },
+  { id:'m004', name:'高君銓' },
+  { id:'m005', name:'林怡秀' },
+  { id:'m006', name:'陳勤傑' },
+  { id:'m007', name:'盧鵬宇' },
+  { id:'m008', name:'林幸一' },
+];
+
+var todayCheckins = []; // 今日已打卡記錄（本地快取）
+
+// ── 時鐘 ──
+function updateClock() {
+  var now = new Date();
+  var h = String(now.getHours()).padStart(2,'0');
+  var m = String(now.getMinutes()).padStart(2,'0');
+  var s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+
+  var days = ['日','一','二','三','四','五','六'];
+  var dateStr = now.getFullYear() + ' 年 ' +
+    (now.getMonth()+1) + ' 月 ' +
+    now.getDate() + ' 日（' + days[now.getDay()] + '）';
+  document.getElementById('clock-date').textContent = dateStr;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── 日期工具 ──
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function nowTimeStr() {
+  var d = new Date();
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+// ── 初始化人員選單 ──
+function initMembers() {
+  var sel = document.getElementById('member-select');
+  MEMBERS.forEach(function(m) {
+    var opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+
+  // 嘗試從雲端讀取人員名單
+  fetch(API_URL + '?module=members&action=getAll&token=checkin')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.data && d.data.length > 0) {
+        MEMBERS = d.data.filter(function(m){ return m.active !== false; });
+        sel.innerHTML = '<option value="">— 請選擇 —</option>';
+        MEMBERS.forEach(function(m) {
+          var opt = document.createElement('option');
+          opt.value = m.id;
+          opt.textContent = m.name;
+          sel.appendChild(opt);
+        });
+      }
+    })
+    .catch(function(){});
+}
+
+// ── 人員切換 ──
+document.getElementById('member-select').addEventListener('change', function() {
+  var hasSelection = !!this.value;
+  document.getElementById('btn-in').disabled  = !hasSelection;
+  document.getElementById('btn-out').disabled = !hasSelection;
+  if (hasSelection) loadTodayRecords(this.value);
+  updateLastPunchTimes();
+});
+
+function updateLastPunchTimes() {
+  var memberId = document.getElementById('member-select').value;
+  if (!memberId) return;
+  var memberRecs = todayCheckins.filter(function(r){ return r.memberId === memberId; });
+  var lastIn  = memberRecs.filter(function(r){ return r.punchType==='in'; }).pop();
+  var lastOut = memberRecs.filter(function(r){ return r.punchType==='out'; }).pop();
+  document.getElementById('last-in-time').textContent  = lastIn  ? '上次 ' + lastIn.timeIn  : '尚未打卡';
+  document.getElementById('last-out-time').textContent = lastOut ? '上次 ' + lastOut.timeOut : '尚未打卡';
+}
+
+// ── 讀取今日記錄 ──
+function loadTodayRecords(memberId) {
+  // 從 localStorage 讀取今天的記錄（快取）
+  try {
+    var stored = localStorage.getItem('checkin_today_' + todayStr());
+    if (stored) {
+      todayCheckins = JSON.parse(stored);
+      renderRecentList(memberId);
+      updateLastPunchTimes();
+    }
+  } catch(e) {}
+}
+
+// ── 打卡 ──
+async function doCheckin(type) {
+  var memberId = document.getElementById('member-select').value;
+  var note     = document.getElementById('note').value.trim();
+  if (!memberId) return;
+
+  var btnEl = type === 'in' ? document.getElementById('btn-in') : document.getElementById('btn-out');
+  btnEl.disabled = true;
+
+  // ── 步驟1：取得 GPS 位置 ──
+  showToast('📡 定位中，請稍候…', '');
+  var userLat, userLng, dist;
+  try {
+    var pos = await getCurrentPosition();
+    userLat = pos.coords.latitude;
+    userLng = pos.coords.longitude;
+    dist = Math.round(calcDistance(userLat, userLng, SITE_LAT, SITE_LNG));
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+    btnEl.disabled = false;
+    return;
+  }
+
+  // 更新位置狀態顯示
+  var geoText = document.getElementById('geo-text');
+  if (geoText) {
+    var distLabel = dist < 1000 ? dist + ' 公尺' : (dist/1000).toFixed(1) + ' 公里';
+    geoText.textContent = '距工地 ' + distLabel + (dist <= MAX_DIST ? '　✅ 範圍內' : '　❌ 超出範圍');
+    geoText.style.color = dist <= MAX_DIST ? '#16A34A' : '#DC2626';
+  }
+
+  // ── 步驟2：距離檢查 ──
+  if (dist > MAX_DIST) {
+    showToast('❌ 距工地 ' + dist + ' 公尺，超出 ' + MAX_DIST + ' 公尺範圍', 'error');
+    btnEl.disabled = false;
+    return;
+  }
+
+  var member = MEMBERS.find(function(m){ return m.id === memberId; });
+  var timeStr = nowTimeStr();
+  var today   = todayStr();
+
+  // 建立出勤記錄（對應主系統 att 格式）
+  var record = {
+    id:        'ck_' + Date.now().toString(36),
+    date:      today,
+    memberId:  memberId,
+    timeIn:    type === 'in'  ? timeStr : '',
+    timeOut:   type === 'out' ? timeStr : '',
+    status:    'present',
+    note:      note,
+    dist:      dist,  // 打卡距離（公尺）
+    punchType: type,  // 額外標記打卡類型
+    punchTime: timeStr,
+  };
+
+  // 如果今天已有記錄，更新它
+  var existingIdx = -1;
+  for (var i = 0; i < todayCheckins.length; i++) {
+    if (todayCheckins[i].memberId === memberId && todayCheckins[i].date === today) {
+      existingIdx = i;
+      break;
+    }
+  }
+
+  var payload;
+  if (existingIdx >= 0) {
+    // 更新現有記錄
+    if (type === 'in')  todayCheckins[existingIdx].timeIn  = timeStr;
+    if (type === 'out') todayCheckins[existingIdx].timeOut = timeStr;
+    if (note) todayCheckins[existingIdx].note = note;
+    todayCheckins[existingIdx].punchType = type;
+    todayCheckins[existingIdx].punchTime = timeStr;
+    payload = todayCheckins[existingIdx];
+  } else {
+    todayCheckins.push(record);
+    payload = record;
+  }
+
+  // 存本地快取
+  try {
+    localStorage.setItem('checkin_today_' + today, JSON.stringify(todayCheckins));
+  } catch(e) {}
+
+  // 上傳到雲端
+  var btnEl = type === 'in' ? document.getElementById('btn-in') : document.getElementById('btn-out');
+  try {
+    // 讀取現有 att 資料
+    var getRes = await fetch(API_URL + '?module=att&action=getAll&token=checkin');
+    var getData = await getRes.json();
+    var allAtt = (getData.data && Array.isArray(getData.data)) ? getData.data : [];
+
+    // 找到今天這個人的記錄並更新，或新增
+    var found = false;
+    for (var i = 0; i < allAtt.length; i++) {
+      if (allAtt[i].memberId === memberId && allAtt[i].date === today) {
+        if (type === 'in')  allAtt[i].timeIn  = timeStr;
+        if (type === 'out') allAtt[i].timeOut = timeStr;
+        if (note) allAtt[i].note = note;
+        found = true;
+        break;
+      }
+    }
+    if (!found) allAtt.push(payload);
+
+    // 存回雲端（POST）
+    var saveRes = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ module: 'att', action: 'saveAll', json: JSON.stringify(allAtt), token: 'checkin' })
+    });
+    var saveData = await saveRes.json();
+    if (saveData.error && saveData.error !== 'UNAUTHORIZED') throw new Error(saveData.error);
+
+    showToast((type === 'in' ? '✅ 到場打卡成功！' : '🔵 離場打卡成功！') + '　' + timeStr + '　距工地 ' + dist + 'm', 'success');
+  } catch(e) {
+    showToast('⚠️ 雲端同步失敗，記錄已暫存', 'error');
+  }
+
+  btnEl.disabled = false;
+  document.getElementById('note').value = '';
+  renderRecentList(memberId);
+  updateLastPunchTimes();
+}
+
+// ── 顯示今日記錄 ──
+function renderRecentList(memberId) {
+  var section = document.getElementById('recent-section');
+  var list    = document.getElementById('recent-list');
+  var recs = todayCheckins.filter(function(r){ return r.memberId === memberId; });
+
+  if (!recs.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  list.innerHTML = recs.map(function(r) {
+    var parts = [];
+    if (r.timeIn)  parts.push('<span class="ri-in">到場 ' + r.timeIn  + '</span>');
+    if (r.timeOut) parts.push('<span class="ri-out">離場 ' + r.timeOut + '</span>');
+    return '<div class="recent-item">' +
+      '<span class="ri-name">' + (r.note || '無備註') + '</span>' +
+      parts.join('　') +
+    '</div>';
+  }).join('');
+}
+
+// ── Toast ──
+var _toastTimer = null;
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() {
+    el.classList.remove('show');
+  }, 3000);
+}
+
+// ── 啟動 ──
+initMembers();
+</script>
+</body>
+</html>
