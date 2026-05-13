@@ -1107,6 +1107,79 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
   .doc-filter-bar .filter-select { min-width: 100%; }
 }
 
+
+/* 出勤管理 */
+.att-status-present  { background:#DCFCE7; color:#166534; border:1px solid #BBF7D0; }
+.att-status-half     { background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE; }
+.att-status-leave    { background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; }
+.att-status-business { background:#F3E8FF; color:#6B21A8; border:1px solid #DDD6FE; }
+.att-status-holiday  { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+.att-status-absent   { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+
+/* 月曆 */
+.att-cal-header {
+  display:grid; grid-template-columns: repeat(7,1fr);
+  background:var(--text-primary); color:#fff;
+  font-size:11px; font-weight:700; text-align:center;
+}
+.att-cal-header div { padding:8px 4px; }
+.att-cal-grid {
+  display:grid; grid-template-columns: repeat(7,1fr);
+  border-left:1px solid var(--border-light);
+  border-top:1px solid var(--border-light);
+}
+.att-cal-cell {
+  border-right:1px solid var(--border-light);
+  border-bottom:1px solid var(--border-light);
+  min-height:80px; padding:4px;
+  position:relative;
+}
+.att-cal-cell.other-month { background:#FAFAFA; }
+.att-cal-cell.today { background:#EFF6FF; }
+.att-cal-cell.weekend { background:#FDFCFA; }
+.att-cal-day {
+  font-size:11px; font-weight:600; color:var(--text-muted);
+  margin-bottom:3px;
+}
+.att-cal-cell.today .att-cal-day { color:var(--c-blue); font-weight:700; }
+.att-cal-pill {
+  font-size:9px; font-weight:700;
+  padding:1px 5px; border-radius:3px;
+  margin-bottom:2px; cursor:pointer;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  display:block; transition:opacity .12s;
+}
+.att-cal-pill:hover { opacity:.8; }
+.att-cal-add {
+  font-size:10px; color:var(--text-muted);
+  cursor:pointer; padding:1px 3px;
+  border-radius:3px; display:inline-block;
+}
+.att-cal-add:hover { background:var(--border-light); color:var(--text-primary); }
+
+/* 月報摘要表 */
+.att-summary-table { width:100%; border-collapse:collapse; font-size:12px; }
+.att-summary-table th {
+  background:var(--bg); color:var(--text-secondary);
+  font-size:11px; font-weight:700; padding:8px 12px;
+  text-align:left; border-bottom:2px solid var(--border);
+}
+.att-summary-table td {
+  padding:9px 12px; border-bottom:1px solid var(--border-light);
+  vertical-align:middle;
+}
+.att-summary-table tr:hover td { background:var(--bg); }
+.att-day-badge {
+  display:inline-block; font-size:10px; font-weight:700;
+  padding:1px 6px; border-radius:4px; margin-right:3px;
+}
+
+@media (max-width:767px) {
+  .att-cal-cell { min-height:56px; padding:2px; }
+  .att-cal-pill { font-size:8px; padding:1px 3px; }
+  .att-cal-day  { font-size:10px; }
+}
+
 /* PRINT */
 @media print{
   .header,.tabs,.sidebar,.sidebar-toggle,.card-actions,.filter-bar,.btn-export,.export-section,.tab-panel:not(#panel-timeline),.project-progress-card{display:none!important;}
@@ -1157,6 +1230,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
     <button class="tab-btn" onclick="switchTab('defects')">改善事項追蹤 <span class="tab-badge" id="open-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('docs')">文件送審 <span class="tab-badge" id="doc-pending-count" style="display:none">0</span></button>
     <button class="tab-btn" onclick="switchTab('quality')">監造查驗 <span class="tab-badge" id="qi-fail-count" style="display:none">0</span></button>
+    <button class="tab-btn" onclick="switchTab('attendance')">👷 出勤管理</button>
     <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出</button>
   </div>
 
@@ -1442,6 +1516,44 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       </div>
 
 
+
+      <!-- Attendance -->
+      <div class="tab-panel" id="panel-attendance">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <h2 style="font-size:14px;font-weight:700;">監造人員出勤管理</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAttModal()">＋ 新增出勤記錄</button>
+            <button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openMemberModal()">👤 管理人員名單</button>
+          </div>
+        </div>
+
+        <!-- 統計卡 -->
+        <div class="stat-grid" id="att-stat-grid" style="margin-bottom:16px;"></div>
+
+        <!-- 月份切換 + 篩選 -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn-icon" onclick="attChangeMonth(-1)" title="上個月" style="width:32px;height:32px;">◀</button>
+          <span id="att-month-label" style="font-size:14px;font-weight:700;min-width:80px;text-align:center;"></span>
+          <button class="btn-icon" onclick="attChangeMonth(1)" title="下個月" style="width:32px;height:32px;">▶</button>
+          <button class="btn-secondary" onclick="attGoToday()" style="width:auto;padding:6px 12px;font-size:12px;">今天</button>
+          <select class="filter-select" id="att-filter-member" onchange="renderAttendance()">
+            <option value="">全部人員</option>
+          </select>
+          <span class="filter-count" id="att-count"></span>
+        </div>
+
+        <!-- 月曆式出勤表 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;">
+          <div id="att-calendar"></div>
+        </div>
+
+        <!-- 月報摘要 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">本月出勤統計</div>
+          <div id="att-summary"></div>
+        </div>
+      </div>
+
       <!-- Export -->
       <div class="tab-panel" id="panel-export">
         <div class="export-section">
@@ -1669,6 +1781,56 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
     </div>
   </div>
 
+
+  <!-- Attendance Modal -->
+  <div class="modal-overlay" id="att-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header"><h3 id="att-modal-title">新增出勤記錄</h3><button class="modal-close" onclick="closeAttModal()">×</button></div>
+      <div class="modal-body">
+        <div class="field-row">
+          <div class="field"><label>日期</label><input type="date" id="att-date"></div>
+          <div class="field"><label>人員</label>
+            <select id="att-member"></select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>到場時間</label><input type="time" id="att-in" value="08:00"></div>
+          <div class="field"><label>離場時間</label><input type="time" id="att-out" value="17:00"></div>
+        </div>
+        <div class="field"><label>出勤狀態</label>
+          <select id="att-status">
+            <option value="present">✅ 出勤</option>
+            <option value="half">🌗 半天</option>
+            <option value="leave">📋 請假</option>
+            <option value="business">🚗 公出</option>
+            <option value="holiday">🏖 例假</option>
+          </select>
+        </div>
+        <div class="field"><label>備註（選填）</label><input type="text" id="att-note" placeholder="請假事由、公出地點等"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal" onclick="closeAttModal()">取消</button>
+        <button class="btn-modal primary" onclick="saveAttRecord()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Member Management Modal -->
+  <div class="modal-overlay" id="member-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header"><h3>管理人員名單</h3><button class="modal-close" onclick="closeMemberModal()">×</button></div>
+      <div class="modal-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input type="text" id="new-member-name" placeholder="輸入姓名" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
+          <input type="text" id="new-member-role" placeholder="職稱（選填）" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
+          <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="addMember()">新增</button>
+        </div>
+        <div id="member-list" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;"></div>
+      </div>
+      <div class="modal-footer"><button class="btn-modal primary" onclick="closeMemberModal()">完成</button></div>
+    </div>
+  </div>
+
   <!-- Fix 5: Toast Confirm -->
   <div class="toast-confirm" id="toast-confirm">
     <span id="toast-msg">確定要刪除？</span>
@@ -1723,7 +1885,7 @@ var DOC_TYPE_CLS   = { plan:'dtype-plan', drawing:'dtype-drawing', subplan:'dtyp
 var VER_RESULT_LABEL = { approved:'核定', approved_mod:'審查認可但有修正處', approved_after:'修正後核定', rejected:'退回修正', reviewing:'審查中／修正中', pending:'未送', sent:'已送（審查中）' };
 var VALID_STATUS = { normal:1, milestone:1, warn:1, pending:1, issue:1 };
 // Fix 10: TAB_IDS 放在函式外
-var TAB_IDS = ['dashboard','timeline','defects','docs','quality','export'];
+var TAB_IDS = ['dashboard','timeline','defects','docs','quality','attendance','export'];
 
 // Fix 9: 所有資料變數統一在頂部宣告
 var entries = [], defects = [], docs = [], qualityItems = [];
@@ -2001,6 +2163,20 @@ async function init() {
           await cloudSaveAll('qi', qualityItems);
         }
 
+        // 出勤 & 人員名單
+        var cloudAtt = await cloudLoadAll('att');
+        if (cloudAtt && cloudAtt.length > 0) {
+          attRecords = cloudAtt;
+          try { localStorage.setItem(ATT_KEY, JSON.stringify(attRecords)); } catch(e) {}
+        }
+        var cloudMembers = await cloudLoadAll('members');
+        if (cloudMembers && cloudMembers.length > 0) {
+          members = cloudMembers;
+          try { localStorage.setItem(MEMBER_KEY, JSON.stringify(members)); } catch(e) {}
+        } else if (!members.length) {
+          members = getDefaultMembers();
+        }
+
         setSync('已同步 ✓ (' + entries.length + ' 筆)', 'sync-ok');
       } catch(e) {
         setSync('離線，使用本機', 'sync-err');
@@ -2032,6 +2208,7 @@ async function init() {
     renderQi();
     updateQiFailCount();
     initAllFormBadges();
+    initAttendance();
   } catch(e) {
     console.error('init failed:', e);
     showErrBanner('初始化失敗：' + e.message);
@@ -2125,6 +2302,7 @@ function switchTab(tab) {
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'docs')      renderDocs();
   if (tab === 'quality')   renderQi();
+  if (tab === 'attendance') renderAttendance();
   closeSidebar();
 }
 
@@ -3430,6 +3608,8 @@ function diagStorage() {
     { name: '文件送審', key: DOCS_KEY },
     { name: '監造查驗', key: QI_KEY },
     { name: '工程進度', key: PROGRESS_KEY },
+    { name: '出勤記錄', key: ATT_KEY },
+    { name: '人員名單', key: MEMBER_KEY },
   ];
   var lines = ['<strong>localStorage 診斷結果：</strong><br>'];
   keys.forEach(function(k) {
@@ -3802,6 +3982,384 @@ function qiSave() {
   _qiSaveTimer = setTimeout(function() {
     cloudSaveAll('qi', qualityItems).catch(function(){});
   }, 500);
+}
+
+
+// ══════════════════════════════════════
+// ── 出勤管理系統 ──
+// ══════════════════════════════════════
+
+var ATT_KEY     = 'construction_att_v1';
+var MEMBER_KEY  = 'construction_members_v1';
+
+var attRecords  = [];
+var members     = [];
+var attCurrentMonth = todayStr().slice(0,7); // 'YYYY-MM'
+var editingAttId = null;
+
+var ATT_STATUS = {
+  present:  { label:'出勤',   icon:'✅', cls:'att-status-present'  },
+  half:     { label:'半天',   icon:'🌗', cls:'att-status-half'     },
+  leave:    { label:'請假',   icon:'📋', cls:'att-status-leave'    },
+  business: { label:'公出',   icon:'🚗', cls:'att-status-business' },
+  holiday:  { label:'例假',   icon:'🏖', cls:'att-status-holiday'  },
+  absent:   { label:'缺勤',   icon:'❌', cls:'att-status-absent'   },
+};
+
+// ── 儲存 / 讀取 ──
+function attSave() {
+  try { localStorage.setItem(ATT_KEY, JSON.stringify(attRecords)); } catch(e) {}
+  clearTimeout(attSave._timer);
+  attSave._timer = setTimeout(function() {
+    cloudSaveAll('att', attRecords).catch(function(){});
+  }, 500);
+}
+function attLoad() {
+  try { var r = localStorage.getItem(ATT_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+}
+function memberSave() {
+  try { localStorage.setItem(MEMBER_KEY, JSON.stringify(members)); } catch(e) {}
+  clearTimeout(memberSave._timer);
+  memberSave._timer = setTimeout(function() {
+    cloudSaveAll('members', members).catch(function(){});
+  }, 500);
+}
+function memberLoad() {
+  try { var r = localStorage.getItem(MEMBER_KEY); return r ? JSON.parse(r) : getDefaultMembers(); } catch(e) { return getDefaultMembers(); }
+}
+function getDefaultMembers() {
+  return [
+    { id:'m001', name:'王中平', role:'監造工程師', active:true },
+    { id:'m002', name:'劉錦華', role:'監造工程師', active:true },
+    { id:'m003', name:'謝庭蓁', role:'監造工程師', active:true },
+    { id:'m004', name:'高君銓', role:'監造工程師', active:true },
+    { id:'m005', name:'林怡秀', role:'監造工程師', active:true },
+    { id:'m006', name:'陳勤傑', role:'監造工程師', active:true },
+    { id:'m007', name:'盧鵬宇', role:'監造工程師', active:true },
+    { id:'m008', name:'林幸一', role:'監造工程師', active:true },
+  ];
+}
+
+// ── 月份切換 ──
+function attChangeMonth(dir) {
+  var parts = attCurrentMonth.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1+dir, 1);
+  attCurrentMonth = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  renderAttendance();
+}
+function attGoToday() {
+  attCurrentMonth = todayStr().slice(0,7);
+  renderAttendance();
+}
+
+// ── 主渲染 ──
+function renderAttendance() {
+  updateAttMemberFilter();
+  renderAttStats();
+  renderAttCalendar();
+  renderAttSummary();
+}
+
+function updateAttMemberFilter() {
+  var sel = document.getElementById('att-filter-member'); if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">全部人員</option>' +
+    members.filter(function(m){ return m.active; }).map(function(m) {
+      return '<option value="' + esc(m.id) + '"' + (m.id===cur?' selected':'') + '>' + esc(m.name) + '</option>';
+    }).join('');
+}
+
+function getMonthRecords() {
+  var filterMember = document.getElementById('att-filter-member') ? document.getElementById('att-filter-member').value : '';
+  return attRecords.filter(function(r) {
+    return r.date.startsWith(attCurrentMonth) &&
+           (!filterMember || r.memberId === filterMember);
+  });
+}
+
+// ── 統計卡 ──
+function renderAttStats() {
+  var monthRecs = attRecords.filter(function(r){ return r.date.startsWith(attCurrentMonth); });
+  var activeM = members.filter(function(m){ return m.active; });
+
+  // 計算本月工作日（週一到週五）
+  var parts = attCurrentMonth.split('-');
+  var y = parseInt(parts[0]), mo = parseInt(parts[1]);
+  var daysInMonth = new Date(y, mo, 0).getDate();
+  var workdays = 0;
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dow = new Date(y, mo-1, d).getDay();
+    if (dow !== 0 && dow !== 6) workdays++;
+  }
+
+  var presentCount  = monthRecs.filter(function(r){ return r.status==='present'; }).length;
+  var halfCount     = monthRecs.filter(function(r){ return r.status==='half'; }).length;
+  var leaveCount    = monthRecs.filter(function(r){ return r.status==='leave'; }).length;
+  var businessCount = monthRecs.filter(function(r){ return r.status==='business'; }).length;
+
+  var el = document.getElementById('att-stat-grid'); if (!el) return;
+  el.innerHTML =
+    '<div class="stat-card blue"><div class="stat-label">本月工作日</div><div class="stat-value">' + workdays + '</div><div class="stat-sub">天</div></div>' +
+    '<div class="stat-card green"><div class="stat-label">出勤記錄</div><div class="stat-value">' + presentCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card"><div class="stat-label">半天出勤</div><div class="stat-value">' + halfCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card amber"><div class="stat-label">請假</div><div class="stat-value">' + leaveCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card purple"><div class="stat-label">公出</div><div class="stat-value">' + businessCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card"><div class="stat-label">監造人員</div><div class="stat-value">' + activeM.length + '</div><div class="stat-sub">人</div></div>';
+}
+
+// ── 月曆 ──
+function renderAttCalendar() {
+  var el = document.getElementById('att-calendar'); if (!el) return;
+  var filterMember = document.getElementById('att-filter-member') ? document.getElementById('att-filter-member').value : '';
+
+  var parts = attCurrentMonth.split('-');
+  var y = parseInt(parts[0]), mo = parseInt(parts[1]);
+  var label = document.getElementById('att-month-label');
+  if (label) label.textContent = y + ' 年 ' + mo + ' 月';
+
+  var firstDay = new Date(y, mo-1, 1);
+  var lastDay  = new Date(y, mo, 0);
+  var startDow = firstDay.getDay(); // 0=Sun
+  var today = todayStr();
+
+  // 月曆起始日（補前面空格）
+  var calStart = new Date(firstDay);
+  calStart.setDate(calStart.getDate() - startDow);
+
+  // 建立日期→記錄 map
+  var recMap = {};
+  attRecords.filter(function(r){
+    return r.date.startsWith(attCurrentMonth) && (!filterMember || r.memberId === filterMember);
+  }).forEach(function(r) {
+    if (!recMap[r.date]) recMap[r.date] = [];
+    recMap[r.date].push(r);
+  });
+
+  var DAYS = ['日','一','二','三','四','五','六'];
+  var html = '<div class="att-cal-header">' + DAYS.map(function(d){ return '<div>' + d + '</div>'; }).join('') + '</div>';
+  html += '<div class="att-cal-grid">';
+
+  for (var week = 0; week < 6; week++) {
+    for (var dow = 0; dow < 7; dow++) {
+      var cur = new Date(calStart);
+      cur.setDate(calStart.getDate() + week*7 + dow);
+      var dateStr = cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0');
+      var isThisMonth = cur.getMonth()+1 === mo;
+      var isToday = dateStr === today;
+      var isWeekend = dow === 0 || dow === 6;
+
+      var cls = 'att-cal-cell';
+      if (!isThisMonth) cls += ' other-month';
+      else if (isToday) cls += ' today';
+      else if (isWeekend) cls += ' weekend';
+
+      var recs = recMap[dateStr] || [];
+      var pillsHtml = recs.map(function(r) {
+        var m = members.find(function(x){ return x.id===r.memberId; });
+        var st = ATT_STATUS[r.status] || ATT_STATUS.present;
+        var name = m ? m.name : '—';
+        return '<span class="att-cal-pill ' + st.cls + '" ' +
+          'data-id="' + esc(r.id) + '" onclick="editAttRecord(this.dataset.id)" ' +
+          'title="' + esc(name) + '　' + st.label + (r.note?' | '+r.note:'') + '">' +
+          st.icon + ' ' + esc(name.slice(0,3)) +
+        '</span>';
+      }).join('');
+
+      var addBtn = isThisMonth ? '<span class="att-cal-add" onclick="quickAddAtt(this.dataset.date)" data-date="' + dateStr + '">＋</span>' : '';
+
+      html += '<div class="' + cls + '">' +
+        '<div class="att-cal-day">' + cur.getDate() + '</div>' +
+        pillsHtml + addBtn +
+      '</div>';
+    }
+    // 如果第6週全部是下個月就不顯示
+    var weekStart = new Date(calStart);
+    weekStart.setDate(calStart.getDate() + week*7);
+    if (week === 5 && weekStart.getMonth()+1 !== mo) break;
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+
+  var countEl = document.getElementById('att-count');
+  if (countEl) {
+    var total = Object.values(recMap).reduce(function(s,a){ return s+a.length; }, 0);
+    countEl.textContent = '本月 ' + total + ' 筆記錄';
+  }
+}
+
+// ── 月報摘要 ──
+function renderAttSummary() {
+  var el = document.getElementById('att-summary'); if (!el) return;
+  var activeM = members.filter(function(m){ return m.active; });
+  if (!activeM.length) { el.innerHTML = '<div class="empty">尚無人員資料</div>'; return; }
+
+  var parts = attCurrentMonth.split('-');
+  var y = parseInt(parts[0]), mo = parseInt(parts[1]);
+  var daysInMonth = new Date(y, mo, 0).getDate();
+
+  // 計算工作日
+  var workdays = 0;
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dow = new Date(y, mo-1, d).getDay();
+    if (dow !== 0 && dow !== 6) workdays++;
+  }
+
+  var html = '<table class="att-summary-table"><thead><tr>' +
+    '<th>姓名</th><th>職稱</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>出勤率</th><th>操作</th>' +
+    '</tr></thead><tbody>';
+
+  activeM.forEach(function(m) {
+    var recs = attRecords.filter(function(r){ return r.date.startsWith(attCurrentMonth) && r.memberId === m.id; });
+    var present  = recs.filter(function(r){ return r.status==='present'; }).length;
+    var half     = recs.filter(function(r){ return r.status==='half'; }).length;
+    var business = recs.filter(function(r){ return r.status==='business'; }).length;
+    var leave    = recs.filter(function(r){ return r.status==='leave'; }).length;
+    var effectiveDays = present + half*0.5 + business;
+    var rate = workdays ? Math.round(effectiveDays/workdays*100) : 0;
+    var rateColor = rate >= 90 ? 'var(--c-green)' : rate >= 70 ? 'var(--c-amber)' : 'var(--c-red)';
+
+    html += '<tr>' +
+      '<td style="font-weight:600;">' + esc(m.name) + '</td>' +
+      '<td style="font-size:11px;color:var(--text-muted);">' + esc(m.role||'—') + '</td>' +
+      '<td><span class="att-day-badge att-status-present">' + present + ' 天</span></td>' +
+      '<td><span class="att-day-badge att-status-half">' + half + ' 次</span></td>' +
+      '<td><span class="att-day-badge att-status-business">' + business + ' 天</span></td>' +
+      '<td><span class="att-day-badge att-status-leave">' + leave + ' 天</span></td>' +
+      '<td><strong style="color:' + rateColor + ';">' + rate + '%</strong>' +
+        '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">(' + effectiveDays + '/' + workdays + ')</span>' +
+      '</td>' +
+      '<td><button class="btn-sm" onclick="openAttModalForMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">新增記錄</button></td>' +
+    '</tr>';
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ── Modal 操作 ──
+function openAttModal() {
+  editingAttId = null;
+  document.getElementById('att-modal-title').textContent = '新增出勤記錄';
+  document.getElementById('att-date').value = todayStr();
+  document.getElementById('att-in').value   = '08:00';
+  document.getElementById('att-out').value  = '17:00';
+  document.getElementById('att-status').value = 'present';
+  document.getElementById('att-note').value  = '';
+  // 填充人員選單
+  var sel = document.getElementById('att-member');
+  sel.innerHTML = members.filter(function(m){ return m.active; }).map(function(m) {
+    return '<option value="' + esc(m.id) + '">' + esc(m.name) + '</option>';
+  }).join('');
+  document.getElementById('att-modal').style.display = 'flex';
+}
+
+function openAttModalForMember(memberId) {
+  openAttModal();
+  var sel = document.getElementById('att-member');
+  sel.value = memberId;
+}
+
+function quickAddAtt(date) {
+  openAttModal();
+  document.getElementById('att-date').value = date;
+}
+
+function editAttRecord(id) {
+  var r = attRecords.find(function(x){ return x.id===id; }); if (!r) return;
+  editingAttId = id;
+  document.getElementById('att-modal-title').textContent = '編輯出勤記錄';
+  var sel = document.getElementById('att-member');
+  sel.innerHTML = members.filter(function(m){ return m.active; }).map(function(m) {
+    return '<option value="' + esc(m.id) + '">' + esc(m.name) + '</option>';
+  }).join('');
+  document.getElementById('att-date').value   = r.date;
+  document.getElementById('att-member').value = r.memberId;
+  document.getElementById('att-in').value     = r.timeIn  || '08:00';
+  document.getElementById('att-out').value    = r.timeOut || '17:00';
+  document.getElementById('att-status').value = r.status;
+  document.getElementById('att-note').value   = r.note || '';
+  document.getElementById('att-modal').style.display = 'flex';
+}
+
+function closeAttModal() { document.getElementById('att-modal').style.display = 'none'; }
+
+function saveAttRecord() {
+  var date     = document.getElementById('att-date').value;
+  var memberId = document.getElementById('att-member').value;
+  var timeIn   = document.getElementById('att-in').value;
+  var timeOut  = document.getElementById('att-out').value;
+  var status   = document.getElementById('att-status').value;
+  var note     = document.getElementById('att-note').value.trim();
+  if (!date || !memberId) { alert('請填寫日期和人員'); return; }
+
+  var payload = { date, memberId, timeIn, timeOut, status, note };
+  if (editingAttId) {
+    var idx = attRecords.findIndex(function(r){ return r.id===editingAttId; });
+    if (idx !== -1) attRecords[idx] = Object.assign({}, attRecords[idx], payload);
+  } else {
+    attRecords.push(Object.assign({ id: uid() }, payload));
+  }
+  attSave();
+  closeAttModal();
+  renderAttendance();
+}
+
+// ── 人員管理 ──
+function openMemberModal() {
+  renderMemberList();
+  document.getElementById('member-modal').style.display = 'flex';
+}
+function closeMemberModal() {
+  document.getElementById('member-modal').style.display = 'none';
+  updateAttMemberFilter();
+  renderAttSummary();
+}
+
+function renderMemberList() {
+  var el = document.getElementById('member-list'); if (!el) return;
+  if (!members.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:8px;">尚無人員</div>'; return; }
+  el.innerHTML = members.map(function(m) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);">' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:13px;font-weight:600;' + (m.active?'':'text-decoration:line-through;color:var(--text-muted);') + '">' + esc(m.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);">' + esc(m.role||'') + '</div>' +
+      '</div>' +
+      '<button class="btn-sm" onclick="toggleMemberActive(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;' + (m.active?'':'background:var(--c-green-bg);color:var(--c-green);') + '">' +
+        (m.active ? '停用' : '啟用') +
+      '</button>' +
+      '<button class="btn-sm del" onclick="deleteMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">刪除</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addMember() {
+  var name = document.getElementById('new-member-name').value.trim();
+  var role = document.getElementById('new-member-role').value.trim();
+  if (!name) { alert('請輸入姓名'); return; }
+  members.push({ id: 'm' + uid(), name, role, active: true });
+  memberSave();
+  document.getElementById('new-member-name').value = '';
+  document.getElementById('new-member-role').value = '';
+  renderMemberList();
+}
+
+function toggleMemberActive(id) {
+  var m = members.find(function(x){ return x.id===id; });
+  if (m) { m.active = !m.active; memberSave(); renderMemberList(); }
+}
+
+async function deleteMember(id) {
+  if (!await toastConfirm('確定要刪除此人員？已有的出勤記錄不會刪除。')) return;
+  members = members.filter(function(m){ return m.id!==id; });
+  memberSave(); renderMemberList();
+}
+
+// ── 初始化出勤 ──
+function initAttendance() {
+  attRecords = attLoad();
+  members    = memberLoad();
+  renderAttendance();
 }
 
 // ── BOOT ──
