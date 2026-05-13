@@ -1573,6 +1573,18 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
           <h3>🔬 匯出監造查驗 Excel</h3><p>匯出所有監造查驗紀錄，含進度顏色、自動欄寬。</p>
           <button class="btn-export csv" onclick="exportQiXLSX()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下載監造查驗 Excel</button>
         <div class="export-section">
+          <h3>👷 匯出出勤月報 Excel</h3>
+          <p>匯出監造人員出勤月報，含人員出勤統計、每日明細，格式適合提交甲方。</p>
+          <div class="export-options" style="align-items:center;gap:16px;">
+            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">選擇月份：</label>
+            <input type="month" id="exp-att-month" style="font-family:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
+          </div>
+          <button class="btn-export csv" onclick="exportAttXLSX()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下載出勤月報 Excel
+          </button>
+        </div>
+        <div class="export-section">
           <h3>🔧 資料診斷 / 手動還原</h3>
           <p>如果改善事項、文件送審、監造查驗資料消失，請先點擊「診斷」確認 localStorage 狀態，再點「強制重新讀取」。</p>
           <div id="storage-diag-result" style="font-size:11px;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:12px;line-height:1.9;display:none;"></div>
@@ -2194,6 +2206,9 @@ async function init() {
     // Fix 2: 初始化自動帶入今天日期
     var fDate = document.getElementById('f-date');
     if (fDate) fDate.value = todayStr();
+    // 匯出月份預設為當月
+    var expAttMonth = document.getElementById('exp-att-month');
+    if (expAttMonth) expAttMonth.value = todayStr().slice(0,7);
 
     updateProgress(progressLoad(), false);
     loadScheduleUI();
@@ -3588,6 +3603,375 @@ function exportQiXLSX() {
   downloadXLSX(wb, '監造查驗紀錄_' + todayStr() + '.xlsx');
 }
 
+
+// ── 出勤月報 XLSX ──
+function exportAttXLSX() {
+  var monthInput = document.getElementById('exp-att-month');
+  var month = monthInput ? monthInput.value : todayStr().slice(0,7);
+  if (!month) { alert('請選擇月份'); return; }
+
+  var parts = month.split('-');
+  var y = parseInt(parts[0]), mo = parseInt(parts[1]);
+  var daysInMonth = new Date(y, mo, 0).getDate();
+  var monthLabel = y + '年' + mo + '月';
+
+  // 計算工作日
+  var workdaySet = {};
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dow = new Date(y, mo-1, d).getDay();
+    if (dow !== 0 && dow !== 6) workdaySet[d] = true;
+  }
+  var workdays = Object.keys(workdaySet).length;
+
+  var activeMembers = members.filter(function(m){ return m.active !== false; });
+  var monthRecs = attRecords.filter(function(r){ return r.date && r.date.startsWith(month); });
+
+  var STATUS_LABEL = {
+    present:'出勤', half:'半天', leave:'請假',
+    business:'公出', holiday:'例假', absent:'缺勤', '':''
+  };
+  var STATUS_BG = {
+    present:'DCFCE7', half:'DBEAFE', leave:'FEF3C7',
+    business:'F3E8FF', holiday:'F1F5F9', absent:'FEE2E2'
+  };
+  var STATUS_FG = {
+    present:'166534', half:'1E40AF', leave:'92400E',
+    business:'6B21A8', holiday:'475569', absent:'991B1B'
+  };
+
+  var wb = XLSX.utils.book_new();
+
+  // ════════════════════════
+  // 工作表一：出勤統計摘要
+  // ════════════════════════
+  var ws1Data = [];
+
+  // 標題區
+  ws1Data.push(['監造人員出勤月報']);
+  ws1Data.push(['減碳A標　' + monthLabel]);
+  ws1Data.push(['製表日期：' + todayStr()]);
+  ws1Data.push([]); // 空行
+
+  // 表頭
+  ws1Data.push([
+    '姓名', '職稱',
+    '出勤天數', '半天次數', '公出天數', '請假天數', '例假天數',
+    '有效出勤', '本月工作日', '出勤率'
+  ]);
+
+  // 每個人的統計
+  activeMembers.forEach(function(m) {
+    var mRecs = monthRecs.filter(function(r){ return r.memberId === m.id; });
+    var present  = mRecs.filter(function(r){ return r.status==='present'; }).length;
+    var half     = mRecs.filter(function(r){ return r.status==='half'; }).length;
+    var business = mRecs.filter(function(r){ return r.status==='business'; }).length;
+    var leave    = mRecs.filter(function(r){ return r.status==='leave'; }).length;
+    var holiday  = mRecs.filter(function(r){ return r.status==='holiday'; }).length;
+    var effective = present + half * 0.5 + business;
+    var rate = workdays > 0 ? (effective / workdays * 100).toFixed(1) + '%' : '—';
+    ws1Data.push([
+      m.name, m.role || '監造工程師',
+      present, half, business, leave, holiday,
+      effective, workdays, rate
+    ]);
+  });
+
+  ws1Data.push([]); // 空行
+  ws1Data.push(['備註：有效出勤 = 出勤天數 + 半天次數×0.5 + 公出天數']);
+
+  var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+  ws1['!cols'] = [
+    {wch:10},{wch:14},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}
+  ];
+  ws1['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:9} },
+    { s:{r:1,c:0}, e:{r:1,c:9} },
+    { s:{r:2,c:0}, e:{r:2,c:9} },
+  ];
+
+  // 樣式
+  // 主標題
+  if (ws1['A1']) ws1['A1'].s = {
+    font:{bold:true, sz:16, color:{rgb:'1C1B18'}},
+    fill:{fgColor:{rgb:'F4F3EF'}},
+    alignment:{horizontal:'center', vertical:'center'}
+  };
+  if (ws1['A2']) ws1['A2'].s = {
+    font:{sz:12, color:{rgb:'6B6860'}},
+    fill:{fgColor:{rgb:'F4F3EF'}},
+    alignment:{horizontal:'center'}
+  };
+  if (ws1['A3']) ws1['A3'].s = {
+    font:{sz:11, color:{rgb:'9C9A93'}},
+    fill:{fgColor:{rgb:'F4F3EF'}},
+    alignment:{horizontal:'center'}
+  };
+
+  // 表頭列（第5列，row index 4）
+  var hdrCols1 = ['A','B','C','D','E','F','G','H','I','J'];
+  hdrCols1.forEach(function(col) {
+    var addr = col + '5';
+    if (ws1[addr]) ws1[addr].s = {
+      font:{bold:true, sz:10, color:{rgb:'FFFFFF'}},
+      fill:{fgColor:{rgb:'1C1B18'}},
+      alignment:{horizontal:'center', vertical:'center', wrapText:true},
+      border:{
+        bottom:{style:'thin',color:{rgb:'444444'}},
+        right:{style:'thin',color:{rgb:'444444'}}
+      }
+    };
+  });
+
+  // 資料列
+  activeMembers.forEach(function(m, mi) {
+    var rowIdx = 5 + mi; // 0-based, header at row 4
+    var mRecs = monthRecs.filter(function(r){ return r.memberId === m.id; });
+    var present  = mRecs.filter(function(r){ return r.status==='present'; }).length;
+    var half     = mRecs.filter(function(r){ return r.status==='half'; }).length;
+    var business = mRecs.filter(function(r){ return r.status==='business'; }).length;
+    var effective = present + half * 0.5 + business;
+    var rate = workdays > 0 ? effective / workdays * 100 : 0;
+    var isAlt = mi % 2 === 1;
+    var baseBg = isAlt ? 'F8F9FA' : 'FFFFFF';
+    var rateColor = rate >= 90 ? '166534' : rate >= 70 ? '92400E' : '991B1B';
+    var rateBg    = rate >= 90 ? 'DCFCE7' : rate >= 70 ? 'FEF3C7' : 'FEE2E2';
+
+    hdrCols1.forEach(function(col, ci) {
+      var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
+      if (!ws1[addr]) ws1[addr] = {v:'', t:'s'};
+      var isRateCol = ci === 9;
+      ws1[addr].s = {
+        font: isRateCol
+          ? {bold:true, sz:11, color:{rgb: rateColor}}
+          : {sz:11, color:{rgb: ci===0?'1C1B18':'6B6860'}},
+        fill: {fgColor:{rgb: isRateCol ? rateBg : baseBg}},
+        alignment: {horizontal: ci>=2?'center':'left', vertical:'center'},
+        border: {
+          bottom:{style:'thin',color:{rgb:'EAE7E0'}},
+          right:{style:'thin',color:{rgb:'EAE7E0'}}
+        }
+      };
+    });
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws1, '出勤統計');
+
+  // ════════════════════════
+  // 工作表二：每日出勤明細
+  // ════════════════════════
+  var ws2Data = [];
+  ws2Data.push(['監造人員出勤明細　' + monthLabel]);
+  ws2Data.push(['減碳A標']);
+  ws2Data.push([]);
+  ws2Data.push(['日期', '星期', '姓名', '狀態', '到場時間', '離場時間', '備註']);
+
+  var DAYS_TW = ['日','一','二','三','四','五','六'];
+  var sorted = monthRecs.slice().sort(function(a,b){
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    var mA = activeMembers.find(function(m){ return m.id===a.memberId; });
+    var mB = activeMembers.find(function(m){ return m.id===b.memberId; });
+    return (mA?mA.name:'').localeCompare(mB?mB.name:'');
+  });
+
+  sorted.forEach(function(r) {
+    var m = activeMembers.find(function(x){ return x.id===r.memberId; });
+    var dp = (r.date||'').split('-');
+    var dateLabel = dp.length===3 ? y+'/'+(parseInt(dp[1]))+'/'+parseInt(dp[2]) : r.date;
+    var dow = r.date ? DAYS_TW[new Date(r.date).getDay()] : '';
+    ws2Data.push([
+      dateLabel, '（' + dow + '）',
+      m ? m.name : '—',
+      STATUS_LABEL[r.status] || r.status,
+      r.timeIn  || '—',
+      r.timeOut || '—',
+      r.note    || ''
+    ]);
+  });
+
+  if (!sorted.length) ws2Data.push(['（本月無記錄）','','','','','','']);
+
+  var ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+  ws2['!cols'] = [{wch:12},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:24}];
+  ws2['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:6} },
+    { s:{r:1,c:0}, e:{r:1,c:6} },
+  ];
+  ws2['!freeze'] = { xSplit:0, ySplit:4 };
+
+  // 標題樣式
+  if (ws2['A1']) ws2['A1'].s = {
+    font:{bold:true, sz:14, color:{rgb:'1C1B18'}},
+    fill:{fgColor:{rgb:'F4F3EF'}},
+    alignment:{horizontal:'center'}
+  };
+
+  // 表頭
+  ['A','B','C','D','E','F','G'].forEach(function(col) {
+    var addr = col + '4';
+    if (ws2[addr]) ws2[addr].s = {
+      font:{bold:true, sz:10, color:{rgb:'FFFFFF'}},
+      fill:{fgColor:{rgb:'1C1B18'}},
+      alignment:{horizontal:'center', vertical:'center'}
+    };
+  });
+
+  // 資料列
+  sorted.forEach(function(r, ri) {
+    var rowIdx = 4 + ri;
+    var isAlt = ri % 2 === 1;
+    var baseBg = isAlt ? 'F8F9FA' : 'FFFFFF';
+    var stBg = STATUS_BG[r.status] || 'F1F5F9';
+    var stFg = STATUS_FG[r.status] || '475569';
+
+    for (var ci = 0; ci < 7; ci++) {
+      var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
+      if (!ws2[addr]) ws2[addr] = {v:'', t:'s'};
+      var isStatus = ci === 3;
+      ws2[addr].s = {
+        font: isStatus
+          ? {bold:true, sz:10, color:{rgb: stFg}}
+          : {sz:10, color:{rgb:'1C1B18'}},
+        fill: {fgColor:{rgb: isStatus ? stBg : baseBg}},
+        alignment: {horizontal: ci<=1||ci===3||ci===4||ci===5?'center':'left', vertical:'center'},
+        border: {
+          bottom:{style:'thin',color:{rgb:'EAE7E0'}},
+          right:{style:'thin',color:{rgb:'EAE7E0'}}
+        }
+      };
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws2, '每日明細');
+
+  // ════════════════════════
+  // 工作表三：人員月曆表
+  // ════════════════════════
+  var ws3Data = [];
+  ws3Data.push(['監造人員出勤月曆　' + monthLabel]);
+  ws3Data.push(['減碳A標']);
+  ws3Data.push([]);
+
+  // 表頭：日期列
+  var headerRow = ['姓名 \ 日期'];
+  for (var d = 1; d <= daysInMonth; d++) {
+    headerRow.push(d + '日');
+  }
+  headerRow.push('出勤', '半天', '公出', '請假', '出勤率');
+  ws3Data.push(headerRow);
+
+  // 星期列
+  var dowRow = [''];
+  var DAYS_SHORT = ['日','一','二','三','四','五','六'];
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dow2 = new Date(y, mo-1, d).getDay();
+    dowRow.push(DAYS_SHORT[dow2]);
+  }
+  dowRow.push('','','','','');
+  ws3Data.push(dowRow);
+
+  // 每個人一列
+  activeMembers.forEach(function(m) {
+    var row = [m.name];
+    var present=0, half=0, business=0, leave=0;
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dateStr2 = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      var rec = monthRecs.find(function(r){ return r.memberId===m.id && r.date===dateStr2; });
+      if (rec) {
+        row.push(STATUS_LABEL[rec.status] || '');
+        if (rec.status==='present')  present++;
+        if (rec.status==='half')     half++;
+        if (rec.status==='business') business++;
+        if (rec.status==='leave')    leave++;
+      } else {
+        var dow3 = new Date(y, mo-1, d).getDay();
+        row.push(dow3===0||dow3===6 ? '—' : '');
+      }
+    }
+    var effective2 = present + half*0.5 + business;
+    var rate2 = workdays>0 ? (effective2/workdays*100).toFixed(1)+'%' : '—';
+    row.push(present, half, business, leave, rate2);
+    ws3Data.push(row);
+  });
+
+  var ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
+  // 固定寬度
+  var cols3 = [{wch:10}];
+  for (var d=0; d<daysInMonth; d++) cols3.push({wch:5});
+  cols3.push({wch:6},{wch:6},{wch:6},{wch:6},{wch:8});
+  ws3['!cols'] = cols3;
+  ws3['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:daysInMonth+4} },
+    { s:{r:1,c:0}, e:{r:1,c:daysInMonth+4} },
+  ];
+  ws3['!freeze'] = { xSplit:1, ySplit:5 };
+
+  // 標題
+  if (ws3['A1']) ws3['A1'].s = {
+    font:{bold:true,sz:14,color:{rgb:'1C1B18'}},
+    fill:{fgColor:{rgb:'F4F3EF'}},
+    alignment:{horizontal:'center'}
+  };
+
+  // 表頭列 & 星期列 樣式
+  for (var ci2=0; ci2<=daysInMonth+4; ci2++) {
+    var hAddr = XLSX.utils.encode_cell({r:3, c:ci2});
+    if (!ws3[hAddr]) ws3[hAddr] = {v:'',t:'s'};
+    ws3[hAddr].s = {
+      font:{bold:true,sz:9,color:{rgb:'FFFFFF'}},
+      fill:{fgColor:{rgb:'1C1B18'}},
+      alignment:{horizontal:'center',vertical:'center'}
+    };
+    // 星期列
+    var dAddr = XLSX.utils.encode_cell({r:4, c:ci2});
+    if (ws3[dAddr]) {
+      var val = ws3[dAddr].v;
+      var isWkend = (val==='日'||val==='六');
+      ws3[dAddr].s = {
+        font:{sz:9,bold:isWkend,color:{rgb:isWkend?'DC2626':'6B6860'}},
+        fill:{fgColor:{rgb:isWkend?'FEF2F2':'F8F9FA'}},
+        alignment:{horizontal:'center'}
+      };
+    }
+  }
+
+  // 資料列顏色
+  activeMembers.forEach(function(m, mi) {
+    var rowIdx3 = 5 + mi;
+    for (var ci3=0; ci3<=daysInMonth+4; ci3++) {
+      var addr3 = XLSX.utils.encode_cell({r:rowIdx3, c:ci3});
+      if (!ws3[addr3]) ws3[addr3] = {v:'',t:'s'};
+      var val3 = ws3[addr3].v || '';
+      var isAlt3 = mi%2===1;
+      var cellBg = isAlt3?'F8F9FA':'FFFFFF';
+      var cellFg = '1C1B18';
+
+      // 狀態欄顏色
+      if (ci3>=1 && ci3<=daysInMonth) {
+        var stKey = Object.keys(STATUS_LABEL).find(function(k){ return STATUS_LABEL[k]===val3; });
+        if (stKey && STATUS_BG[stKey]) {
+          cellBg = STATUS_BG[stKey];
+          cellFg = STATUS_FG[stKey];
+        }
+        // 週末底色
+        var colDay = ci3; // 1-indexed day
+        var dow4 = new Date(y,mo-1,colDay).getDay();
+        if (!stKey && (dow4===0||dow4===6)) cellBg = 'FEF2F2';
+      }
+
+      ws3[addr3].s = {
+        font:{sz:9,bold:ci3===0,color:{rgb:cellFg}},
+        fill:{fgColor:{rgb:cellBg}},
+        alignment:{horizontal:ci3===0?'left':'center',vertical:'center'},
+        border:{bottom:{style:'thin',color:{rgb:'EAE7E0'}},right:{style:'thin',color:{rgb:'EAE7E0'}}}
+      };
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws3, '月曆表');
+
+  downloadXLSX(wb, '監造人員出勤月報_' + month + '.xlsx');
+}
+
 function printReport() {
   document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
   switchTab('timeline');
@@ -4380,3 +4764,4 @@ initSidebarState();
 })();
 </script>
 </body>
+        '>' + esc(f.note) + '</textarea>' +
