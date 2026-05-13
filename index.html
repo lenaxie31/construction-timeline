@@ -4869,18 +4869,14 @@ function importPunchXLS(input) {
           }
         }
 
-        // 判斷出勤狀態
-        var dow = new Date(dateVal).getDay();
-        var isWeekend = (dow === 0 || dow === 6);
+        // 只匯入有打卡時間的記錄（缺勤/例假不匯入）
+        if (!timeIn && !timeOut) continue;
+
+        // 判斷出勤狀態（只有出勤/半天）
         var status;
-        if (isWeekend && !timeIn) {
-          status = 'holiday';
-        } else if (!timeIn && !timeOut) {
-          status = 'absent';
-        } else if (timeIn && !timeOut) {
-          status = 'present'; // 只有到場沒離場（可能還在）
+        if (timeIn && !timeOut) {
+          status = 'present'; // 只有到場沒離場
         } else {
-          // 判斷是否半天（工時 < 5 小時）
           var inParts  = timeIn.split(':');
           var outParts = timeOut.split(':');
           var inMin  = parseInt(inParts[0])*60  + parseInt(inParts[1]);
