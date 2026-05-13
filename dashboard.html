@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>監造人員出勤儀表板 — 減碳A標</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: 'Noto Sans TC', -apple-system, 'Microsoft JhengHei', sans-serif;
+  background: #F4F3EF;
+  color: #1C1B18;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+.header {
+  background: #1C1B18;
+  color: #fff;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.header-logo {
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.header-logo svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+.header-title h1 { font-size: 16px; font-weight: 700; }
+.header-title p  { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.sync-time { font-size: 12px; color: rgba(255,255,255,0.5); }
+.btn-refresh {
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 7px 14px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-refresh:hover { background: rgba(255,255,255,0.18); }
+.btn-refresh.loading { opacity: .6; pointer-events: none; }
+
+/* ── MONTH NAV ── */
+.month-nav {
+  background: #fff;
+  border-bottom: 1px solid #EAE7E0;
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-month {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid #DDD9D0;
+  background: #F4F3EF;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s;
+}
+.btn-month:hover { background: #EAE7E0; }
+.month-label {
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 120px;
+}
+.btn-today {
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid #DDD9D0;
+  border-radius: 8px;
+  background: #F4F3EF;
+  cursor: pointer;
+  transition: background .12s;
+}
+.btn-today:hover { background: #EAE7E0; }
+.workday-info {
+  margin-left: auto;
+  font-size: 12px;
+  color: #9C9A93;
+}
+
+/* ── MAIN ── */
+.main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+
+/* ── STAT CARDS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: #fff;
+  border: 1px solid #EAE7E0;
+  border-radius: 12px;
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.stat-card.blue::before   { background: #2563EB; }
+.stat-card.green::before  { background: #16A34A; }
+.stat-card.amber::before  { background: #D97706; }
+.stat-card.purple::before { background: #7C3AED; }
+.stat-card.red::before    { background: #DC2626; }
+.stat-card.gray::before   { background: #94A3B8; }
+.stat-label { font-size: 11px; font-weight: 700; color: #9C9A93; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 30px; font-weight: 500; line-height: 1; }
+.stat-card.blue   .stat-value { color: #2563EB; }
+.stat-card.green  .stat-value { color: #16A34A; }
+.stat-card.amber  .stat-value { color: #D97706; }
+.stat-card.purple .stat-value { color: #7C3AED; }
+.stat-card.red    .stat-value { color: #DC2626; }
+.stat-sub { font-size: 11px; color: #9C9A93; margin-top: 5px; }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9C9A93;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 14px;
+}
+
+/* ── 出勤率總覽 ── */
+.rate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.rate-card {
+  background: #fff;
+  border: 1px solid #EAE7E0;
+  border-radius: 12px;
+  padding: 16px;
+}
+.rate-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.rate-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #1C1B18;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.rate-name { font-size: 14px; font-weight: 700; }
+.rate-role { font-size: 11px; color: #9C9A93; }
+.rate-bar-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.rate-bar-track {
+  flex: 1; height: 8px;
+  background: #F1F5F9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.rate-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+.rate-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 38px;
+  text-align: right;
+}
+.rate-detail {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.rate-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.rp-present  { background: #DCFCE7; color: #166534; }
+.rp-half     { background: #EFF6FF; color: #1E40AF; }
+.rp-business { background: #F3E8FF; color: #6B21A8; }
+.rp-leave    { background: #FEF3C7; color: #92400E; }
+.rp-absent   { background: #FEF2F2; color: #991B1B; }
+
+/* ── 月曆 ── */
+.calendar-section {
+  background: #fff;
+  border: 1px solid #EAE7E0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.cal-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #1C1B18;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.cal-header div { padding: 9px 4px; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-left: 1px solid #EAE7E0;
+  border-top: 1px solid #EAE7E0;
+}
+.cal-cell {
+  border-right: 1px solid #EAE7E0;
+  border-bottom: 1px solid #EAE7E0;
+  padding: 6px 6px 8px;
+  min-height: 90px;
+}
+.cal-cell.other-month { background: #FAFAFA; }
+.cal-cell.today       { background: #EFF6FF; }
+.cal-cell.weekend     { background: #FDFCFA; }
+.cal-day {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9C9A93;
+  margin-bottom: 5px;
+}
+.cal-cell.today .cal-day { color: #2563EB; }
+.cal-cell.weekend .cal-day { color: #DC2626; }
+.cal-pills { display: flex; flex-direction: column; gap: 2px; }
+.cal-pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cal-pill.s-present  { background: #DCFCE7; color: #166534; }
+.cal-pill.s-half     { background: #EFF6FF; color: #1E40AF; }
+.cal-pill.s-leave    { background: #FEF3C7; color: #92400E; }
+.cal-pill.s-business { background: #F3E8FF; color: #6B21A8; }
+.cal-pill.s-holiday  { background: #F1F5F9; color: #64748B; }
+.cal-pill.s-absent   { background: #FEF2F2; color: #991B1B; }
+.cal-more { font-size: 9px; color: #9C9A93; padding: 1px 4px; }
+
+/* ── 詳細列表 ── */
+.att-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #EAE7E0;
+  margin-bottom: 24px;
+}
+.att-table th {
+  background: #F8F9FA;
+  color: #6B6860;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid #EAE7E0;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.att-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+.att-table tr:last-child td { border-bottom: none; }
+.att-table tr:hover td { background: #FAFAFA; }
+.status-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.time-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #1C1B18;
+}
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9C9A93;
+  font-size: 14px;
+}
+
+/* ── LOADING ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(244,243,239,0.8);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid #EAE7E0;
+  border-top-color: #1C1B18;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RWD ── */
+@media (max-width: 768px) {
+  .header { padding: 14px 16px; }
+  .month-nav { padding: 10px 16px; }
+  .main { padding: 16px; }
+  .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-value { font-size: 24px; }
+  .rate-grid { grid-template-columns: 1fr 1fr; }
+  .cal-cell { min-height: 60px; padding: 4px; }
+  .cal-pill { font-size: 8px; }
+  .att-table { font-size: 12px; }
+  .att-table th, .att-table td { padding: 8px 10px; }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .rate-grid { grid-template-columns: 1fr; }
+  .cal-cell { min-height: 48px; }
+  .header-title p { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <div class="header-title">
+      <h1>監造人員出勤儀表板</h1>
+      <p>減碳A標　唯讀檢視</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="sync-time" id="sync-time">—</span>
+    <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      更新資料
+    </button>
+  </div>
+</div>
+
+<div class="month-nav">
+  <button class="btn-month" onclick="changeMonth(-1)">◀</button>
+  <span class="month-label" id="month-label"></span>
+  <button class="btn-month" onclick="changeMonth(1)">▶</button>
+  <button class="btn-today" onclick="goToday()">本月</button>
+  <span class="workday-info" id="workday-info"></span>
+</div>
+
+<div class="main">
+  <!-- 統計卡 -->
+  <div class="section-title">本月概況</div>
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <!-- 出勤率總覽 -->
+  <div class="section-title">人員出勤率</div>
+  <div class="rate-grid" id="rate-grid"></div>
+
+  <!-- 月曆 -->
+  <div class="section-title">月曆檢視</div>
+  <div class="calendar-section">
+    <div class="cal-header">
+      <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <!-- 詳細記錄 -->
+  <div class="section-title">出勤明細</div>
+  <table class="att-table">
+    <thead>
+      <tr>
+        <th>日期</th>
+        <th>姓名</th>
+        <th>狀態</th>
+        <th>到場</th>
+        <th>離場</th>
+        <th>備註</th>
+      </tr>
+    </thead>
+    <tbody id="att-tbody"></tbody>
+  </table>
+</div>
+
+<script>
+'use strict';
+
+var API_URL = 'https://script.google.com/macros/s/AKfycbzsFQEkz4_cVuNfCAMTDDs808uXstWUH0SVAMjIi54sbIRcgEW-atEGEFvdPmRkzXxK/exec';
+
+var attRecords = [];
+var members    = [];
+var currentMonth = todayStr().slice(0,7);
+
+var STATUS = {
+  present:  { label:'出勤',   cls:'s-present',  badgeCls:'rp-present',  bar:'#16A34A' },
+  half:     { label:'半天',   cls:'s-half',     badgeCls:'rp-half',     bar:'#2563EB' },
+  leave:    { label:'請假',   cls:'s-leave',    badgeCls:'rp-leave',    bar:'#D97706' },
+  business: { label:'公出',   cls:'s-business', badgeCls:'rp-business', bar:'#7C3AED' },
+  holiday:  { label:'例假',   cls:'s-holiday',  badgeCls:'rp-absent',   bar:'#94A3B8' },
+  absent:   { label:'缺勤',   cls:'s-absent',   badgeCls:'rp-absent',   bar:'#DC2626' },
+};
+
+// ── 工具 ──
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function getWorkdays(y, mo) {
+  var days = new Date(y, mo, 0).getDate();
+  var count = 0;
+  for (var d = 1; d <= days; d++) {
+    var dow = new Date(y, mo-1, d).getDay();
+    if (dow !== 0 && dow !== 6) count++;
+  }
+  return count;
+}
+
+// ── 月份切換 ──
+function changeMonth(dir) {
+  var p = currentMonth.split('-');
+  var d = new Date(parseInt(p[0]), parseInt(p[1])-1+dir, 1);
+  currentMonth = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  renderAll();
+}
+function goToday() {
+  currentMonth = todayStr().slice(0,7);
+  renderAll();
+}
+
+// ── 載入資料 ──
+async function loadData() {
+  var btn = document.getElementById('btn-refresh');
+  btn.classList.add('loading');
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 載入中…';
+
+  try {
+    // 讀取人員名單
+    var mRes = await fetch(API_URL + '?module=members&action=getAll&token=checkin');
+    var mData = await mRes.json();
+    if (mData.data && mData.data.length > 0) {
+      members = mData.data.filter(function(m){ return m.active !== false; });
+    } else {
+      members = getDefaultMembers();
+    }
+
+    // 讀取出勤記錄
+    var aRes = await fetch(API_URL + '?module=att&action=getAll&token=checkin');
+    var aData = await aRes.json();
+    attRecords = (aData.data && Array.isArray(aData.data)) ? aData.data : [];
+
+    var now = new Date();
+    document.getElementById('sync-time').textContent =
+      '更新時間 ' + String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0') + ':' +
+      String(now.getSeconds()).padStart(2,'0');
+
+    renderAll();
+  } catch(e) {
+    document.getElementById('sync-time').textContent = '載入失敗，請重試';
+  }
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 更新資料';
+  document.getElementById('loading').style.display = 'none';
+}
+
+function getDefaultMembers() {
+  return [
+    { id:'m001', name:'王中平', role:'監造工程師' },
+    { id:'m002', name:'劉錦華', role:'監造工程師' },
+    { id:'m003', name:'謝庭蓁', role:'監造工程師' },
+    { id:'m004', name:'高君銓', role:'監造工程師' },
+    { id:'m005', name:'林怡秀', role:'監造工程師' },
+    { id:'m006', name:'陳勤傑', role:'監造工程師' },
+    { id:'m007', name:'盧鵬宇', role:'監造工程師' },
+    { id:'m008', name:'林幸一', role:'監造工程師' },
+  ];
+}
+
+// ── 主渲染 ──
+function renderAll() {
+  var p = currentMonth.split('-');
+  var y = parseInt(p[0]), mo = parseInt(p[1]);
+  var workdays = getWorkdays(y, mo);
+
+  // 月份標題
+  document.getElementById('month-label').textContent = y + ' 年 ' + mo + ' 月';
+  document.getElementById('workday-info').textContent = '本月工作日 ' + workdays + ' 天';
+
+  var monthRecs = attRecords.filter(function(r){ return r.date && r.date.startsWith(currentMonth); });
+
+  renderStats(monthRecs, workdays);
+  renderRateGrid(monthRecs, workdays);
+  renderCalendar(y, mo, monthRecs);
+  renderTable(monthRecs);
+}
+
+// ── 統計卡 ──
+function renderStats(recs, workdays) {
+  var present  = recs.filter(function(r){ return r.status==='present'; }).length;
+  var half     = recs.filter(function(r){ return r.status==='half'; }).length;
+  var leave    = recs.filter(function(r){ return r.status==='leave'; }).length;
+  var business = recs.filter(function(r){ return r.status==='business'; }).length;
+  var totalMembers = members.length;
+
+  document.getElementById('stat-grid').innerHTML = [
+    { cls:'blue',   label:'本月工作日', value: workdays,      sub: '天' },
+    { cls:'green',  label:'出勤人次',   value: present,       sub: '人次' },
+    { cls:'',       label:'半天人次',   value: half,          sub: '人次' },
+    { cls:'purple', label:'公出人次',   value: business,      sub: '人次' },
+    { cls:'amber',  label:'請假人次',   value: leave,         sub: '人次' },
+    { cls:'gray',   label:'監造人員',   value: totalMembers,  sub: '人' },
+  ].map(function(s) {
+    return '<div class="stat-card ' + s.cls + '">' +
+      '<div class="stat-label">' + s.label + '</div>' +
+      '<div class="stat-value">' + s.value + '</div>' +
+      '<div class="stat-sub">' + s.sub + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── 出勤率總覽 ──
+function renderRateGrid(recs, workdays) {
+  if (!members.length) {
+    document.getElementById('rate-grid').innerHTML = '<div class="empty">尚無人員資料</div>';
+    return;
+  }
+
+  document.getElementById('rate-grid').innerHTML = members.map(function(m) {
+    var mRecs    = recs.filter(function(r){ return r.memberId === m.id; });
+    var present  = mRecs.filter(function(r){ return r.status==='present'; }).length;
+    var half     = mRecs.filter(function(r){ return r.status==='half'; }).length;
+    var business = mRecs.filter(function(r){ return r.status==='business'; }).length;
+    var leave    = mRecs.filter(function(r){ return r.status==='leave'; }).length;
+    var effective = present + half * 0.5 + business;
+    var rate = workdays ? Math.round(effective / workdays * 100) : 0;
+    var barColor = rate >= 90 ? '#16A34A' : rate >= 70 ? '#D97706' : '#DC2626';
+    var initials = m.name.slice(0,1);
+
+    return '<div class="rate-card">' +
+      '<div class="rate-card-top">' +
+        '<div class="rate-avatar">' + esc(initials) + '</div>' +
+        '<div>' +
+          '<div class="rate-name">' + esc(m.name) + '</div>' +
+          '<div class="rate-role">' + esc(m.role||'監造工程師') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rate-bar-wrap">' +
+        '<div class="rate-bar-track"><div class="rate-bar-fill" style="width:' + rate + '%;background:' + barColor + ';"></div></div>' +
+        '<div class="rate-pct" style="color:' + barColor + ';">' + rate + '%</div>' +
+      '</div>' +
+      '<div class="rate-detail">' +
+        (present  ? '<span class="rate-pill rp-present">出勤 ' + present + '</span>' : '') +
+        (half     ? '<span class="rate-pill rp-half">半天 ' + half + '</span>' : '') +
+        (business ? '<span class="rate-pill rp-business">公出 ' + business + '</span>' : '') +
+        (leave    ? '<span class="rate-pill rp-leave">請假 ' + leave + '</span>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── 月曆 ──
+function renderCalendar(y, mo, recs) {
+  var firstDay = new Date(y, mo-1, 1);
+  var startDow = firstDay.getDay();
+  var calStart = new Date(firstDay);
+  calStart.setDate(calStart.getDate() - startDow);
+  var today = todayStr();
+
+  // Build date → records map
+  var recMap = {};
+  recs.forEach(function(r) {
+    if (!recMap[r.date]) recMap[r.date] = [];
+    recMap[r.date].push(r);
+  });
+
+  var html = '';
+  for (var week = 0; week < 6; week++) {
+    var weekHasThisMonth = false;
+    for (var dow = 0; dow < 7; dow++) {
+      var cur = new Date(calStart);
+      cur.setDate(calStart.getDate() + week*7 + dow);
+      if (cur.getMonth()+1 === mo) weekHasThisMonth = true;
+    }
+    if (week === 5 && !weekHasThisMonth) break;
+
+    for (var dow = 0; dow < 7; dow++) {
+      var cur = new Date(calStart);
+      cur.setDate(calStart.getDate() + week*7 + dow);
+      var dateStr = cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0');
+      var isThisMonth = cur.getMonth()+1 === mo;
+      var isToday = dateStr === today;
+      var isWeekend = dow === 0 || dow === 6;
+
+      var cls = 'cal-cell';
+      if (!isThisMonth) cls += ' other-month';
+      else if (isToday) cls += ' today';
+      else if (isWeekend) cls += ' weekend';
+
+      var dayRecs = recMap[dateStr] || [];
+      var maxShow = 4;
+      var pillsHtml = dayRecs.slice(0, maxShow).map(function(r) {
+        var m = members.find(function(x){ return x.id===r.memberId; });
+        var st = STATUS[r.status] || STATUS.present;
+        var name = m ? m.name.slice(0,2) : '—';
+        return '<div class="cal-pill ' + st.cls + '">' + esc(name) + ' ' + st.label + '</div>';
+      }).join('');
+      if (dayRecs.length > maxShow) {
+        pillsHtml += '<div class="cal-more">+' + (dayRecs.length - maxShow) + ' 筆</div>';
+      }
+
+      html += '<div class="' + cls + '">' +
+        '<div class="cal-day">' + cur.getDate() + '</div>' +
+        '<div class="cal-pills">' + pillsHtml + '</div>' +
+      '</div>';
+    }
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+// ── 明細表格 ──
+function renderTable(recs) {
+  var tbody = document.getElementById('att-tbody');
+  if (!recs.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">本月尚無出勤記錄</td></tr>';
+    return;
+  }
+
+  var sorted = recs.slice().sort(function(a,b){
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    var mA = members.find(function(m){ return m.id===a.memberId; });
+    var mB = members.find(function(m){ return m.id===b.memberId; });
+    return (mA?mA.name:'').localeCompare(mB?mB.name:'');
+  });
+
+  tbody.innerHTML = sorted.map(function(r) {
+    var m  = members.find(function(x){ return x.id===r.memberId; });
+    var st = STATUS[r.status] || STATUS.present;
+    var name = m ? m.name : '（未知）';
+    var dateP = r.date ? r.date.split('-') : ['','',''];
+    var dateLabel = dateP.length===3 ? (dateP[1].replace(/^0/,'') + '/' + dateP[2].replace(/^0/,'')) : r.date;
+
+    return '<tr>' +
+      '<td><span style="font-family:monospace;font-size:12px;">' + esc(dateLabel) + '</span></td>' +
+      '<td><strong>' + esc(name) + '</strong></td>' +
+      '<td><span class="status-badge cal-pill ' + st.cls + '">' + st.label + '</span></td>' +
+      '<td><span class="time-chip">' + esc(r.timeIn||'—') + '</span></td>' +
+      '<td><span class="time-chip">' + esc(r.timeOut||'—') + '</span></td>' +
+      '<td style="color:#6B6860;font-size:12px;">' + esc(r.note||'—') + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+// ── 自動更新（每5分鐘）──
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
