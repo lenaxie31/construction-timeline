@@ -1523,9 +1523,15 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
           <h2 style="font-size:14px;font-weight:700;">監造人員出勤管理</h2>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAttModal()">＋ 新增出勤記錄</button>
+            <label class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+              📥 匯入打卡鐘 XLS
+              <input type="file" id="punch-import-file" accept=".xls,.xlsx" style="display:none;" onchange="importPunchXLS(this)">
+            </label>
             <button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openMemberModal()">👤 管理人員名單</button>
           </div>
         </div>
+        <!-- 匯入結果提示 -->
+        <div id="import-result" style="display:none;background:var(--c-green-bg);border:1px solid var(--c-green-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:13px;color:#166534;"></div>
 
         <!-- 統計卡 -->
         <div class="stat-grid" id="att-stat-grid" style="margin-bottom:16px;"></div>
@@ -4744,6 +4750,206 @@ function initAttendance() {
   attRecords = attLoad();
   members    = memberLoad();
   renderAttendance();
+}
+
+
+// ══════════════════════════════════════
+// ── 打卡鐘 XLS 匯入 ──
+// ══════════════════════════════════════
+
+function importPunchXLS(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, { type: 'array', cellText: true, cellDates: true });
+
+      // 用「異常統計表」— 每人每日一列，含日期+上下班時間
+      var sheetName = '異常統計表';
+      if (!wb.SheetNames.includes(sheetName)) {
+        // fallback: 找含「異常」的工作表
+        sheetName = wb.SheetNames.find(function(s){ return s.indexOf('異常') >= 0; }) || wb.SheetNames[0];
+      }
+      var ws = wb.Sheets[sheetName];
+      var rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+
+      // 解析表頭：找日期範圍
+      var dateRangeStr = '';
+      for (var i = 0; i < Math.min(rows.length, 5); i++) {
+        var row = rows[i];
+        for (var j = 0; j < row.length; j++) {
+          var v = String(row[j]);
+          if (/\d{4}-\d{2}-\d{2}\s*~\s*\d{4}-\d{2}-\d{2}/.test(v)) {
+            dateRangeStr = v; break;
+          }
+        }
+        if (dateRangeStr) break;
+      }
+
+      // 找資料列起始（表頭結束後）
+      // 異常統計表格式：工號, 姓名, 部門, 日期, 上班時段一, 下班時段一, 上班時段二, 下班時段二, ...
+      var dataStartRow = -1;
+      var colMap = {}; // { name, date, in1, out1, in2, out2 }
+
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var rowStr = row.join(',');
+        if (rowStr.indexOf('工號') >= 0 && rowStr.indexOf('姓名') >= 0 && rowStr.indexOf('日期') >= 0) {
+          // 找欄位位置
+          for (var j = 0; j < row.length; j++) {
+            var v = String(row[j]).trim();
+            if (v === '工號')  colMap.empNo  = j;
+            if (v === '姓名')  colMap.name   = j;
+            if (v === '部門')  colMap.dept   = j;
+            if (v === '日期')  colMap.date   = j;
+          }
+          // 下班/上班欄位在下一行
+          var nextRow = rows[i+1] || [];
+          var inCount = 0, outCount = 0;
+          colMap.timeIns  = [];
+          colMap.timeOuts = [];
+          for (var j = 0; j < nextRow.length; j++) {
+            var v2 = String(nextRow[j]).trim();
+            if (v2 === '上班') colMap.timeIns.push(j);
+            if (v2 === '下班') colMap.timeOuts.push(j);
+          }
+          dataStartRow = i + 2;
+          break;
+        }
+      }
+
+      if (dataStartRow < 0 || !colMap.date) {
+        showImportResult('❌ 無法識別格式，請確認是否為「異常統計表」工作表', 'error');
+        return;
+      }
+
+      // 解析每筆記錄
+      var imported = [];
+      var skipped  = 0;
+
+      for (var i = dataStartRow; i < rows.length; i++) {
+        var row = rows[i];
+        if (!row || !row[colMap.date]) continue;
+
+        var dateVal = String(row[colMap.date]).trim();
+        var nameVal = String(row[colMap.name] || '').trim();
+
+        // 日期格式：2026-05-04
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) continue;
+        if (!nameVal || nameVal === '姓名') continue;
+
+        // 取上下班時間（取第一個有效時段）
+        var timeIn = '', timeOut = '';
+        for (var ti = 0; ti < colMap.timeIns.length; ti++) {
+          var v = String(row[colMap.timeIns[ti]] || '').trim();
+          if (v && v !== '缺' && v !== '' && /\d{1,2}:\d{2}/.test(v)) {
+            timeIn = v.slice(0,5); break;
+          }
+        }
+        for (var to2 = 0; to2 < colMap.timeOuts.length; to2++) {
+          var v2 = String(row[colMap.timeOuts[to2]] || '').trim();
+          if (v2 && v2 !== '缺' && v2 !== '' && /\d{1,2}:\d{2}/.test(v2)) {
+            timeOut = v2.slice(0,5); break;
+          }
+        }
+
+        // 判斷出勤狀態
+        var dow = new Date(dateVal).getDay();
+        var isWeekend = (dow === 0 || dow === 6);
+        var status;
+        if (isWeekend && !timeIn) {
+          status = 'holiday';
+        } else if (!timeIn && !timeOut) {
+          status = 'absent';
+        } else if (timeIn && !timeOut) {
+          status = 'present'; // 只有到場沒離場（可能還在）
+        } else {
+          // 判斷是否半天（工時 < 5 小時）
+          var inParts  = timeIn.split(':');
+          var outParts = timeOut.split(':');
+          var inMin  = parseInt(inParts[0])*60  + parseInt(inParts[1]);
+          var outMin = parseInt(outParts[0])*60 + parseInt(outParts[1]);
+          var workMin = outMin - inMin;
+          status = (workMin > 0 && workMin < 300) ? 'half' : 'present';
+        }
+
+        // 找對應的人員 ID
+        var member = members.find(function(m){ return m.name === nameVal; });
+        if (!member) { skipped++; continue; }
+
+        imported.push({
+          date:     dateVal,
+          memberId: member.id,
+          timeIn:   timeIn,
+          timeOut:  timeOut,
+          status:   status,
+          note:     '打卡鐘匯入',
+        });
+      }
+
+      if (!imported.length) {
+        showImportResult('⚠️ 沒有匯入任何記錄，請確認人員名單是否一致', 'warn');
+        input.value = '';
+        return;
+      }
+
+      // 合併到現有記錄（同日同人覆蓋，其他保留）
+      var overwritten = 0;
+      imported.forEach(function(rec) {
+        var idx = attRecords.findIndex(function(r){
+          return r.date === rec.date && r.memberId === rec.memberId;
+        });
+        if (idx >= 0) {
+          // 只覆蓋打卡時間，保留手動填的 note（除非是「打卡鐘匯入」）
+          attRecords[idx].timeIn  = rec.timeIn;
+          attRecords[idx].timeOut = rec.timeOut;
+          attRecords[idx].status  = rec.status;
+          if (!attRecords[idx].note || attRecords[idx].note === '打卡鐘匯入') {
+            attRecords[idx].note = rec.note;
+          }
+          overwritten++;
+        } else {
+          attRecords.push(Object.assign({ id: uid() }, rec));
+        }
+      });
+
+      attSave();
+      renderAttendance();
+
+      var msg = '✅ 匯入完成！新增 ' + (imported.length - overwritten) + ' 筆，更新 ' + overwritten + ' 筆';
+      if (skipped > 0) msg += '，略過 ' + skipped + ' 筆（找不到對應人員）';
+      showImportResult(msg, 'success');
+      input.value = '';
+
+    } catch(err) {
+      showImportResult('❌ 匯入失敗：' + err.message, 'error');
+      input.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showImportResult(msg, type) {
+  var el = document.getElementById('import-result');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = msg;
+  if (type === 'error') {
+    el.style.background = 'var(--c-red-bg)';
+    el.style.borderColor = 'var(--c-red-border)';
+    el.style.color = '#991B1B';
+  } else if (type === 'warn') {
+    el.style.background = 'var(--c-amber-bg)';
+    el.style.borderColor = 'var(--c-amber-border)';
+    el.style.color = '#92400E';
+  } else {
+    el.style.background = 'var(--c-green-bg)';
+    el.style.borderColor = 'var(--c-green-border)';
+    el.style.color = '#166534';
+  }
+  setTimeout(function() { el.style.display = 'none'; }, 6000);
 }
 
 // ── BOOT ──
