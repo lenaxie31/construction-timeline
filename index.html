@@ -236,7 +236,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 /* DEFECTS */
 .defect-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
 .defect-header h2{font-size:14px;font-weight:700;}
-.defects-list{display:flex;flex-direction:column;gap:12px;}
+.defects-list{overflow-x:auto;}
 .defect-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);box-shadow:var(--shadow);
@@ -1196,6 +1196,94 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
   .att-cal-cell { min-height:56px; padding:2px; }
   .att-cal-pill { font-size:8px; padding:1px 3px; }
   .att-cal-day  { font-size:10px; }
+}
+
+
+/* ── 改善通知單 表格式版面 ── */
+.d-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.d-th {
+  background: #1C1B18; color: #fff;
+  font-size: 11px; font-weight: 700;
+  padding: 10px 12px; text-align: left;
+  letter-spacing: .3px; white-space: nowrap;
+}
+.d-cell {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+.d-row:hover .d-cell { background: #F8F9FF; }
+.d-row-closed .d-cell { opacity: .7; }
+.d-row-closed .d-cell:first-child { opacity: 1; }
+
+/* 狀態 badge */
+.d-st-open    { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEE2E2;color:#991B1B;white-space:nowrap; }
+.d-st-replied { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEF3C7;color:#92400E;white-space:nowrap; }
+.d-st-recheck { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DBEAFE;color:#1E40AF;white-space:nowrap; }
+.d-st-closed  { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DCFCE7;color:#166534;white-space:nowrap; }
+
+/* 期限 chip */
+.d-overdue { font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FEE2E2;color:#991B1B;margin-left:4px; }
+.d-soon    { font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FEF3C7;color:#92400E;margin-left:4px; }
+
+/* 類型 tag */
+.d-tag-checkpoint {
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;
+  background:var(--c-purple-bg);color:var(--c-purple);
+  margin-left:6px;vertical-align:middle;
+}
+
+/* 統計 chips */
+.d-chip { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-right:4px; }
+.d-chip-open    { background:#FEE2E2;color:#991B1B; }
+.d-chip-replied { background:#FEF3C7;color:#92400E; }
+.d-chip-recheck { background:#DBEAFE;color:#1E40AF; }
+.d-chip-closed  { background:#DCFCE7;color:#166534; }
+
+/* 展開詳細面板 */
+.d-detail-panel {
+  background: linear-gradient(135deg, #F8FAFF 0%, #F4F3EF 100%);
+  border-top: 2px solid var(--c-blue-border);
+  padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  animation: slideDown .18s ease;
+}
+.d-detail-section {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--border-light);
+}
+.d-detail-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .4px;
+  margin-bottom: 6px;
+}
+.d-detail-content {
+  font-size: 13px; color: var(--text-primary); line-height: 1.6;
+}
+.d-notes-area {
+  width: 100%; font-family: inherit; font-size: 12px;
+  padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--bg);
+  resize: vertical; min-height: 52px; outline: none;
+  color: var(--text-primary); margin-top: 4px;
+}
+.d-notes-area:focus { border-color: var(--text-primary); background: #fff; }
+
+@media (max-width: 767px) {
+  .d-table { min-width: 600px; font-size: 11px; }
+  .d-th, .d-cell { padding: 8px 8px; }
+  .d-detail-panel { padding: 12px 14px; }
+  .d-detail-panel > div[style*="grid"] { grid-template-columns: 1fr !important; }
 }
 
 /* PRINT */
@@ -2828,48 +2916,14 @@ function updateOpenCount() {
 function renderDefects() {
   var list = document.getElementById('defects-list');
   if (!defects.length) {
-    list.innerHTML = '<div class="empty" style="padding:60px 20px;text-align:center;color:var(--text-muted);">目前沒有改善事項通知單記錄</div>';
+    list.innerHTML = '<div class="empty">目前沒有改善事項通知單記錄</div>';
+    updateDefectBanner();
     return;
   }
 
-  var today = todayStr();
-  var sMap  = { open:'未結案', replied:'承商已回覆', recheck:'複驗中', closed:'已結案' };
-  var rMap  = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
-  var oMap  = { random:'隨機抽查（驗）', checkpoint:'檢驗停留點抽查（驗）' };
+  updateDefectBanner();
 
-  var STATUS_COLOR = {
-    open:    { border:'var(--c-red)',    bg:'var(--c-red-bg)',    badge:'background:#FEE2E2;color:#991B1B;' },
-    replied: { border:'var(--c-amber)',  bg:'var(--c-amber-bg)',  badge:'background:#FEF3C7;color:#92400E;' },
-    recheck: { border:'var(--c-blue)',   bg:'var(--c-blue-bg)',   badge:'background:#DBEAFE;color:#1E40AF;' },
-    closed:  { border:'var(--c-green)',  bg:'var(--c-green-bg)',  badge:'background:#DCFCE7;color:#166534;' },
-  };
-
-  // 催件橫幅
-  var bannerArea = document.getElementById('defect-remind-banner');
-  if (bannerArea) {
-    var remindItems = defects.filter(function(d) {
-      if (d.status === 'closed') return false;
-      if (!d.deadline || !d.remind) return false;
-      var dl = Math.ceil((new Date(d.deadline) - new Date(today)) / 86400000);
-      return dl <= (d.remindDays || 5);
-    });
-    bannerArea.innerHTML = remindItems.map(function(d) {
-      var dl = Math.ceil((new Date(d.deadline) - new Date(today)) / 86400000);
-      var icon = dl < 0 ? '🔴' : dl === 0 ? '🔴' : dl <= 3 ? '🟡' : '🟠';
-      var msg  = dl < 0 ? '逾期 ' + Math.abs(dl) + ' 天' : dl === 0 ? '今天到期！' : '還剩 ' + dl + ' 天';
-      return '<div class="remind-banner">' +
-        '<span style="font-size:16px;">🔔</span>' +
-        '<div style="flex:1;min-width:0;">' +
-          '<strong>' + esc(d.no||'—') + '</strong>　' +
-          '<span style="color:#92400E;">' + esc(d.title.slice(0,40)) + (d.title.length>40?'…':'') + '</span><br>' +
-          '<span style="font-size:11px;">改善期限：' + d.deadline + '　' + icon + ' <strong>' + msg + '</strong></span>' +
-        '</div>' +
-        '<button class="btn-sm edit" data-id="' + d.id + '" onclick="openEditDefectModal(this.dataset.id)" style="flex-shrink:0;font-size:11px;">查看</button>' +
-      '</div>';
-    }).join('');
-  }
-
-  // 篩選 bar 統計
+  // 統計 chips
   var countEl = document.getElementById('defect-count');
   if (countEl) {
     var openN    = defects.filter(function(d){ return d.status==='open'; }).length;
@@ -2878,78 +2932,159 @@ function renderDefects() {
     var closedN  = defects.filter(function(d){ return d.status==='closed'; }).length;
     countEl.innerHTML =
       '<span style="font-size:11px;color:var(--text-muted);">共 ' + defects.length + ' 筆　</span>' +
-      (openN    ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEE2E2;color:#991B1B;margin-right:4px;">未結案 ' + openN + '</span>' : '') +
-      (repliedN ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEF3C7;color:#92400E;margin-right:4px;">已回覆 ' + repliedN + '</span>' : '') +
-      (recheckN ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DBEAFE;color:#1E40AF;margin-right:4px;">複驗中 ' + recheckN + '</span>' : '') +
-      (closedN  ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DCFCE7;color:#166534;">已結案 ' + closedN + '</span>' : '');
+      (openN    ? '<span class="d-chip d-chip-open">未結案 ' + openN + '</span>' : '') +
+      (repliedN ? '<span class="d-chip d-chip-replied">已回覆 ' + repliedN + '</span>' : '') +
+      (recheckN ? '<span class="d-chip d-chip-recheck">複驗中 ' + recheckN + '</span>' : '') +
+      (closedN  ? '<span class="d-chip d-chip-closed">已結案 ' + closedN + '</span>' : '');
   }
+
+  var today = todayStr();
+  var sMap  = { open:'未結案', replied:'承商已回覆', recheck:'複驗中', closed:'已結案' };
+  var rMap  = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
 
   var sorted = defects.slice().sort(function(a,b) { return (b.date||'').localeCompare(a.date||''); });
 
-  list.innerHTML = sorted.map(function(d) {
-    var sc = STATUS_COLOR[d.status] || STATUS_COLOR.open;
+  var rows = sorted.map(function(d, idx) {
     var daysLeft = d.deadline ? Math.ceil((new Date(d.deadline) - new Date(today)) / 86400000) : null;
 
-    // 期限 chip
-    var deadlineChip = '';
+    // 期限欄
+    var deadlineCell = d.deadline || '—';
+    var deadlineStyle = '';
     if (d.deadline && d.status !== 'closed') {
-      if (daysLeft < 0)
-        deadlineChip = '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;">⚠️ 逾期 ' + Math.abs(daysLeft) + ' 天</span>';
-      else if (daysLeft <= (d.remindDays||5))
-        deadlineChip = '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">🔔 還剩 ' + daysLeft + ' 天</span>';
+      if (daysLeft < 0) {
+        deadlineCell = d.deadline + ' <span class="d-overdue">逾期 ' + Math.abs(daysLeft) + ' 天</span>';
+        deadlineStyle = 'color:var(--c-red);font-weight:600;';
+      } else if (daysLeft <= (d.remindDays||5)) {
+        deadlineCell = d.deadline + ' <span class="d-soon">剩 ' + daysLeft + ' 天</span>';
+        deadlineStyle = 'color:var(--c-amber);font-weight:600;';
+      }
     }
 
-    return '<div class="defect-card status-' + d.status + '" id="dc-' + d.id + '" style="border-left:4px solid ' + sc.border + ';">' +
+    // Status badge
+    var statusCls = { open:'d-st-open', replied:'d-st-replied', recheck:'d-st-recheck', closed:'d-st-closed' }[d.status] || 'd-st-open';
 
-      // ── 頂部：單號 + 狀態 + 編輯 ──
-      '<div style="display:flex;align-items:center;gap:8px;padding:12px 16px 0;flex-wrap:wrap;">' +
-        '<span style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text-muted);">' + esc(d.no||'—') + '</span>' +
-        '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;' + sc.badge + '">' + (sMap[d.status]||d.status) + '</span>' +
-        (d.occasion==='checkpoint' ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--c-purple-bg);color:var(--c-purple);">停留點</span>' : '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--text-muted);">隨機抽查</span>') +
-        (deadlineChip ? deadlineChip : '') +
-        '<div style="margin-left:auto;display:flex;gap:4px;">' +
-          '<button class="btn-sm edit" data-id="' + d.id + '" onclick="openEditDefectModal(this.dataset.id)" style="font-size:11px;">編輯</button>' +
+    // 完成 checkbox（已結案才勾）
+    var doneMark = d.status === 'closed'
+      ? '<span style="color:var(--c-green);font-size:16px;">☑</span>'
+      : '<span style="color:var(--border);font-size:16px;">☐</span>';
+
+    return '<tr class="d-row' + (d.status==='closed'?' d-row-closed':'') + '" onclick="toggleDefectDetail(\'' + d.id + '\')" style="cursor:pointer;">' +
+      '<td class="d-cell" style="font-family:monospace;font-size:11px;white-space:nowrap;color:var(--text-muted);">' + esc(d.no||'—') + '</td>' +
+      '<td class="d-cell" style="font-weight:600;font-size:13px;max-width:420px;">' +
+        esc(d.title) +
+        (d.occasion==='checkpoint' ? '<span class="d-tag-checkpoint">停留點</span>' : '') +
+      '</td>' +
+      '<td class="d-cell" style="white-space:nowrap;font-size:12px;">' + (d.date||'—') + '</td>' +
+      '<td class="d-cell" style="white-space:nowrap;font-size:12px;' + deadlineStyle + '">' + deadlineCell + '</td>' +
+      '<td class="d-cell" style="text-align:center;">' +
+        '<span class="' + statusCls + '">' + (sMap[d.status]||d.status) + '</span>' +
+      '</td>' +
+      '<td class="d-cell" style="text-align:center;">' + doneMark + '</td>' +
+      '<td class="d-cell" style="font-size:11px;color:var(--text-muted);max-width:200px;">' +
+        esc((d.result ? rMap[d.result] + '　' : '') + (d.notes||'').slice(0,30) + ((d.notes||'').length>30?'…':'')) +
+      '</td>' +
+    '</tr>' +
+    // 展開詳細列
+    '<tr id="d-detail-' + d.id + '" style="display:none;">' +
+      '<td colspan="7" style="padding:0;border-bottom:2px solid var(--c-blue-border);">' +
+        '<div class="d-detail-panel">' +
+          // 快速狀態切換
+          '<div class="d-detail-section">' +
+            '<div class="d-detail-label">狀態</div>' +
+            '<div style="display:flex;gap:5px;flex-wrap:wrap;">' +
+              '<button class="btn-status' + (d.status==='open'?' active-open':'') + '" data-id="' + d.id + '" data-status="open" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">未結案</button>' +
+              '<button class="btn-status' + (d.status==='replied'?' active-replied':'') + '" data-id="' + d.id + '" data-status="replied" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">承商已回覆</button>' +
+              '<button class="btn-status' + (d.status==='recheck'?' active-recheck':'') + '" data-id="' + d.id + '" data-status="recheck" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">複驗中</button>' +
+              '<button class="btn-status' + (d.status==='closed'?' active-closed':'') + '" data-id="' + d.id + '" data-status="closed" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">已結案</button>' +
+              '<button class="btn-sm edit" style="margin-left:auto;" onclick="event.stopPropagation();openEditDefectModal(\'' + d.id + '\')">✏️ 編輯完整資訊</button>' +
+            '</div>' +
+          '</div>' +
+          // 改善事項
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-wrap:wrap;">' +
+            '<div class="d-detail-section">' +
+              '<div class="d-detail-label">改善事項說明</div>' +
+              '<div class="d-detail-content">' + esc(d.title) + '</div>' +
+            '</div>' +
+            (d.progress ?
+              '<div class="d-detail-section">' +
+                '<div class="d-detail-label">改善經過</div>' +
+                '<div class="d-detail-content">' + esc(d.progress).split('\n').join('<br>') + '</div>' +
+              '</div>' : '<div></div>') +
+          '</div>' +
+          // 結果 + 備註
+          (d.result || d.notes ?
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+              (d.result ?
+                '<div class="d-detail-section">' +
+                  '<div class="d-detail-label">改善結果判定</div>' +
+                  '<div style="font-size:13px;font-weight:700;">' + esc(rMap[d.result]||d.result) + '</div>' +
+                '</div>' : '<div></div>') +
+              (d.notes ?
+                '<div class="d-detail-section">' +
+                  '<div class="d-detail-label">監造備註</div>' +
+                  '<div class="d-detail-content">' + esc(d.notes).split('\n').join('<br>') + '</div>' +
+                '</div>' : '<div></div>') +
+            '</div>' : '') +
+          // 快速備註
+          '<div class="d-detail-section" onclick="event.stopPropagation();">' +
+            '<div class="d-detail-label">快速備註（即時儲存）</div>' +
+            '<textarea class="d-notes-area" data-id="' + d.id + '" oninput="saveDefectNotes(this.dataset.id,this.value)" placeholder="監造追蹤備註…">' + esc(d.notes||'') + '</textarea>' +
+            '<span class="notes-saved-hint" id="hint-' + d.id + '">已儲存 ✓</span>' +
+          '</div>' +
         '</div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  list.innerHTML =
+    '<table class="d-table">' +
+    '<thead><tr>' +
+      '<th class="d-th" style="width:130px;">通知單標號</th>' +
+      '<th class="d-th">改善事項說明</th>' +
+      '<th class="d-th" style="width:100px;">開立日期</th>' +
+      '<th class="d-th" style="width:130px;">改善期限</th>' +
+      '<th class="d-th" style="width:90px;text-align:center;">狀態</th>' +
+      '<th class="d-th" style="width:50px;text-align:center;">完成</th>' +
+      '<th class="d-th" style="width:200px;">備註</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table>';
+}
+
+function toggleDefectDetail(id) {
+  var row = document.getElementById('d-detail-' + id);
+  if (!row) return;
+  var isOpen = row.style.display !== 'none';
+  // Close all others
+  defects.forEach(function(d) {
+    var r = document.getElementById('d-detail-' + d.id);
+    if (r) r.style.display = 'none';
+  });
+  if (!isOpen) row.style.display = 'table-row';
+}
+
+function updateDefectBanner() {
+  var today = todayStr();
+  var bannerArea = document.getElementById('defect-remind-banner');
+  if (!bannerArea) return;
+  var remindItems = defects.filter(function(d) {
+    if (d.status === 'closed') return false;
+    if (!d.deadline || !d.remind) return false;
+    var dl = Math.ceil((new Date(d.deadline) - new Date(today)) / 86400000);
+    return dl <= (d.remindDays || 5);
+  });
+  if (!remindItems.length) { bannerArea.innerHTML = ''; return; }
+  bannerArea.innerHTML = remindItems.map(function(d) {
+    var dl = Math.ceil((new Date(d.deadline) - new Date(today)) / 86400000);
+    var icon = dl < 0 ? '🔴' : dl <= 3 ? '🟡' : '🟠';
+    var msg  = dl < 0 ? '逾期 ' + Math.abs(dl) + ' 天' : dl === 0 ? '今天到期！' : '還剩 ' + dl + ' 天';
+    return '<div class="remind-banner">' +
+      '<span>🔔</span>' +
+      '<div style="flex:1;min-width:0;"><strong>' + esc(d.no||'—') + '</strong>　' +
+        esc(d.title.slice(0,40)) + (d.title.length>40?'…':'') + '<br>' +
+        '<span style="font-size:11px;">期限：' + d.deadline + '　' + icon + ' <strong>' + msg + '</strong></span>' +
       '</div>' +
-
-      // ── 改善事項標題 ──
-      '<div style="padding:8px 16px 6px;font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.5;">' + esc(d.title) + '</div>' +
-
-      // ── Meta 行 ──
-      '<div style="display:flex;gap:16px;flex-wrap:wrap;padding:0 16px 10px;font-size:11px;color:var(--text-muted);">' +
-        '<span>📅 開立：' + (d.date||'—') + '</span>' +
-        '<span>⏰ 期限：' + (d.deadline||'—') + '</span>' +
-        (d.reportNo ? '<span>📋 報告：' + esc(d.reportNo) + '</span>' : '') +
-      '</div>' +
-
-      // ── 改善經過 ──
-      (d.progress ?
-        '<div style="margin:0 16px 8px;padding:10px 12px;background:#F8FAFC;border-radius:8px;border-left:3px solid ' + sc.border + ';">' +
-          '<div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">改善經過</div>' +
-          '<div style="font-size:13px;color:var(--text-primary);line-height:1.6;">' + esc(d.progress).split('\n').join('<br>') + '</div>' +
-        '</div>' : '') +
-
-      // ── 改善結果 ──
-      (d.result ?
-        '<div style="margin:0 16px 8px;padding:8px 12px;background:' + (d.result==='pass'?'#F0FDF4':d.result==='fail'?'#FEF2F2':'#FFFBEB') + ';border-radius:8px;">' +
-          '<div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">改善結果判定</div>' +
-          '<div style="font-size:13px;font-weight:700;">' + esc(rMap[d.result]||d.result) + '</div>' +
-        '</div>' : '') +
-
-      // ── 狀態快速切換 ──
-      '<div style="display:flex;gap:5px;padding:10px 16px;border-top:1px solid var(--border-light);flex-wrap:wrap;align-items:center;">' +
-        '<span style="font-size:11px;color:var(--text-muted);margin-right:4px;">狀態：</span>' +
-        '<button class="btn-status' + (d.status==='open'?' active-open':'') + '" onclick="setDefectStatus(\'' + d.id + '\',\'open\')">未結案</button>' +
-        '<button class="btn-status' + (d.status==='replied'?' active-replied':'') + '" onclick="setDefectStatus(\'' + d.id + '\',\'replied\')">承商已回覆</button>' +
-        '<button class="btn-status' + (d.status==='recheck'?' active-recheck':'') + '" onclick="setDefectStatus(\'' + d.id + '\',\'recheck\')">複驗中</button>' +
-        '<button class="btn-status' + (d.status==='closed'?' active-closed':'') + '" onclick="setDefectStatus(\'' + d.id + '\',\'closed\')">已結案</button>' +
-      '</div>' +
-
-      // ── 監造備註快速編輯 ──
-      '<div class="defect-notes">' +
-        '<textarea placeholder="監造備註（即時自動儲存）" data-id="' + d.id + '" oninput="saveDefectNotes(this.dataset.id,this.value)">' + esc(d.notes||'') + '</textarea>' +
-        '<span class="notes-saved-hint" id="hint-' + d.id + '">已儲存 ✓</span>' +
-      '</div>' +
+      '<button class="btn-sm edit" data-id="' + d.id + '" onclick="openEditDefectModal(this.dataset.id)" style="flex-shrink:0;font-size:11px;">查看</button>' +
     '</div>';
   }).join('');
 }
