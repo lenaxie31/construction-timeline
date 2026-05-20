@@ -171,6 +171,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .iss-replied{background:var(--c-amber-bg);color:var(--c-amber);}
 .iss-closed{background:var(--c-green-bg);color:var(--c-green);}
 .iss-pending{background:var(--c-purple-bg);color:var(--c-purple);}
+.iss-recheck{background:var(--c-blue-bg);color:var(--c-blue);}
 
 /* FILTER BAR */
 .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
@@ -233,26 +234,43 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .empty{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:14px;}
 
 /* DEFECTS */
-.defect-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.defect-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
 .defect-header h2{font-size:14px;font-weight:700;}
-.defects-list{display:flex;flex-direction:column;gap:10px;}
-.defect-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
-.defect-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.defect-no{font-family:monospace;font-size:11px;font-weight:500;color:var(--text-muted);}
-.defect-title{font-size:14px;font-weight:600;flex:1;}
-.defect-body{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px;}
-.defect-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);}
-.defect-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light);}
+.defects-list{display:flex;flex-direction:column;gap:12px;}
+.defect-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  overflow:hidden;
+  border-left:4px solid var(--border);
+  transition:box-shadow var(--transition);
+}
+.defect-card:hover{box-shadow:var(--shadow-md);}
+.defect-card.status-open     { border-left-color:var(--c-red); }
+.defect-card.status-replied  { border-left-color:var(--c-amber); }
+.defect-card.status-recheck  { border-left-color:var(--c-blue); }
+.defect-card.status-closed   { border-left-color:var(--c-green); }
+.defect-card-header{padding:12px 16px;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+.defect-no{font-family:monospace;font-size:12px;font-weight:700;color:var(--text-muted);white-space:nowrap;}
+.defect-title{font-size:14px;font-weight:700;flex:1;line-height:1.4;}
+.defect-meta-row{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);padding:0 16px 10px;align-items:center;}
+.defect-meta-chip{display:inline-flex;align-items:center;gap:3px;}
+.defect-deadline-warn{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--c-red-bg);color:var(--c-red);border:1px solid var(--c-red-border);}
+.defect-deadline-soon{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);}
+.defect-body-section{padding:10px 16px;border-top:1px solid var(--border-light);font-size:13px;color:var(--text-secondary);line-height:1.6;}
+.defect-body-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.defect-actions{display:flex;gap:6px;padding:10px 16px;border-top:1px solid var(--border-light);flex-wrap:wrap;align-items:center;}
 .btn-status{font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s;}
 .btn-status:hover{background:var(--border-light);}
-.btn-status.active-open{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
-.btn-status.active-replied{background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
-.btn-status.active-closed{background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border);}
-.defect-notes{margin-top:8px;position:relative;}
+.btn-status.active-open    {background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
+.btn-status.active-replied {background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
+.btn-status.active-recheck {background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);}
+.btn-status.active-closed  {background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border);}
+.defect-notes{padding:0 16px 12px;position:relative;}
 .defect-notes textarea{width:100%;font-family:inherit;font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);resize:vertical;min-height:52px;outline:none;color:var(--text-primary);}
 .defect-notes textarea:focus{border-color:var(--text-primary);background:#fff;}
-/* Fix 4: autosave hint */
-.notes-saved-hint{position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--c-green);font-weight:600;pointer-events:none;display:none;}
+.notes-saved-hint{position:absolute;bottom:18px;right:22px;font-size:10px;color:var(--c-green);font-weight:600;pointer-events:none;display:none;}
+/* 催件橫幅 */
+.remind-banner{background:var(--c-amber-bg);border:1px solid var(--c-amber-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:14px;font-size:13px;color:#78350F;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 
 /* EXPORT */
 .export-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
@@ -1418,6 +1436,8 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
           <h2>改善事項通知單追蹤</h2>
           <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增改善事項通知單</button>
         </div>
+        <!-- 催件提醒橫幅 -->
+        <div id="defect-remind-banner"></div>
         <div class="defects-list" id="defects-list"></div>
       </div>
 
@@ -1608,16 +1628,84 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 
   <!-- Modals -->
   <div class="modal-overlay" id="defect-modal" style="display:none">
-    <div class="modal">
-      <div class="modal-header"><h3>新增改善事項通知單</h3><button class="modal-close" onclick="closeDefectModal()">×</button></div>
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-header"><h3 id="dm-modal-title">新增改善事項通知單</h3><button class="modal-close" onclick="closeDefectModal()">×</button></div>
       <div class="modal-body">
-        <div class="field"><label>改善事項通知單號</label><input type="text" id="dm-no" placeholder="例：10490817_0001"></div>
-        <div class="field"><label>改善事項說明</label><textarea id="dm-title" placeholder="簡述改善事項內容"></textarea></div>
-        <div class="field"><label>相關日期</label><input type="date" id="dm-date"></div>
-        <div class="field"><label>追蹤備註（選填）</label><textarea id="dm-notes" placeholder="回覆內容、複驗結果…"></textarea></div>
-        <div class="field"><label>初始狀態</label><select id="dm-status"><option value="open">未結案</option><option value="replied">承商已回覆</option><option value="closed">已結案</option></select></div>
+        <!-- 基本資訊 -->
+        <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">基本資訊</div>
+          <div class="field-row">
+            <div class="field"><label>通知單標號</label><input type="text" id="dm-no" placeholder="例：10490817-0005"></div>
+            <div class="field"><label>開立日期</label><input type="date" id="dm-date"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>開立時機</label>
+              <select id="dm-occasion">
+                <option value="random">隨機抽查（驗）</option>
+                <option value="checkpoint">檢驗停留點抽查（驗）</option>
+              </select>
+            </div>
+            <div class="field"><label>查驗報告編號（選填）</label><input type="text" id="dm-report-no" placeholder="停留點才需填寫"></div>
+          </div>
+          <div class="field"><label>改善期限</label><input type="date" id="dm-deadline"></div>
+        </div>
+
+        <!-- 改善事項 -->
+        <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">改善事項說明</div>
+          <div class="field"><textarea id="dm-title" placeholder="描述改善事項內容（改善前問題描述）" style="min-height:72px;"></textarea></div>
+        </div>
+
+        <!-- 改善狀態 -->
+        <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">改善追蹤</div>
+          <div class="field"><label>目前狀態</label>
+            <select id="dm-status">
+              <option value="open">未結案（待承商改善）</option>
+              <option value="replied">承商已回覆改善</option>
+              <option value="recheck">複驗中</option>
+              <option value="closed">已結案（複驗合格）</option>
+            </select>
+          </div>
+          <div class="field"><label>改善經過（承商填報內容）</label>
+            <textarea id="dm-progress" placeholder="承商說明改善過程…" style="min-height:56px;"></textarea>
+          </div>
+          <div class="field"><label>改善結果判定</label>
+            <select id="dm-result">
+              <option value="">—（尚未判定）</option>
+              <option value="pass">✅ 複驗合格</option>
+              <option value="fail">❌ 複驗不合格，需再改善</option>
+              <option value="partial">⚠️ 部分合格</option>
+            </select>
+          </div>
+          <div class="field"><label>監造備註（選填）</label>
+            <textarea id="dm-notes" placeholder="監造人員追蹤記錄、聯繫記錄…" style="min-height:48px;"></textarea>
+          </div>
+        </div>
+
+        <!-- 催件提醒設定 -->
+        <div style="background:var(--c-amber-bg);border-radius:8px;padding:10px 12px;border:1px solid var(--c-amber-border);display:flex;align-items:center;gap:10px;">
+          <span style="font-size:14px;">🔔</span>
+          <div style="flex:1;font-size:12px;color:#78350F;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;">
+              <input type="checkbox" id="dm-remind" style="accent-color:var(--c-amber);" checked>
+              改善期限前 <select id="dm-remind-days" style="font-family:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--c-amber-border);border-radius:4px;background:#fff;">
+                <option value="3">3</option>
+                <option value="5" selected>5</option>
+                <option value="7">7</option>
+                <option value="10">10</option>
+              </select> 天顯示催件提醒
+            </label>
+          </div>
+        </div>
       </div>
-      <div class="modal-footer"><button class="btn-modal" onclick="closeDefectModal()">取消</button><button class="btn-modal primary" onclick="saveDefect()">儲存缺失單</button></div>
+      <div class="modal-footer" style="justify-content:space-between;">
+        <button class="btn-modal" id="dm-delete-btn" style="display:none;color:var(--c-red);border-color:var(--c-red-border);background:var(--c-red-bg);" onclick="deleteDefectFromModal()">刪除</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-modal" onclick="closeDefectModal()">取消</button>
+          <button class="btn-modal primary" onclick="saveDefect()">儲存</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2134,6 +2222,7 @@ async function apiCall(params) {
 async function init() {
   try {
     defects = defectLoad();
+    migrateDefects();
     docs = docsLoad();
     qualityItems = qiLoad();
     // Debug: log what was loaded from localStorage
@@ -2787,21 +2876,90 @@ async function deleteDefect(id) {
   defects = defects.filter(function(d) { return d.id !== id; });
   defectSave(); renderDefects(); updateOpenCount(); renderDashboard();
 }
+// 相容舊資料：補上 recheck 狀態
+function migrateDefects() {
+  defects.forEach(function(d) {
+    if (!d.occasion) d.occasion = 'random';
+    if (d.remind === undefined) d.remind = true;
+    if (!d.remindDays) d.remindDays = 5;
+  });
+}
 
-function openAddDefectModal() { document.getElementById('defect-modal').style.display = 'flex'; }
-function closeDefectModal()   { document.getElementById('defect-modal').style.display = 'none'; }
+var editingDefectId = null;
+
+function openAddDefectModal() {
+  editingDefectId = null;
+  document.getElementById('dm-modal-title').textContent = '新增改善事項通知單';
+  document.getElementById('dm-no').value       = '';
+  document.getElementById('dm-date').value     = todayStr();
+  document.getElementById('dm-occasion').value = 'random';
+  document.getElementById('dm-report-no').value= '';
+  document.getElementById('dm-deadline').value = '';
+  document.getElementById('dm-title').value    = '';
+  document.getElementById('dm-status').value   = 'open';
+  document.getElementById('dm-progress').value = '';
+  document.getElementById('dm-result').value   = '';
+  document.getElementById('dm-notes').value    = '';
+  document.getElementById('dm-remind').checked = true;
+  document.getElementById('dm-remind-days').value = '5';
+  document.getElementById('dm-delete-btn').style.display = 'none';
+  document.getElementById('defect-modal').style.display = 'flex';
+}
+
+function openEditDefectModal(id) {
+  var d = defects.find(function(x){ return x.id === id; });
+  if (!d) return;
+  editingDefectId = id;
+  document.getElementById('dm-modal-title').textContent = '編輯改善事項通知單';
+  document.getElementById('dm-no').value       = d.no || '';
+  document.getElementById('dm-date').value     = d.date || '';
+  document.getElementById('dm-occasion').value = d.occasion || 'random';
+  document.getElementById('dm-report-no').value= d.reportNo || '';
+  document.getElementById('dm-deadline').value = d.deadline || '';
+  document.getElementById('dm-title').value    = d.title || '';
+  document.getElementById('dm-status').value   = d.status || 'open';
+  document.getElementById('dm-progress').value = d.progress || '';
+  document.getElementById('dm-result').value   = d.result || '';
+  document.getElementById('dm-notes').value    = d.notes || '';
+  document.getElementById('dm-remind').checked = d.remind !== false;
+  document.getElementById('dm-remind-days').value = d.remindDays || '5';
+  document.getElementById('dm-delete-btn').style.display = 'block';
+  document.getElementById('defect-modal').style.display = 'flex';
+}
+
+function closeDefectModal() { document.getElementById('defect-modal').style.display = 'none'; }
+
+async function deleteDefectFromModal() {
+  if (!editingDefectId) return;
+  if (!await toastConfirm('確定要刪除此改善事項通知單？')) return;
+  defects = defects.filter(function(d){ return d.id !== editingDefectId; });
+  defectSave(); closeDefectModal(); renderDefects(); updateOpenCount(); renderDashboard();
+}
+
 function saveDefect() {
-  var no    = document.getElementById('dm-no').value.trim();
   var title = document.getElementById('dm-title').value.trim();
-  var date  = document.getElementById('dm-date').value;
-  var notes = document.getElementById('dm-notes').value.trim();
-  var status= document.getElementById('dm-status').value;
-  if (!title) { alert('請填寫缺失說明'); return; }
-  defects.push({ id:uid(), no, title, date, notes, status });
-  defectSave(); closeDefectModal();
-  ['dm-no','dm-title','dm-date','dm-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('dm-status').value = 'open';
-  renderDefects(); updateOpenCount(); renderDashboard();
+  if (!title) { alert('請填寫改善事項說明'); return; }
+  var payload = {
+    no:         document.getElementById('dm-no').value.trim(),
+    date:       document.getElementById('dm-date').value,
+    occasion:   document.getElementById('dm-occasion').value,
+    reportNo:   document.getElementById('dm-report-no').value.trim(),
+    deadline:   document.getElementById('dm-deadline').value,
+    title:      title,
+    status:     document.getElementById('dm-status').value,
+    progress:   document.getElementById('dm-progress').value.trim(),
+    result:     document.getElementById('dm-result').value,
+    notes:      document.getElementById('dm-notes').value.trim(),
+    remind:     document.getElementById('dm-remind').checked,
+    remindDays: parseInt(document.getElementById('dm-remind-days').value) || 5,
+  };
+  if (editingDefectId) {
+    var idx = defects.findIndex(function(d){ return d.id === editingDefectId; });
+    if (idx !== -1) defects[idx] = Object.assign({}, defects[idx], payload);
+  } else {
+    defects.push(Object.assign({ id: uid() }, payload));
+  }
+  defectSave(); closeDefectModal(); renderDefects(); updateOpenCount(); renderDashboard();
 }
 
 // ── DOCUMENTS ──
