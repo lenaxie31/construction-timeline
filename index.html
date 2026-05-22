@@ -4273,7 +4273,7 @@ ws1Data.push([
   // 每個人一列
   activeMembers.forEach(function(m) {
     var row = [m.name];
-    var present=0, half=0, business=0, leave=0;
+    var present=0, leave=0;
     for (var d = 1; d <= daysInMonth; d++) {
       var dateStr2 = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       var rec = monthRecs.find(function(r){ return r.memberId===m.id && r.date===dateStr2; });
