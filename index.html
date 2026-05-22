@@ -4076,7 +4076,7 @@ ws1Data.push([
           ]);
 
   ws1Data.push([]); // 空行
-  ws1Data.push(['備註：有效出勤 = 出勤天數 + 半天次數×0.5 + 公出天數']);
+  ws1Data.push(['備註：出勤率 = 出勤天數 ÷ 本月工作日']);
 
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
  ws1['!cols'] = [
