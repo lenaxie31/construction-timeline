@@ -4791,9 +4791,7 @@ var editingAttId = null;
 
 var ATT_STATUS = {
   present:  { label:'出勤',   icon:'✅', cls:'att-status-present'  },
-  half:     { label:'半天',   icon:'🌗', cls:'att-status-half'     },
   leave:    { label:'請假',   icon:'📋', cls:'att-status-leave'    },
-  business: { label:'公出',   icon:'🚗', cls:'att-status-business' },
   holiday:  { label:'例假',   icon:'🏖', cls:'att-status-holiday'  },
   absent:   { label:'缺勤',   icon:'❌', cls:'att-status-absent'   },
 };
@@ -4910,9 +4908,7 @@ function renderAttStats() {
   el.innerHTML =
     '<div class="stat-card blue"><div class="stat-label">本月工作日</div><div class="stat-value">' + workdays + '</div><div class="stat-sub">天</div></div>' +
     '<div class="stat-card green"><div class="stat-label">出勤記錄</div><div class="stat-value">' + presentCount + '</div><div class="stat-sub">人次</div></div>' +
-    '<div class="stat-card"><div class="stat-label">半天出勤</div><div class="stat-value">' + halfCount + '</div><div class="stat-sub">人次</div></div>' +
     '<div class="stat-card amber"><div class="stat-label">請假</div><div class="stat-value">' + leaveCount + '</div><div class="stat-sub">人次</div></div>' +
-    '<div class="stat-card purple"><div class="stat-label">公出</div><div class="stat-value">' + businessCount + '</div><div class="stat-sub">人次</div></div>' +
     '<div class="stat-card"><div class="stat-label">監造人員</div><div class="stat-value">' + activeM.length + '</div><div class="stat-sub">人</div></div>';
 }
 
@@ -5017,7 +5013,7 @@ function renderAttSummary() {
   }
 
   var html = '<table class="att-summary-table"><thead><tr>' +
-    '<th>姓名</th><th>職稱</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
+    '<th>姓名</th><th>職稱</th><th>出勤</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
     '</tr></thead><tbody>';
 
   activeM.forEach(function(m) {
