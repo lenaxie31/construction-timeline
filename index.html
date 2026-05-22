@@ -4054,7 +4054,7 @@ function exportAttXLSX() {
   ws1Data.push([]); // 空行
 
   // 表頭
-  ws1Data.push([
+ws1Data.push([
     '姓名', '職稱',
     '出勤天數', '請假天數', '例假天數',
     '上班時數(hr)', '平均時數/天', '本月工作日', '出勤率'
@@ -4062,7 +4062,6 @@ function exportAttXLSX() {
 
   // 每個人的統計
   activeMembers.forEach(function(m) {
-    var mRecs = monthRecs.filter(function(r){ return r.memberId === m.id; });
     var present  = mRecs.filter(function(r){ return r.status==='present'; }).length;
       var leave    = mRecs.filter(function(r){ return r.status==='leave'; }).length;
       var holiday  = mRecs.filter(function(r){ return r.status==='holiday'; }).length;
@@ -4899,10 +4898,13 @@ function renderAttStats() {
   var businessCount = monthRecs.filter(function(r){ return r.status==='business'; }).length;
 
   var el = document.getElementById('att-stat-grid'); if (!el) return;
+  var totalMins = monthRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+  var totalHours = (totalMins / 60).toFixed(1);
   el.innerHTML =
     '<div class="stat-card blue"><div class="stat-label">本月工作日</div><div class="stat-value">' + workdays + '</div><div class="stat-sub">天</div></div>' +
     '<div class="stat-card green"><div class="stat-label">出勤記錄</div><div class="stat-value">' + presentCount + '</div><div class="stat-sub">人次</div></div>' +
     '<div class="stat-card amber"><div class="stat-label">請假</div><div class="stat-value">' + leaveCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card teal"><div class="stat-label">累計上班時數</div><div class="stat-value">' + totalHours + '</div><div class="stat-sub">小時</div></div>' +
     '<div class="stat-card"><div class="stat-label">監造人員</div><div class="stat-value">' + activeM.length + '</div><div class="stat-sub">人</div></div>';
 }
 
