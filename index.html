@@ -2021,7 +2021,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <div class="modal-body">
         <div style="display:flex;gap:8px;margin-bottom:12px;">
           <input type="text" id="new-member-name" placeholder="輸入姓名" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
-          <input type="text" id="new-member-role" placeholder="職稱（選填）" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
+          <input type="text" id="new-member-note" placeholder="備註（選填）" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
           <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="addMember()">新增</button>
         </div>
         <div id="member-list" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;"></div>
@@ -5140,24 +5140,69 @@ function renderMemberList() {
   var el = document.getElementById('member-list'); if (!el) return;
   if (!members.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:8px;">尚無人員</div>'; return; }
   el.innerHTML = members.map(function(m) {
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);">' +
-      '<div style="flex:1;">' +
-        '<div style="font-size:13px;font-weight:600;' + (m.active?'':'text-decoration:line-through;color:var(--text-muted);') + '">' + esc(m.name) + '</div>' +
-        '<div style="font-size:11px;color:var(--text-muted);">' + esc(m.role||'') + '</div>' +
+    return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);margin-bottom:6px;" id="mrow-' + m.id + '">' +
+      '<div style="width:34px;height:34px;border-radius:50%;background:var(--c-blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--c-blue);flex-shrink:0;opacity:' + (m.active ? 1 : 0.45) + ';">' +
+        (m.name ? m.name.slice(0,2) : '—') +
       '</div>' +
-      '<button class="btn-sm" onclick="toggleMemberActive(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;' + (m.active?'':'background:var(--c-green-bg);color:var(--c-green);') + '">' +
-        (m.active ? '停用' : '啟用') +
-      '</button>' +
-      '<button class="btn-sm del" onclick="deleteMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">刪除</button>' +
+      '<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+        '<div style="display:flex;flex-direction:column;gap:3px;">' +
+          '<label style="font-size:10px;font-weight:600;color:var(--text-muted);">姓名</label>' +
+          '<input type="text" value="' + esc(m.name||'') + '" ' +
+            'data-id="' + m.id + '" data-field="name" ' +
+            'oninput="updateMemberField(this)" ' +
+            'style="font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;width:100%;" ' +
+            'placeholder="姓名">' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:3px;">' +
+          '<label style="font-size:10px;font-weight:600;color:var(--text-muted);">職稱</label>' +
+          '<input type="text" value="' + esc(m.role||'') + '" ' +
+            'data-id="' + m.id + '" data-field="role" ' +
+            'oninput="updateMemberField(this)" ' +
+            'style="font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;width:100%;" ' +
+            'placeholder="職稱（如：監造主任）">' +
+        '</div>' +
+        '<div style="grid-column:1/-1;display:flex;flex-direction:column;gap:3px;">' +
+          '<label style="font-size:10px;font-weight:600;color:var(--text-muted);">備註</label>' +
+          '<input type="text" value="' + esc(m.note||'') + '" ' +
+            'data-id="' + m.id + '" data-field="note" ' +
+            'oninput="updateMemberField(this)" ' +
+            'style="font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;width:100%;" ' +
+            'placeholder="備註（選填，如：聯絡電話）">' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">' +
+        '<button class="btn-sm" onclick="toggleMemberActive(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;' + (m.active ? '' : 'background:var(--c-green-bg);color:var(--c-green);') + '">' +
+          (m.active ? '停用' : '啟用') +
+        '</button>' +
+        '<button class="btn-sm del" onclick="deleteMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">刪除</button>' +
+      '</div>' +
     '</div>';
   }).join('');
+}
+
+function updateMemberField(el) {
+  var id = el.dataset.id, field = el.dataset.field;
+  var m = members.find(function(x) { return x.id === id; });
+  if (!m) return;
+  m[field] = el.value;
+  memberSave();
+  // 即時更新頭像縮寫
+  if (field === 'name') {
+    var row = document.getElementById('mrow-' + id);
+    if (row) {
+      var av = row.querySelector('div[style*="border-radius:50%"]');
+      if (av) av.textContent = el.value ? el.value.slice(0,2) : '—';
+    }
+  }
 }
 
 function addMember() {
   var name = document.getElementById('new-member-name').value.trim();
   var role = document.getElementById('new-member-role').value.trim();
   if (!name) { alert('請輸入姓名'); return; }
-  members.push({ id: 'm' + uid(), name, role, active: true });
+  members.push({ id: 'm' + uid(), name, role, 
+  note: document.getElementById('new-member-note') ? document.getElementById('new-member-note').value.trim() : '', 
+  active: true });
   memberSave();
   document.getElementById('new-member-name').value = '';
   document.getElementById('new-member-role').value = '';
