@@ -5015,7 +5015,7 @@ function renderAttSummary() {
   }
 
   var html = '<table class="att-summary-table"><thead><tr>' +
-    '<th>姓名</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
+    '<th>姓名</th><th>職稱</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
     '</tr></thead><tbody>';
 
   activeM.forEach(function(m) {
@@ -5030,6 +5030,7 @@ function renderAttSummary() {
 
     html += '<tr>' +
       '<td style="font-weight:600;">' + esc(m.name) + '</td>' +
+      '<td style="font-size:11px;color:var(--text-secondary);">' + esc(m.role || '—') + '</td>' +
       
       '<td><span class="att-day-badge att-status-present">' + present + ' 天</span></td>' +
       '<td><span class="att-day-badge att-status-half">' + half + ' 次</span></td>' +
