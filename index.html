@@ -4257,7 +4257,7 @@ ws1Data.push([
   for (var d = 1; d <= daysInMonth; d++) {
     headerRow.push(d + '日');
   }
-  headerRow.push('出勤', '半天', '公出', '請假', '出勤率');
+  headerRow.push('出勤', '請假', '出勤率');
   ws3Data.push(headerRow);
 
   // 星期列
@@ -4279,20 +4279,17 @@ ws1Data.push([
       var rec = monthRecs.find(function(r){ return r.memberId===m.id && r.date===dateStr2; });
       if (rec) {
         row.push(STATUS_LABEL[rec.status] || '');
-        if (rec.status==='present')  present++;
-        if (rec.status==='half')     half++;
-        if (rec.status==='business') business++;
-        if (rec.status==='leave')    leave++;
-      } else {
-        var dow3 = new Date(y, mo-1, d).getDay();
-        row.push(dow3===0||dow3===6 ? '—' : '');
+          if (rec.status==='present') present++;
+          if (rec.status==='leave')   leave++;
+        } else {
+          var dow3 = new Date(y, mo-1, d).getDay();
+          row.push(dow3===0||dow3===6 ? '—' : '');
+        }
       }
-    }
-    var effective2 = present + half*0.5 + business;
-    var rate2 = workdays>0 ? (effective2/workdays*100).toFixed(1)+'%' : '—';
-    row.push(present, half, business, leave, rate2);
-    ws3Data.push(row);
-  });
+      var rate2 = workdays>0 ? (present/workdays*100).toFixed(1)+'%' : '—';
+      row.push(present, leave, rate2);
+      ws3Data.push(row);
+    });
 
   var ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
   // 固定寬度
@@ -4373,11 +4370,6 @@ ws1Data.push([
   downloadXLSX(wb, '監造人員出勤月報_' + month + '.xlsx');
 }
 
-function printReport() {
-  document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
-  switchTab('timeline');
-  setTimeout(function() { window.print(); }, 200);
-}
 function printReport() {
   document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
   switchTab('timeline');
