@@ -1996,9 +1996,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
         <div class="field"><label>出勤狀態</label>
           <select id="att-status">
             <option value="present">✅ 出勤</option>
-            <option value="half">🌗 半天</option>
             <option value="leave">📋 請假</option>
-            <option value="business">🚗 公出</option>
             <option value="holiday">🏖 例假</option>
           </select>
         </div>
@@ -4057,37 +4055,33 @@ function exportAttXLSX() {
 
   // 表頭
   ws1Data.push([
-    '姓名',
-    '出勤天數', '半天次數', '公出天數', '請假天數', '例假天數',
-    '總工作時數', '平均時數/天', '有效出勤', '本月工作日', '出勤率'
+    '姓名', '職稱',
+    '出勤天數', '請假天數', '例假天數',
+    '上班時數(hr)', '平均時數/天', '本月工作日', '出勤率'
   ]);
 
   // 每個人的統計
   activeMembers.forEach(function(m) {
     var mRecs = monthRecs.filter(function(r){ return r.memberId === m.id; });
     var present  = mRecs.filter(function(r){ return r.status==='present'; }).length;
-    var half     = mRecs.filter(function(r){ return r.status==='half'; }).length;
-    var business = mRecs.filter(function(r){ return r.status==='business'; }).length;
-    var leave    = mRecs.filter(function(r){ return r.status==='leave'; }).length;
-    var holiday  = mRecs.filter(function(r){ return r.status==='holiday'; }).length;
-    var effective = present + half * 0.5 + business;
-    var rate = workdays > 0 ? (effective / workdays * 100).toFixed(1) + '%' : '—';
-    var totalMinXlsx = mRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
-    var presentDays = present + half + business;
-    var avgMinXlsx = presentDays > 0 ? Math.round(totalMinXlsx / presentDays) : 0;
-    ws1Data.push([
-      m.name,
-      present, half, business, leave, holiday,
-      fmtMinutes(totalMinXlsx), fmtMinutes(avgMinXlsx), effective, workdays, rate
-    ]);
-  });
+      var leave    = mRecs.filter(function(r){ return r.status==='leave'; }).length;
+      var holiday  = mRecs.filter(function(r){ return r.status==='holiday'; }).length;
+      var rate = workdays > 0 ? (present / workdays * 100).toFixed(1) + '%' : '—';
+      var totalMinXlsx = mRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+      var totalHoursXlsx = (totalMinXlsx / 60).toFixed(1);
+      var avgHoursXlsx = present > 0 ? (totalMinXlsx / 60 / present).toFixed(1) : '—';
+      ws1Data.push([
+        m.name, m.role || '',
+        present, leave, holiday,
+        totalHoursXlsx, avgHoursXlsx, workdays, rate
+      ]);
 
   ws1Data.push([]); // 空行
   ws1Data.push(['備註：有效出勤 = 出勤天數 + 半天次數×0.5 + 公出天數']);
 
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-  ws1['!cols'] = [
-    {wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10}
+ ws1['!cols'] = [
+    {wch:10},{wch:14},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:10}
   ];
   ws1['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:9} },
