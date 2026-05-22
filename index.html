@@ -4063,16 +4063,19 @@ ws1Data.push([
   // 每個人的統計
   activeMembers.forEach(function(m) {
     var present  = mRecs.filter(function(r){ return r.status==='present'; }).length;
+      var half     = mRecs.filter(function(r){ return r.status==='half'; }).length;
+      var business = mRecs.filter(function(r){ return r.status==='business'; }).length;
       var leave    = mRecs.filter(function(r){ return r.status==='leave'; }).length;
       var holiday  = mRecs.filter(function(r){ return r.status==='holiday'; }).length;
-      var rate = workdays > 0 ? (present / workdays * 100).toFixed(1) + '%' : '—';
+      var effective = present + half * 0.5 + business;
+      var rate = workdays > 0 ? (effective / workdays * 100).toFixed(1) + '%' : '—';
       var totalMinXlsx = mRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
-      var totalHoursXlsx = (totalMinXlsx / 60).toFixed(1);
-      var avgHoursXlsx = present > 0 ? (totalMinXlsx / 60 / present).toFixed(1) : '—';
+      var presentDays = present + half + business;
+      var avgMinXlsx = presentDays > 0 ? Math.round(totalMinXlsx / presentDays) : 0;
       ws1Data.push([
-        m.name, m.role || '',
-        present, leave, holiday,
-        totalHoursXlsx, avgHoursXlsx, workdays, rate
+        m.name,
+        present, half, business, leave, holiday,
+        fmtMinutes(totalMinXlsx), fmtMinutes(avgMinXlsx), effective, workdays, rate
       ]);
 
   ws1Data.push([]); // 空行
