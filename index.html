@@ -5006,24 +5006,21 @@ function renderAttSummary() {
 
   activeM.forEach(function(m) {
     var recs = attRecords.filter(function(r){ return r.date.startsWith(attCurrentMonth) && r.memberId === m.id; });
-    var present  = recs.filter(function(r){ return r.status==='present'; }).length;
-    var half     = recs.filter(function(r){ return r.status==='half'; }).length;
-    var business = recs.filter(function(r){ return r.status==='business'; }).length;
-    var leave    = recs.filter(function(r){ return r.status==='leave'; }).length;
-    var effectiveDays = present + half*0.5 + business;
-    var rate = workdays ? Math.round(effectiveDays/workdays*100) : 0;
+    var present = recs.filter(function(r){ return r.status==='present'; }).length;
+    var leave   = recs.filter(function(r){ return r.status==='leave'; }).length;
+    var totalMins = recs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+    var totalHours = (totalMins / 60).toFixed(1);
+    var rate = workdays ? Math.round(present/workdays*100) : 0;
     var rateColor = rate >= 90 ? 'var(--c-green)' : rate >= 70 ? 'var(--c-amber)' : 'var(--c-red)';
 
     html += '<tr>' +
       '<td style="font-weight:600;">' + esc(m.name) + '</td>' +
       '<td style="font-size:11px;color:var(--text-secondary);">' + esc(m.role || '—') + '</td>' +
-      
       '<td><span class="att-day-badge att-status-present">' + present + ' 天</span></td>' +
-      '<td><span class="att-day-badge att-status-half">' + half + ' 次</span></td>' +
-      '<td><span class="att-day-badge att-status-business">' + business + ' 天</span></td>' +
       '<td><span class="att-day-badge att-status-leave">' + leave + ' 天</span></td>' +
+      '<td style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:600;">' + totalHours + ' hr</td>' +
       '<td><strong style="color:' + rateColor + ';">' + rate + '%</strong>' +
-        '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">(' + effectiveDays + '/' + workdays + ')</span>' +
+        '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">(' + present + '/' + workdays + ')</span>' +
       '</td>' +
       '<td><button class="btn-sm" onclick="openAttModalForMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">新增記錄</button></td>' +
     '</tr>';
