@@ -4893,9 +4893,7 @@ function renderAttStats() {
   }
 
   var presentCount  = monthRecs.filter(function(r){ return r.status==='present'; }).length;
-  var halfCount     = monthRecs.filter(function(r){ return r.status==='half'; }).length;
   var leaveCount    = monthRecs.filter(function(r){ return r.status==='leave'; }).length;
-  var businessCount = monthRecs.filter(function(r){ return r.status==='business'; }).length;
 
   var el = document.getElementById('att-stat-grid'); if (!el) return;
   var totalMins = monthRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
