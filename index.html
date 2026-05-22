@@ -4967,10 +4967,12 @@ function renderAttCalendar() {
         var m = members.find(function(x){ return x.id===r.memberId; });
         var st = ATT_STATUS[r.status] || ATT_STATUS.present;
         var name = m ? m.name : '—';
+        var role = m && m.role ? m.role : '';
         return '<span class="att-cal-pill ' + st.cls + '" ' +
           'data-id="' + esc(r.id) + '" onclick="editAttRecord(this.dataset.id)" ' +
-          'title="' + esc(name) + '　' + st.label + (r.note?' | '+r.note:'') + '">' +
+          'title="' + esc(name) + (role ? '　' + esc(role) : '') + '　' + st.label + (r.note?' | '+r.note:'') + '">' +
           st.icon + ' ' + esc(name.slice(0,3)) +
+          (role ? '<span style="font-size:8px;opacity:0.75;margin-left:2px;">(' + esc(role.slice(0,4)) + ')</span>' : '') +
         '</span>';
       }).join('');
 
