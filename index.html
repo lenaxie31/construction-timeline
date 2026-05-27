@@ -477,167 +477,214 @@ tr:hover td { background:#F8F9FF; }
 .filter-count{font-size:12px;color:var(--text-muted);margin-left:auto;white-space:nowrap;}
 
 /* ── TIMELINE ── */
-.alert-banner{
-  background:var(--c-red-bg);border:1px solid var(--c-red-border);
-  border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;
-  font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px;
-}
+.alert-banner{background:var(--c-red-bg);border:1px solid var(--c-red-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px;}
 .alert-banner a{color:var(--c-red);font-weight:700;cursor:pointer;text-decoration:underline;}
 .info-banner{background:var(--c-blue-bg);border:1px solid var(--c-blue-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:13px;color:#1e3a8a;}
-
-/* 圖例 */
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);}
 .legend-dot{width:8px;height:8px;border-radius:50%;}
 
-/* ── 橫向時間軸：網格排列 ── */
-#timeline {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 12px;
-  align-items: start;
-}
+/* 搜尋欄 */
+#search-input{font-family:inherit;font-size:13px;padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;transition:border-color var(--transition);}
+#search-input:focus{border-color:var(--dnv-sea-blue);}
 
-/* 單張時間軸卡片 */
-.tl-item {
+/* ── 橫向時間軸主容器 ── */
+#timeline {
+  position: relative;
   display: flex;
   flex-direction: column;
+  gap: 0;
+}
+
+/* 每一列 */
+.tl-row {
+  display: flex;
+  gap: 0;
+  position: relative;
+  animation: fadeUp .2s ease both;
+  min-height: 0;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* 狀態左邊色條 */
+.tl-s-normal   { --tl-accent: var(--dnv-sea-blue);   }
+.tl-s-milestone{ --tl-accent: var(--dnv-digi-green);  }
+.tl-s-warn     { --tl-accent: var(--c-amber);          }
+.tl-s-issue    { --tl-accent: var(--dnv-energy-red);  }
+.tl-today      { background: #EAF3FB; border-radius: var(--radius); }
+
+/* 左側日期欄 */
+.tl-row-date {
+  width: 80px;
+  min-width: 80px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 18px;
+  flex-shrink: 0;
+}
+.tl-row-date-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+}
+.tl-row-ymd {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; font-weight: 700;
+  color: var(--dnv-dark-blue);
+  letter-spacing: .02em;
+}
+.tl-today-pill {
+  font-size: 9px; font-weight: 700;
+  background: var(--dnv-digi-green); color: #fff;
+  padding: 1px 5px; border-radius: 4px;
+}
+.tl-row-weather {
+  font-size: 10px; color: var(--text-muted);
+}
+
+/* 時間軸連接線 & dot */
+.tl-row-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--tl-accent, var(--dnv-sea-blue));
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1.5px var(--tl-accent, var(--dnv-sea-blue));
+  z-index: 2;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  top: 20px;
+}
+.tl-row-line-top, .tl-row-line-bot {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  width: 1px;
+  background: var(--border);
+}
+.tl-row-line-top { top: 0; height: 20px; }
+.tl-row-line-bot { top: 30px; bottom: 0; }
+
+/* 右側內容區 */
+.tl-row-body {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px 12px 20px;
+  border-bottom: 1px solid var(--border-light);
+  border-left: 2px solid var(--tl-accent, var(--border-light));
+  margin-left: 4px;
+}
+.tl-row:last-child .tl-row-body { border-bottom: none; }
+
+/* 狀態列 */
+.tl-row-top {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* 內容分區 */
+.tl-row-content { display: flex; flex-direction: column; gap: 6px; }
+.tl-row-sec { display: flex; gap: 8px; align-items: flex-start; }
+.tl-sec-lbl {
+  font-size: 9px; font-weight: 700;
+  padding: 2px 6px; border-radius: 4px;
+  white-space: nowrap; flex-shrink: 0;
+  margin-top: 2px; letter-spacing: .04em;
+}
+.tl-sec-1 { background: #EAF3FB; color: var(--dnv-sea-blue); }
+.tl-sec-3 { background: #FFF4E0; color: var(--c-amber); }
+.tl-sec-n { background: var(--border-light); color: var(--text-muted); }
+.tl-sec-body {
+  font-size: 13px; color: var(--text-primary);
+  line-height: 1.65; flex: 1;
+}
+.tl-sec-3-body { color: var(--text-secondary); font-size: 12px; }
+.tl-note { font-size: 12px; color: var(--text-muted); font-style: italic; }
+.tl-row-foot {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* 卡片動作按鈕 */
+.card-actions {
+  margin-left: auto; display: flex; gap: 4px;
+  opacity: 0; transition: opacity .15s;
+}
+.tl-row:hover .card-actions { opacity: 1; }
+@media(hover:none){ .card-actions { opacity:1; } }
+
+/* badge */
+.badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap;letter-spacing:.03em;}
+.s-normal   {background:#EAF3FB;color:var(--dnv-sea-blue);}
+.s-milestone{background:#EDF9EC;color:var(--dnv-digi-green);}
+.s-warn     {background:#FFF4E0;color:var(--c-amber);}
+.s-pending  {background:#FFF4E0;color:var(--c-amber);}
+.s-issue    {background:#FDE8E9;color:var(--dnv-energy-red);}
+
+/* defect tag */
+.defect-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;cursor:pointer;}
+
+/* formatTitle 內嵌分區 */
+.card-sections{display:flex;flex-direction:column;gap:2px;}
+.cs-block{display:flex;flex-direction:column;gap:1px;}
+.cs-label{font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;display:none;}
+.cs-text{font-size:13px;color:var(--text-primary);line-height:1.65;}
+
+/* ── 儀表板內嵌時間軸 ── */
+.dash-tl-wrap {
   background: var(--surface);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow);
-  animation: fadeUp .2s ease both;
-  transition: box-shadow var(--transition), transform var(--transition);
-  position: relative;
 }
-.tl-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-
-@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-
-/* 卡片頂部色帶：依狀態 */
-.tl-item::before {
-  content:''; display:block; height:3px;
-}
-.tl-item.s-normal::before   { background: var(--dnv-sea-blue); }
-.tl-item.s-milestone::before{ background: var(--dnv-digi-green); }
-.tl-item.s-warn::before     { background: var(--c-amber); }
-.tl-item.s-pending::before  { background: var(--c-amber); }
-.tl-item.s-issue::before    { background: var(--dnv-energy-red); }
-
-/* 卡片頭部：日期列 */
-.tl-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px 8px;
+.dash-tl-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-light);
   background: var(--bg);
 }
-.tl-date {
-  font-family: 'DM Mono', monospace;
-  font-size: 13px; font-weight: 700;
-  color: var(--dnv-dark-blue);
-  letter-spacing: .02em;
-  flex-shrink: 0;
+.dash-tl-header h3 { font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+.dash-tl-inner { max-height: 420px; overflow-y: auto; padding: 0 4px; }
+.dash-tl-row {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--transition);
 }
-.tl-today-badge {
-  font-size:9px;font-weight:700;
-  background:var(--dnv-digi-green);color:#fff;
-  padding:1px 6px;border-radius:4px;letter-spacing:.3px;
-  flex-shrink:0;
+.dash-tl-row:last-child { border-bottom: none; }
+.dash-tl-row:hover { background: #F8F9FF; }
+.dash-tl-date {
+  width: 68px; min-width: 68px; flex-shrink: 0;
+  padding: 10px 8px 10px 16px;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  gap: 2px;
 }
-.tl-weather {
-  font-size:11px;color:var(--text-muted);
-  margin-left:auto; flex-shrink:0;
+.dash-tl-ymd { font-family:'DM Mono',monospace; font-size:11px; font-weight:700; color:var(--dnv-dark-blue); }
+.dash-tl-w   { font-size:10px; color:var(--text-muted); }
+.dash-tl-sep {
+  width: 1px; background: var(--border-light);
+  flex-shrink: 0; margin: 8px 0;
 }
-.tl-status-badge {
-  flex-shrink:0;
+.dash-tl-content {
+  flex: 1; min-width: 0;
+  padding: 10px 16px 10px 12px;
+  display: flex; flex-direction: column; gap: 3px;
 }
+.dash-tl-status {
+  font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+  display: inline-block; margin-bottom: 4px;
+}
+.dash-tl-text { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
 
-/* 卡片動作按鈕 */
-.card-actions {
-  margin-left: auto;
-  display: flex; gap: 4px;
-  opacity: 0; transition: opacity .15s;
-}
-.tl-item:hover .card-actions { opacity: 1; }
-@media(hover:none){ .card-actions { opacity:1; } }
-
-/* 卡片主體 */
-.tl-body { padding: 10px 14px 12px; display:flex; flex-direction:column; gap:8px; }
-
-/* 各分區小標題 */
-.tl-section { display:flex; flex-direction:column; gap:4px; }
-.tl-section-label {
-  font-size:10px;font-weight:700;
-  color: var(--dnv-sea-blue);
-  text-transform:uppercase;letter-spacing:.06em;
-  display:flex;align-items:center;gap:4px;
-}
-.tl-section-label.orange { color:var(--c-amber); }
-.tl-section-label.red    { color:var(--dnv-energy-red); }
-.tl-section-label.grey   { color:var(--text-muted); }
-.tl-section-body {
-  font-size:12px; color:var(--text-secondary);
-  line-height:1.6; white-space:pre-wrap;
-}
-/* 備註 */
-.tl-remark {
-  font-size:11px;color:var(--text-muted);
-  border-left:2px solid var(--border);
-  padding-left:8px; line-height:1.5;
-}
-
-/* 卡片底部 meta */
-.tl-foot {
-  padding: 6px 14px 10px;
-  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-  border-top:1px solid var(--border-light);
-}
-.tl-meta { font-size:11px;color:var(--text-muted); }
-.defect-tag {
-  font-size:10px;font-weight:700;
-  padding:2px 8px;border-radius:8px;
-  cursor:pointer;
-}
-
-/* badge (狀態標籤) */
-.badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap;letter-spacing:.03em;}
-.s-normal    { background:#EAF3FB; color:var(--dnv-sea-blue); }
-.s-milestone { background:#EDF9EC; color:var(--dnv-digi-green); }
-.s-warn      { background:#FFF4E0; color:var(--c-amber); }
-.s-pending   { background:#FFF4E0; color:var(--c-amber); }
-.s-issue     { background:#FDE8E9; color:var(--dnv-energy-red); }
-
-/* 舊的 tl-card / tl-left / tl-spine → 保留相容 */
-.tl-left{display:none;}
-.tl-spine{display:none;}
-.tl-card{padding:0;background:none;border:none;box-shadow:none;margin:0;}
-.card-top{display:none;}
-.card-title,.card-sub,.card-sub-label,.card-body{
-  /* rendered inside tl-body sections */
-}
-
-/* 搜尋欄 */
-#search-input {
-  font-family:inherit;font-size:13px;padding:8px 14px;
-  border:1px solid var(--border);border-radius:var(--radius-sm);
-  background:var(--surface);color:var(--text-primary);
-  outline:none;transition:border-color var(--transition);
-  width:220px;
-}
-#search-input:focus{border-color:var(--dnv-sea-blue);}
-
-/* RWD：窄螢幕變單欄 */
 @media(max-width:767px){
-  #timeline { grid-template-columns:1fr; }
-}
-@media(min-width:1280px){
-  #timeline { grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); }
-}
-@media(min-width:1600px){
-  #timeline { grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); }
+  .tl-row-date { width:56px; min-width:56px; }
+  .tl-row-ymd  { font-size:11px; }
+  .tl-sec-body { font-size:12px; }
+  .tl-row-body { padding:10px 12px 10px 14px; }
 }
 
 /* DEFECTS */
@@ -1854,96 +1901,10 @@ tr:hover td { background:#F8F9FF; }
       </div>
 
       <!-- Dashboard -->
-      <div class="tab-panel active" id="panel-dashboard">
-        <div class="project-progress-card">
-          <div class="progress-header">
-            <div class="progress-header-left"><h3>整體工程進度</h3><p>減碳A標施工進度（可手動調整）</p></div>
-            <div class="progress-pct-display" id="progress-pct-display" style="color:var(--c-amber)">0%</div>
-          </div>
-          <div class="progress-track"><div class="progress-fill amber" id="main-progress-fill" style="width:0%"></div></div>
-          <div class="progress-labels"><span>開工</span><span>50%</span><span>完工</span></div>
-          <div style="margin-bottom:8px;">
-            <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">記錄組成分布</div>
-            <div class="multi-progress-track" id="multi-progress"></div>
-            <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;" id="multi-legend"></div>
-          </div>
-          <div class="progress-controls">
-            <label>手動調整進度：</label>
-            <input type="range" class="progress-slider" id="progress-slider" min="0" max="100" value="0" oninput="updateProgress(this.value)">
-            <input type="number" class="progress-pct-input" id="progress-pct-input" min="0" max="100" value="0" oninput="updateProgress(this.value)">
-            <span style="font-size:11px;color:var(--text-muted);">%</span>
-          </div>
-        </div>
-        <!-- 預定/實際進度 -->
-        <div class="schedule-progress-card" id="schedule-progress-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">預定進度 vs 實際進度</div>
-              <div style="font-size:11px;color:var(--text-muted);">輸入各合約進度百分比，自動計算偏差</div>
-            </div>
-          </div>
-          <div class="schedule-grid">
-            <!-- 預定進度 -->
-            <div>
-              <div class="schedule-col-title planned">📋 預定進度（%）</div>
-              <div class="schedule-row">
-                <div class="schedule-row-label">合約一</div>
-                <div class="schedule-row-bar"><div class="schedule-row-fill planned-1" id="sp-bar-p1" style="width:0%"></div></div>
-                <div class="schedule-pct-input-wrap">
-                  <input class="schedule-pct-input" id="sp-p1" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
-                  <span style="font-size:11px;color:var(--text-muted);">%</span>
-                </div>
-              </div>
-              <div class="schedule-row">
-                <div class="schedule-row-label">合約二</div>
-                <div class="schedule-row-bar"><div class="schedule-row-fill planned-2" id="sp-bar-p2" style="width:0%"></div></div>
-                <div class="schedule-pct-input-wrap">
-                  <input class="schedule-pct-input" id="sp-p2" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
-                  <span style="font-size:11px;color:var(--text-muted);">%</span>
-                </div>
-              </div>
-              <div class="schedule-row" style="margin-bottom:0;">
-                <div class="schedule-row-label" style="font-weight:700;color:var(--text-primary);">總進度</div>
-                <div class="schedule-row-bar"><div class="schedule-row-fill planned-total" id="sp-bar-pt" style="width:0%"></div></div>
-                <div class="schedule-pct-input-wrap">
-                  <input class="schedule-pct-input" id="sp-pt" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()" style="font-weight:700;">
-                  <span style="font-size:11px;color:var(--text-muted);">%</span>
-                </div>
-              </div>
-            </div>
-            <!-- 實際進度 -->
-            <div>
-              <div class="schedule-col-title actual">✅ 實際進度（%）</div>
-              <div class="schedule-row">
-                <div class="schedule-row-label">合約一</div>
-                <div class="schedule-row-bar"><div class="schedule-row-fill actual-1" id="sp-bar-a1" style="width:0%"></div></div>
-                <div class="schedule-pct-input-wrap">
-                  <input class="schedule-pct-input" id="sp-a1" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
-                  <span style="font-size:11px;color:var(--text-muted);">%</span>
-                </div>
-              </div>
-              <div class="schedule-row">
-                <div class="schedule-row-label">合約二</div>
-                <div class="schedule-row-bar"><div class="schedule-row-fill actual-2" id="sp-bar-a2" style="width:0%"></div></div>
-                <div class="schedule-pct-input-wrap">
-                  <input class="schedule-pct-input" id="sp-a2" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()">
-                  <span style="font-size:11px;color:var(--text-muted);">%</span>
-                </div>
-              </div>
-              <div class="schedule-row" style="margin-bottom:0;">
-                <div class="schedule-row-label" style="font-weight:700;color:var(--text-primary);">總進度</div>
-                <div class="schedule-row-bar"><div class="schedule-row-fill actual-total" id="sp-bar-at" style="width:0%"></div></div>
-                <div class="schedule-pct-input-wrap">
-                  <input class="schedule-pct-input" id="sp-at" type="number" min="0" max="100" step="0.01" placeholder="0.00" oninput="updateSchedule()" style="font-weight:700;">
-                  <span style="font-size:11px;color:var(--text-muted);">%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- 偏差摘要 -->
-          <div class="schedule-deviation" id="schedule-deviation" style="display:none;"></div>
-        </div>
-
+      <div class="tab-panel active" 
+id="panel-dashboard">
+        <!-- 近期時間軸 -->
+        <div id="dash-tl-area" style="margin-bottom:28px;"></div>
         <div class="stat-grid" id="stat-grid"></div>
         <div class="dash-row">
           <div class="dash-box"><h3>工項狀態分布</h3><div id="bar-chart"></div></div>
@@ -1961,14 +1922,28 @@ tr:hover td { background:#F8F9FF; }
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-amber)"></div>待注意／待決議</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-red)"></div>異常／已開單</div>
         </div>
-        <div class="filter-bar">
-          <input type="search" id="search-input" placeholder="搜尋工項說明…" oninput="render()">
+        <div class="filter-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <input type="search" id="search-input" placeholder="搜尋工項說明…" oninput="render()" style="width:180px;">
           <select class="filter-select" id="filter-status" onchange="render()">
-            <option value="">全部狀態</option><option value="normal">正常施工</option><option value="milestone">里程碑</option>
-            <option value="warn">待注意</option><option value="pending">待決議</option><option value="issue">異常</option>
+            <option value="">全部狀態</option>
+            <option value="normal">正常施工</option>
+            <option value="milestone">里程碑</option>
+            <option value="warn">待注意</option>
+            <option value="pending">待決議</option>
+            <option value="issue">異常／已開單</option>
+          </select>
+          <select class="filter-select" id="filter-section" onchange="render()">
+            <option value="">全部類型</option>
+            <option value="1">一、工程進行情況</option>
+            <option value="3">三、督導環保及職安衛</option>
+            <option value="alert">備註</option>
           </select>
           <select class="filter-select" id="filter-month" onchange="render()"><option value="">全部月份</option></select>
-          <span class="filter-count" id="filter-count"></span>
+          <select class="filter-select" id="filter-view" onchange="render()">
+            <option value="timeline">橫向時間軸</option>
+            <option value="compact">緊湊列表</option>
+          </select>
+          <span class="filter-count" id="filter-count" style="margin-left:auto;"></span>
         </div>
         <div id="timeline"></div>
       </div>
@@ -3243,46 +3218,97 @@ function render() {
     if (!filtered.length) { tl.innerHTML = '<div class="empty">沒有符合條件的記錄</div>'; return; }
     var today = todayStr();
 
-    tl.innerHTML = filtered.map(function(e, i) {
-      var defect = e.defectNo ? defects.find(function(d) { return d.no === e.defectNo; }) : null;
-      var defectMap = { open:'未結案', replied:'已回覆', recheck:'複驗中', closed:'已結案' };
-      var defectTag = defect
-        ? '<span class="defect-tag iss-' + esc(defect.status) + '" data-tab="defects" onclick="switchTab(this.dataset.tab)" title="缺失單 ' + esc(defect.no) + '">📋 ' + esc(defect.no) + ' ' + (defectMap[defect.status]||esc(defect.status)) + '</span>'
-        : (e.defectNo ? '<span class="defect-tag iss-open" data-tab="defects" onclick="switchTab(this.dataset.tab)">📋 ' + esc(e.defectNo) + '</span>' : '');
-      var qiOnDate = qualityItems.filter(function(q) { return q.date === e.date; });
-      var qiTag = qiOnDate.length
-        ? '<span class="badge" style="background:#EAF3FB;color:var(--dnv-cyan);border:1px solid #C8E2F4;cursor:pointer;" data-tab="quality" onclick="switchTab(this.dataset.tab)">🔬 抽驗 ' + qiOnDate.length + ' 筆</span>'
-        : '';
-      var todayBadge = (e.date === today) ? '<span class="tl-today-badge">今天</span>' : '';
-      var dateStr = e.date ? e.date.slice(5).replace('-','/') : '';  // MM/DD
-      var fullDate = formatDate(e.date).replace('\n',' ');
-      var delay = 'animation-delay:' + Math.min(i*0.025,0.3) + 's';
+    // 取得檢視模式
+  var viewMode = (document.getElementById('filter-view')||{value:'timeline'}).value || 'timeline';
+  // 取得類型篩選
+  var filterSection = (document.getElementById('filter-section')||{value:''}).value || '';
 
-      // 分區內容
-      var sec1 = e.title  ? '<div class="tl-section"><div class="tl-section-label">● 一、工程進行情況</div><div class="tl-section-body">' + formatTitle(e.title) + '</div></div>' : '';
-      var sec3 = e.sub    ? '<div class="tl-section"><div class="tl-section-label orange">● 三、督導環保及職安衛</div><div class="tl-section-body">' + esc(e.sub) + '</div></div>' : '';
-      var sec4 = e.alert  ? '<div class="tl-section"><div class="tl-section-label grey">📝 備註</div><div class="tl-remark">' + esc(e.alert).split('\n').join('<br>') + '</div></div>' : '';
+  // 類型篩選
+  if (filterSection) {
+    filtered = filtered.filter(function(e) {
+      if (filterSection === 'alert') return !!(e.alert);
+      if (filterSection === '1') return !!(e.title);
+      if (filterSection === '3') return !!(e.sub);
+      return true;
+    });
+  }
 
-      return '<div class="tl-item s-' + e.status + '" style="' + delay + '">' +
-        // 頭部
-        '<div class="tl-head">' +
-          '<span class="tl-date">' + fullDate + '</span>' +
-          todayBadge +
-          '<span class="badge s-' + e.status + '" style="font-size:9px;">' + (BADGE[e.status]||esc(e.status)) + '</span>' +
-          '<span class="tl-weather">' + esc(e.weather||'') + '</span>' +
+  if (viewMode === 'compact') {
+    // ── 緊湊列表模式 ──
+    tl.innerHTML = '<table style="width:100%;border-collapse:collapse;">' +
+      '<thead><tr>' +
+        '<th style="background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 14px;text-align:left;white-space:nowrap;border-right:1px solid rgba(255,255,255,0.1);">日期</th>' +
+        '<th style="background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 14px;text-align:left;border-right:1px solid rgba(255,255,255,0.1);">狀態</th>' +
+        '<th style="background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 14px;text-align:left;border-right:1px solid rgba(255,255,255,0.1);">工程進行情況</th>' +
+        '<th style="background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 14px;text-align:left;">督導環保及職安衛</th>' +
+      '</tr></thead><tbody>' +
+      filtered.map(function(e, i) {
+        var isToday = e.date === today;
+        var rowBg = isToday ? '#EAF3FB' : (i%2===0 ? '#fff' : '#FAFAFA');
+        var statusColor = { normal:'#003591', milestone:'#3F9C35', warn:'#E98300', pending:'#E98300', issue:'#EB2A34' };
+        var statusLabel = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常' };
+        return '<tr style="background:' + rowBg + ';border-bottom:1px solid var(--border-light);">' +
+          '<td style="padding:8px 14px;font-family:DM Mono,monospace;font-size:12px;white-space:nowrap;color:var(--dnv-dark-blue);font-weight:700;">' + (e.date||'').slice(5).replace('-','/') + (isToday?'<br><span style="font-size:9px;background:#3F9C35;color:#fff;padding:0 4px;border-radius:3px;">今</span>':'') + '</td>' +
+          '<td style="padding:8px 14px;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:' + (statusColor[e.status]||'#003591') + '22;color:' + (statusColor[e.status]||'#003591') + ';">' + (statusLabel[e.status]||e.status) + '</span></td>' +
+          '<td style="padding:8px 14px;font-size:12px;color:var(--text-secondary);max-width:400px;line-height:1.6;">' + (e.title ? formatTitle(e.title) : '<span style="color:var(--text-muted)">—</span>') + '</td>' +
+          '<td style="padding:8px 14px;font-size:12px;color:var(--text-secondary);max-width:320px;line-height:1.6;">' + (e.sub ? esc(e.sub) : '<span style="color:var(--text-muted)">—</span>') + '</td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table>';
+    return;
+  }
+
+  // ── 橫向時間軸模式（預設）──
+  tl.innerHTML = filtered.map(function(e, i) {
+    var defect = e.defectNo ? defects.find(function(d) { return d.no === e.defectNo; }) : null;
+    var defectMap = { open:'未結案', replied:'已回覆', recheck:'複驗中', closed:'已結案' };
+    var defectTag = defect
+      ? '<span class="defect-tag iss-' + esc(defect.status) + '" data-tab="defects" onclick="switchTab(this.dataset.tab)">📋 ' + esc(defect.no) + ' ' + (defectMap[defect.status]||esc(defect.status)) + '</span>'
+      : (e.defectNo ? '<span class="defect-tag iss-open" data-tab="defects" onclick="switchTab(this.dataset.tab)">📋 ' + esc(e.defectNo) + '</span>' : '');
+    var qiOnDate = qualityItems.filter(function(q) { return q.date === e.date; });
+    var qiTag = qiOnDate.length
+      ? '<span class="badge" style="background:#EAF3FB;color:var(--dnv-cyan);border:1px solid #C8E2F4;cursor:pointer;" data-tab="quality" onclick="switchTab(this.dataset.tab)">🔬 抽驗 ' + qiOnDate.length + ' 筆</span>'
+      : '';
+    var isToday = e.date === today;
+    var delay = 'animation-delay:' + Math.min(i*0.02,0.3) + 's';
+    var isFirst = i === 0;
+    var isLast  = i === filtered.length - 1;
+
+    var SCLS = { normal:'tl-s-normal', milestone:'tl-s-milestone', warn:'tl-s-warn', pending:'tl-s-warn', issue:'tl-s-issue' };
+    var sCls = SCLS[e.status] || 'tl-s-normal';
+
+    var sec1 = e.title ? '<div class="tl-row-sec"><span class="tl-sec-lbl tl-sec-1">工程進行</span><div class="tl-sec-body">' + formatTitle(e.title) + '</div></div>' : '';
+    var sec3 = e.sub   ? '<div class="tl-row-sec"><span class="tl-sec-lbl tl-sec-3">環保職安</span><div class="tl-sec-body tl-sec-3-body">' + esc(e.sub) + '</div></div>' : '';
+    var secN = e.alert ? '<div class="tl-row-sec"><span class="tl-sec-lbl tl-sec-n">備註</span><div class="tl-sec-body tl-note">' + esc(e.alert).split('\n').join('<br>') + '</div></div>' : '';
+
+    var hasFoot = defectTag || qiTag;
+
+    return '<div class="tl-row ' + sCls + (isToday?' tl-today':'') + '" style="' + delay + '">' +
+      // 左側日期軸
+      '<div class="tl-row-date">' +
+        '<div class="tl-row-dot"></div>' +
+        (isFirst ? '' : '<div class="tl-row-line tl-row-line-top"></div>') +
+        (isLast  ? '' : '<div class="tl-row-line tl-row-line-bot"></div>') +
+        '<div class="tl-row-date-text">' +
+          '<span class="tl-row-ymd">' + (e.date||'').slice(5).replace('-','/') + '</span>' +
+          (isToday ? '<span class="tl-today-pill">今天</span>' : '') +
+          '<span class="tl-row-weather">' + esc(e.weather||'') + '</span>' +
+        '</div>' +
+      '</div>' +
+      // 右側內容
+      '<div class="tl-row-body">' +
+        '<div class="tl-row-top">' +
+          '<span class="badge s-' + e.status + '" style="font-size:10px;">' + (BADGE[e.status]||esc(e.status)) + '</span>' +
           '<div class="card-actions">' +
             '<button class="btn-sm edit" data-id="' + e.id + '" onclick="editEntry(this.dataset.id)">編輯</button>' +
             '<button class="btn-sm del" data-id="' + e.id + '" onclick="deleteEntry(this.dataset.id)">刪除</button>' +
           '</div>' +
         '</div>' +
-        // 主體
-        '<div class="tl-body">' +
-          sec1 + sec3 + sec4 +
-        '</div>' +
-        // 底部 meta
-        ((defectTag || qiTag) ? '<div class="tl-foot">' + defectTag + qiTag + '</div>' : '') +
-      '</div>';
-    }).join('');
+        '<div class="tl-row-content">' + sec1 + sec3 + secN + '</div>' +
+        (hasFoot ? '<div class="tl-row-foot">' + defectTag + qiTag + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
   } catch(err) { console.error('render error:', err); showErrBanner('畫面更新失敗'); }
 }
 
@@ -3362,6 +3388,52 @@ function renderDashboard() {
       }).join('')
     : '<div style="font-size:13px;color:var(--text-muted);padding:12px 0;text-align:center">✅ 目前沒有未結案項目</div>';
 }
+
+function renderDashTimeline() {
+  var area = document.getElementById('dash-tl-area');
+  if (!area) return;
+  var today = todayStr();
+  var recent = entries.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).slice(0,14);
+  if (!recent.length) { area.innerHTML = ''; return; }
+
+  var SCLS = { normal:'#003591', milestone:'#3F9C35', warn:'#E98300', pending:'#E98300', issue:'#EB2A34' };
+  var SLBL = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常／已開單' };
+  var SBG  = { normal:'#EAF3FB', milestone:'#EDF9EC', warn:'#FFF4E0', pending:'#FFF4E0', issue:'#FDE8E9' };
+
+  var rows = recent.map(function(e) {
+    var isToday = e.date === today;
+    var sc = SCLS[e.status] || '#003591';
+    var sb = SBG[e.status]  || '#EAF3FB';
+    var t1 = '';
+    if (e.title) {
+      t1 = e.title.split('\n')[0].replace('一、工程進行情況：','').replace('一、工程進行情況:','').slice(0,60);
+    }
+    var s1 = e.sub ? e.sub.split('\n')[0].replace('三、督導環保及職安衛事項：','').replace('三、督導環保及職安衛事項:','').slice(0,50) : '';
+    var s1 = e.sub ? e.sub.split('\n')[0].replace('三、督導環保及職安衛事項：','').replace('三、督導環保及職安衛事項:','').slice(0,50) : '';
+      '<div class="dash-tl-date">' +
+        '<div class="dash-tl-ymd">' + (e.date||'').slice(5).replace('-','/') + (isToday?'<br><span style="font-size:8px;background:#3F9C35;color:#fff;padding:0 3px;border-radius:2px;">今</span>':'') + '</div>' +
+        '<div class="dash-tl-w">' + esc(e.weather||'') + '</div>' +
+      '</div>' +
+      '<div class="dash-tl-sep"></div>' +
+      '<div style="width:3px;background:' + sc + ';flex-shrink:0;"></div>' +
+      '<div class="dash-tl-content">' +
+        '<span class="dash-tl-status" style="background:' + sb + ';color:' + sc + ';">' + (SLBL[e.status]||e.status) + '</span>' +
+        (t1 ? '<div class="dash-tl-text"><span style="font-size:9px;font-weight:700;color:' + sc + ';margin-right:4px;">工程</span>' + esc(t1) + (e.title&&e.title.length>60?'…':'') + '</div>' : '') +
+        (s1 ? '<div class="dash-tl-text" style="color:#E98300;"><span style="font-size:9px;font-weight:700;margin-right:4px;">職安</span>' + esc(s1) + (e.sub&&e.sub.length>50?'…':'') + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  area.innerHTML =
+    '<div class="dash-tl-wrap">' +
+      '<div class="dash-tl-header">' +
+        '<h3>📅 近期施工記錄</h3>' +
+        '<button class="btn-sm edit" data-tab="timeline" onclick="switchTab(this.dataset.tab)" style="font-size:11px;">查看完整時間軸 →</button>' +
+      '</div>' +
+      '<div class="dash-tl-inner">' + rows + '</div>' +
+    '</div>';
+}
+
 
 // ── DEFECTS ──
 function updateOpenCount() {
