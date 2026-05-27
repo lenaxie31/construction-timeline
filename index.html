@@ -476,57 +476,169 @@ tr:hover td { background:#F8F9FF; }
 .filter-select:focus{border-color:var(--text-primary);}
 .filter-count{font-size:12px;color:var(--text-muted);margin-left:auto;white-space:nowrap;}
 
-/* TIMELINE */
-.alert-banner{background:var(--c-red-bg);border:1px solid var(--c-red-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px;}
-.alert-banner a{color:var(--c-red);font-weight:600;cursor:pointer;text-decoration:underline;}
-.info-banner{background:var(--c-blue-bg);border:1px solid var(--c-blue-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:13px;color:#1e3a8a;}
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+/* ── TIMELINE ── */
+.alert-banner{
+  background:var(--c-red-bg);border:1px solid var(--c-red-border);
+  border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;
+  font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px;
+}
+.alert-banner a{color:var(--c-red);font-weight:700;cursor:pointer;text-decoration:underline;}
+.info-banner{background:var(--c-blue-bg);border:1px solid var(--c-blue-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:13px;color:#1e3a8a;}
+
+/* 圖例 */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);}
 .legend-dot{width:8px;height:8px;border-radius:50%;}
-.tl-item{display:flex;margin-bottom:12px;animation:fadeUp .25s ease both;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.tl-left{width:88px;min-width:88px;padding-right:10px;padding-top:12px;text-align:right;}
-.tl-date{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--text-primary);line-height:1.4;}
-/* Fix 6: today badge */
-.tl-today-badge{font-size:9px;font-weight:700;background:var(--c-green);color:#fff;padding:1px 5px;border-radius:4px;letter-spacing:.3px;display:inline-block;margin-top:2px;}
-.tl-weather{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.tl-spine{display:flex;flex-direction:column;align-items:center;width:20px;min-width:20px;}
-.tl-line{width:2px;flex:1;min-height:12px;background:var(--border);}
-.tl-line.hidden{opacity:0;}
-.tl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2.5px solid var(--bg);box-shadow:0 0 0 1px rgba(0,0,0,.12);}
-.tl-card{flex:1;margin:4px 0 4px 12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);transition:border-color var(--transition),box-shadow var(--transition);}
-.tl-card:hover{border-color:#B5B2A8;box-shadow:var(--shadow-md);}
-.tl-card.editing{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
-.card-top{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap;}
-.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;letter-spacing:.2px;}
-.card-actions{margin-left:auto;display:flex;gap:4px;}
-.tl-card .card-actions{opacity:0;transition:opacity .15s;}
-.tl-card:hover .card-actions{opacity:1;}
-@media(hover:none){.tl-card .card-actions{opacity:1;}}
-.btn-sm{font-size:11px;padding:3px 9px;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);transition:background .12s,color .12s;}
-.btn-sm.edit:hover{background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border);}
-.btn-sm.del:hover{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
-.card-title{font-size:14px;font-weight:600;color:var(--text-primary);line-height:1.5;margin-bottom:3px;}
-.card-sub{font-size:12px;color:var(--text-secondary);line-height:1.6;}
-.card-alert{margin-top:8px;padding:7px 10px 7px 12px;font-size:12px;line-height:1.6;border-radius:var(--radius-sm);}
-.alert-warn{background:var(--c-amber-bg);color:#78350f;border-left:3px solid var(--c-amber);}
-.alert-issue{background:var(--c-red-bg);color:#7f1d1d;border-left:3px solid var(--c-red);}
-.defect-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;border:1px solid;cursor:pointer;transition:opacity .12s;}
-.defect-tag:hover{opacity:.75;}
-.defect-tag.iss-open{background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border);}
-.defect-tag.iss-replied{background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border);}
-.defect-tag.iss-closed{background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border);}
-.s-normal{background:var(--c-blue-bg);color:var(--c-blue);border:1px solid var(--c-blue-border);}
-.s-milestone{background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border);}
-.s-warn{background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);}
-.s-pending{background:var(--c-purple-bg);color:var(--c-purple);border:1px solid var(--c-purple-border);}
-.s-issue{background:var(--c-red-bg);color:var(--c-red);border:1px solid var(--c-red-border);}
-.dot-normal{background:var(--c-blue);}
-.dot-milestone{background:var(--c-green);}
-.dot-warn{background:var(--c-amber);}
-.dot-pending{background:var(--c-purple);}
-.dot-issue{background:var(--c-red);}
-.empty{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:14px;}
+
+/* ── 橫向時間軸：網格排列 ── */
+#timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* 單張時間軸卡片 */
+.tl-item {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  animation: fadeUp .2s ease both;
+  transition: box-shadow var(--transition), transform var(--transition);
+  position: relative;
+}
+.tl-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* 卡片頂部色帶：依狀態 */
+.tl-item::before {
+  content:''; display:block; height:3px;
+}
+.tl-item.s-normal::before   { background: var(--dnv-sea-blue); }
+.tl-item.s-milestone::before{ background: var(--dnv-digi-green); }
+.tl-item.s-warn::before     { background: var(--c-amber); }
+.tl-item.s-pending::before  { background: var(--c-amber); }
+.tl-item.s-issue::before    { background: var(--dnv-energy-red); }
+
+/* 卡片頭部：日期列 */
+.tl-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg);
+}
+.tl-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; font-weight: 700;
+  color: var(--dnv-dark-blue);
+  letter-spacing: .02em;
+  flex-shrink: 0;
+}
+.tl-today-badge {
+  font-size:9px;font-weight:700;
+  background:var(--dnv-digi-green);color:#fff;
+  padding:1px 6px;border-radius:4px;letter-spacing:.3px;
+  flex-shrink:0;
+}
+.tl-weather {
+  font-size:11px;color:var(--text-muted);
+  margin-left:auto; flex-shrink:0;
+}
+.tl-status-badge {
+  flex-shrink:0;
+}
+
+/* 卡片動作按鈕 */
+.card-actions {
+  margin-left: auto;
+  display: flex; gap: 4px;
+  opacity: 0; transition: opacity .15s;
+}
+.tl-item:hover .card-actions { opacity: 1; }
+@media(hover:none){ .card-actions { opacity:1; } }
+
+/* 卡片主體 */
+.tl-body { padding: 10px 14px 12px; display:flex; flex-direction:column; gap:8px; }
+
+/* 各分區小標題 */
+.tl-section { display:flex; flex-direction:column; gap:4px; }
+.tl-section-label {
+  font-size:10px;font-weight:700;
+  color: var(--dnv-sea-blue);
+  text-transform:uppercase;letter-spacing:.06em;
+  display:flex;align-items:center;gap:4px;
+}
+.tl-section-label.orange { color:var(--c-amber); }
+.tl-section-label.red    { color:var(--dnv-energy-red); }
+.tl-section-label.grey   { color:var(--text-muted); }
+.tl-section-body {
+  font-size:12px; color:var(--text-secondary);
+  line-height:1.6; white-space:pre-wrap;
+}
+/* 備註 */
+.tl-remark {
+  font-size:11px;color:var(--text-muted);
+  border-left:2px solid var(--border);
+  padding-left:8px; line-height:1.5;
+}
+
+/* 卡片底部 meta */
+.tl-foot {
+  padding: 6px 14px 10px;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  border-top:1px solid var(--border-light);
+}
+.tl-meta { font-size:11px;color:var(--text-muted); }
+.defect-tag {
+  font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:8px;
+  cursor:pointer;
+}
+
+/* badge (狀態標籤) */
+.badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap;letter-spacing:.03em;}
+.s-normal    { background:#EAF3FB; color:var(--dnv-sea-blue); }
+.s-milestone { background:#EDF9EC; color:var(--dnv-digi-green); }
+.s-warn      { background:#FFF4E0; color:var(--c-amber); }
+.s-pending   { background:#FFF4E0; color:var(--c-amber); }
+.s-issue     { background:#FDE8E9; color:var(--dnv-energy-red); }
+
+/* 舊的 tl-card / tl-left / tl-spine → 保留相容 */
+.tl-left{display:none;}
+.tl-spine{display:none;}
+.tl-card{padding:0;background:none;border:none;box-shadow:none;margin:0;}
+.card-top{display:none;}
+.card-title,.card-sub,.card-sub-label,.card-body{
+  /* rendered inside tl-body sections */
+}
+
+/* 搜尋欄 */
+#search-input {
+  font-family:inherit;font-size:13px;padding:8px 14px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--text-primary);
+  outline:none;transition:border-color var(--transition);
+  width:220px;
+}
+#search-input:focus{border-color:var(--dnv-sea-blue);}
+
+/* RWD：窄螢幕變單欄 */
+@media(max-width:767px){
+  #timeline { grid-template-columns:1fr; }
+}
+@media(min-width:1280px){
+  #timeline { grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); }
+}
+@media(min-width:1600px){
+  #timeline { grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); }
+}
 
 /* DEFECTS */
 .defect-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
@@ -1423,9 +1535,9 @@ tr:hover td { background:#F8F9FF; }
 
 /* 出勤管理 */
 .att-status-present  { background:#DCFCE7; color:#166534; border:1px solid #BBF7D0; }
-.att-status-half     { background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE; }
+/* att-status-half removed */
 .att-status-leave    { background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; }
-.att-status-business { background:#F3E8FF; color:#6B21A8; border:1px solid #DDD6FE; }
+/* att-status-business removed */
 .att-status-holiday  { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
 .att-status-absent   { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
 
@@ -2339,9 +2451,7 @@ tr:hover td { background:#F8F9FF; }
         <div class="field"><label>出勤狀態</label>
           <select id="att-status">
             <option value="present">✅ 出勤</option>
-            <option value="half">🌗 半天</option>
             <option value="leave">📋 請假</option>
-            <option value="business">🚗 公出</option>
             <option value="holiday">🏖 例假</option>
           </select>
         </div>
@@ -3134,42 +3244,43 @@ function render() {
     var today = todayStr();
 
     tl.innerHTML = filtered.map(function(e, i) {
-      var alertCls = e.status === 'issue' ? 'alert-issue' : 'alert-warn';
       var defect = e.defectNo ? defects.find(function(d) { return d.no === e.defectNo; }) : null;
-      var defectMap = { open:'未結案', replied:'已回覆', closed:'已結案' };
+      var defectMap = { open:'未結案', replied:'已回覆', recheck:'複驗中', closed:'已結案' };
       var defectTag = defect
-        ? '<span class="defect-tag iss-' + esc(defect.status) + '" onclick="switchTab(\'defects\')" title="缺失單 ' + esc(defect.no) + '">📋 ' + esc(defect.no) + ' · ' + (defectMap[defect.status] || esc(defect.status)) + '</span>'
-        : (e.defectNo ? '<span class="defect-tag iss-open" onclick="switchTab(\'defects\')">📋 ' + esc(e.defectNo) + '</span>' : '');
+        ? '<span class="defect-tag iss-' + esc(defect.status) + '" data-tab="defects" onclick="switchTab(this.dataset.tab)" title="缺失單 ' + esc(defect.no) + '">📋 ' + esc(defect.no) + ' ' + (defectMap[defect.status]||esc(defect.status)) + '</span>'
+        : (e.defectNo ? '<span class="defect-tag iss-open" data-tab="defects" onclick="switchTab(this.dataset.tab)">📋 ' + esc(e.defectNo) + '</span>' : '');
       var qiOnDate = qualityItems.filter(function(q) { return q.date === e.date; });
-      var qiTag = qiOnDate.length ? '<span class="badge" style="background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;cursor:pointer;" onclick="switchTab(\'quality\')">🔬 抽驗 ' + qiOnDate.length + ' 筆</span>' : '';
-      // Fix 6: 今天標記
-      var todayBadge = (e.date === today) ? '<div class="tl-today-badge">今天</div>' : '';
-      var dateStr = formatDate(e.date).replace('\n','<br>');
-      var delay = 'animation-delay:' + Math.min(i*0.03,0.3) + 's';
+      var qiTag = qiOnDate.length
+        ? '<span class="badge" style="background:#EAF3FB;color:var(--dnv-cyan);border:1px solid #C8E2F4;cursor:pointer;" data-tab="quality" onclick="switchTab(this.dataset.tab)">🔬 抽驗 ' + qiOnDate.length + ' 筆</span>'
+        : '';
+      var todayBadge = (e.date === today) ? '<span class="tl-today-badge">今天</span>' : '';
+      var dateStr = e.date ? e.date.slice(5).replace('-','/') : '';  // MM/DD
+      var fullDate = formatDate(e.date).replace('\n',' ');
+      var delay = 'animation-delay:' + Math.min(i*0.025,0.3) + 's';
 
-      return '<div class="tl-item" style="' + delay + '">' +
-        '<div class="tl-left"><div class="tl-date">' + dateStr + '</div>' + todayBadge + '<div class="tl-weather">' + esc(e.weather) + '</div></div>' +
-        '<div class="tl-spine">' +
-          '<div class="tl-line' + (i===0?' hidden':'') + '"></div>' +
-          '<div class="tl-dot dot-' + e.status + '"></div>' +
-          '<div class="tl-line' + (i===filtered.length-1?' hidden':'') + '"></div>' +
-        '</div>' +
-        '<div class="tl-card' + (e.id===editingId?' editing':'') + '">' +
-          '<div class="card-top">' +
-            '<span class="badge s-' + e.status + '">' + (BADGE[e.status]||esc(e.status)) + '</span>' +
-            defectTag + qiTag +
-            '<div class="card-actions">' +
-              '<button class="btn-sm edit" onclick="editEntry(\'' + e.id + '\')">編輯</button>' +
-              '<button class="btn-sm del" onclick="deleteEntry(\'' + e.id + '\')">刪除</button>' +
-            '</div>' +
+      // 分區內容
+      var sec1 = e.title  ? '<div class="tl-section"><div class="tl-section-label">● 一、工程進行情況</div><div class="tl-section-body">' + formatTitle(e.title) + '</div></div>' : '';
+      var sec3 = e.sub    ? '<div class="tl-section"><div class="tl-section-label orange">● 三、督導環保及職安衛</div><div class="tl-section-body">' + esc(e.sub) + '</div></div>' : '';
+      var sec4 = e.alert  ? '<div class="tl-section"><div class="tl-section-label grey">📝 備註</div><div class="tl-remark">' + esc(e.alert).split('\n').join('<br>') + '</div></div>' : '';
+
+      return '<div class="tl-item s-' + e.status + '" style="' + delay + '">' +
+        // 頭部
+        '<div class="tl-head">' +
+          '<span class="tl-date">' + fullDate + '</span>' +
+          todayBadge +
+          '<span class="badge s-' + e.status + '" style="font-size:9px;">' + (BADGE[e.status]||esc(e.status)) + '</span>' +
+          '<span class="tl-weather">' + esc(e.weather||'') + '</span>' +
+          '<div class="card-actions">' +
+            '<button class="btn-sm edit" data-id="' + e.id + '" onclick="editEntry(this.dataset.id)">編輯</button>' +
+            '<button class="btn-sm del" data-id="' + e.id + '" onclick="deleteEntry(this.dataset.id)">刪除</button>' +
           '</div>' +
-          '<div class="card-title">' + formatTitle(e.title) + '</div>' +
-          (e.sub   ? '<div class="card-sub" style="margin-top:6px;">' + esc(e.sub) + '</div>' : '') +
-          (e.alert ? '<div style="margin-top:6px;background:#F1F5F9;border-left:3px solid #94A3B8;border-radius:var(--radius-sm);">' +
-            '<div style="display:flex;align-items:center;gap:5px;padding:4px 8px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.3px;">📝 備註</div>' +
-            '<div style="padding:4px 8px 7px;font-size:12px;color:#334155;line-height:1.6;white-space:pre-wrap;">' + esc(e.alert).replace(/\n/g,'<br>') + '</div>' +
-          '</div>' : '') +
         '</div>' +
+        // 主體
+        '<div class="tl-body">' +
+          sec1 + sec3 + sec4 +
+        '</div>' +
+        // 底部 meta
+        ((defectTag || qiTag) ? '<div class="tl-foot">' + defectTag + qiTag + '</div>' : '') +
       '</div>';
     }).join('');
   } catch(err) { console.error('render error:', err); showErrBanner('畫面更新失敗'); }
@@ -4403,9 +4514,9 @@ function exportAttXLSX() {
 
   // 表頭
   ws1Data.push([
-    '姓名',
-    '出勤天數', '半天次數', '公出天數', '請假天數', '例假天數',
-    '總工作時數', '平均時數/天', '有效出勤', '本月工作日', '出勤率'
+    '姓名', '職稱',
+    '出勤天數', '請假天數',
+    '總工作時數(H)', '平均時數/天(H)', '本月工作日', '出勤率'
   ]);
 
   // 每個人的統計
@@ -4419,12 +4530,12 @@ function exportAttXLSX() {
     var effective = present + half * 0.5 + business;
     var rate = workdays > 0 ? (effective / workdays * 100).toFixed(1) + '%' : '—';
     var totalMinXlsx = mRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
-    var presentDays = present + half + business;
-    var avgMinXlsx = presentDays > 0 ? Math.round(totalMinXlsx / presentDays) : 0;
+    var totalHXlsx = (totalMinXlsx/60).toFixed(1);
+    var avgHXlsx   = present > 0 ? (totalMinXlsx/60/present).toFixed(1) : '0';
     ws1Data.push([
-      m.name,
-      present, half, business, leave, holiday,
-      fmtMinutes(totalMinXlsx), fmtMinutes(avgMinXlsx), effective, workdays, rate
+      m.name, m.role||'',
+      present, leave,
+      totalHXlsx, avgHXlsx, workdays, rate
     ]);
   });
 
@@ -4433,7 +4544,7 @@ function exportAttXLSX() {
 
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
   ws1['!cols'] = [
-    {wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10}
+    {wch:10},{wch:14},{wch:10},{wch:10},{wch:14},{wch:14},{wch:12},{wch:10}
   ];
   ws1['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:9} },
@@ -4460,7 +4571,7 @@ function exportAttXLSX() {
   };
 
   // 表頭列（第5列，row index 4）
-  var hdrCols1 = ['A','B','C','D','E','F','G','H','I','J','K'];
+  var hdrCols1 = ['A','B','C','D','E','F','G','H'];
   hdrCols1.forEach(function(col) {
     var addr = col + '5';
     if (ws1[addr]) ws1[addr].s = {
@@ -4491,7 +4602,7 @@ function exportAttXLSX() {
     hdrCols1.forEach(function(col, ci) {
       var addr = XLSX.utils.encode_cell({r: rowIdx, c: ci});
       if (!ws1[addr]) ws1[addr] = {v:'', t:'s'};
-      var isRateCol = ci === 10;
+      var isRateCol = ci === 7;
       ws1[addr].s = {
         font: isRateCol
           ? {bold:true, sz:11, color:{rgb: rateColor}}
@@ -4651,11 +4762,11 @@ function exportAttXLSX() {
   // 固定寬度
   var cols3 = [{wch:10}];
   for (var d=0; d<daysInMonth; d++) cols3.push({wch:5});
-  cols3.push({wch:6},{wch:6},{wch:6},{wch:6},{wch:8});
+  cols3.push({wch:6},{wch:6},{wch:8});
   ws3['!cols'] = cols3;
   ws3['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:daysInMonth+4} },
-    { s:{r:1,c:0}, e:{r:1,c:daysInMonth+4} },
+    { s:{r:0,c:0}, e:{r:0,c:daysInMonth+2} },
+    { s:{r:1,c:0}, e:{r:1,c:daysInMonth+2} },
   ];
   ws3['!freeze'] = { xSplit:1, ySplit:5 };
 
@@ -4667,7 +4778,7 @@ function exportAttXLSX() {
   };
 
   // 表頭列 & 星期列 樣式
-  for (var ci2=0; ci2<=daysInMonth+4; ci2++) {
+  for (var ci2=0; ci2<=daysInMonth+2; ci2++) {
     var hAddr = XLSX.utils.encode_cell({r:3, c:ci2});
     if (!ws3[hAddr]) ws3[hAddr] = {v:'',t:'s'};
     ws3[hAddr].s = {
@@ -4691,7 +4802,7 @@ function exportAttXLSX() {
   // 資料列顏色
   activeMembers.forEach(function(m, mi) {
     var rowIdx3 = 5 + mi;
-    for (var ci3=0; ci3<=daysInMonth+4; ci3++) {
+    for (var ci3=0; ci3<=daysInMonth+2; ci3++) {
       var addr3 = XLSX.utils.encode_cell({r:rowIdx3, c:ci3});
       if (!ws3[addr3]) ws3[addr3] = {v:'',t:'s'};
       var val3 = ws3[addr3].v || '';
@@ -5137,9 +5248,7 @@ var editingAttId = null;
 
 var ATT_STATUS = {
   present:  { label:'出勤',   icon:'✅', cls:'att-status-present'  },
-  half:     { label:'半天',   icon:'🌗', cls:'att-status-half'     },
   leave:    { label:'請假',   icon:'📋', cls:'att-status-leave'    },
-  business: { label:'公出',   icon:'🚗', cls:'att-status-business' },
   holiday:  { label:'例假',   icon:'🏖', cls:'att-status-holiday'  },
   absent:   { label:'缺勤',   icon:'❌', cls:'att-status-absent'   },
 };
@@ -5247,18 +5356,19 @@ function renderAttStats() {
     if (dow !== 0 && dow !== 6) workdays++;
   }
 
-  var presentCount  = monthRecs.filter(function(r){ return r.status==='present'; }).length;
-  var halfCount     = monthRecs.filter(function(r){ return r.status==='half'; }).length;
-  var leaveCount    = monthRecs.filter(function(r){ return r.status==='leave'; }).length;
-  var businessCount = monthRecs.filter(function(r){ return r.status==='business'; }).length;
+  var presentCount = monthRecs.filter(function(r){ return r.status==='present'; }).length;
+  var leaveCount   = monthRecs.filter(function(r){ return r.status==='leave'; }).length;
 
   var el = document.getElementById('att-stat-grid'); if (!el) return;
+  var totalWorkMin = monthRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+  var totalWorkH = (totalWorkMin / 60).toFixed(1);
+  var avgDailyH  = presentCount > 0 ? (totalWorkMin / 60 / presentCount).toFixed(1) : '0.0';
+
   el.innerHTML =
     '<div class="stat-card blue"><div class="stat-label">本月工作日</div><div class="stat-value">' + workdays + '</div><div class="stat-sub">天</div></div>' +
-    '<div class="stat-card green"><div class="stat-label">出勤記錄</div><div class="stat-value">' + presentCount + '</div><div class="stat-sub">人次</div></div>' +
-    '<div class="stat-card"><div class="stat-label">半天出勤</div><div class="stat-value">' + halfCount + '</div><div class="stat-sub">人次</div></div>' +
-    '<div class="stat-card amber"><div class="stat-label">請假</div><div class="stat-value">' + leaveCount + '</div><div class="stat-sub">人次</div></div>' +
-    '<div class="stat-card purple"><div class="stat-label">公出</div><div class="stat-value">' + businessCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card green"><div class="stat-label">出勤人次</div><div class="stat-value">' + presentCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card amber"><div class="stat-label">請假人次</div><div class="stat-value">' + leaveCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card teal"><div class="stat-label">總工作時數</div><div class="stat-value" style="font-size:22px;">' + totalWorkH + ' H</div><div class="stat-sub">均 ' + avgDailyH + ' H/人天</div></div>' +
     '<div class="stat-card"><div class="stat-label">監造人員</div><div class="stat-value">' + activeM.length + '</div><div class="stat-sub">人</div></div>';
 }
 
@@ -5361,7 +5471,7 @@ function renderAttSummary() {
   }
 
   var html = '<table class="att-summary-table"><thead><tr>' +
-    '<th>姓名</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
+    '<th>姓名</th><th>職稱</th><th>出勤</th><th>請假</th><th>工作時數（H）</th><th>出勤率</th><th>操作</th>' +
     '</tr></thead><tbody>';
 
   activeM.forEach(function(m) {
@@ -5515,6 +5625,11 @@ function toggleMemberActive(id) {
   if (m) { m.active = !m.active; memberSave(); renderMemberList(); }
 }
 
+function updateMemberRole(id, role) {
+  var m = members.find(function(x){ return x.id===id; });
+  if (m) { m.role = role.trim(); memberSave(); renderAttSummary(); }
+}
+
 async function deleteMember(id) {
   if (!await toastConfirm('確定要刪除此人員？已有的出勤記錄不會刪除。')) return;
   members = members.filter(function(m){ return m.id!==id; });
@@ -5634,18 +5749,8 @@ function importPunchXLS(input) {
         // 只匯入有打卡時間的記錄（缺勤/例假不匯入）
         if (!timeIn && !timeOut) continue;
 
-        // 判斷出勤狀態（只有出勤/半天）
-        var status;
-        if (timeIn && !timeOut) {
-          status = 'present'; // 只有到場沒離場
-        } else {
-          var inParts  = timeIn.split(':');
-          var outParts = timeOut.split(':');
-          var inMin  = parseInt(inParts[0])*60  + parseInt(inParts[1]);
-          var outMin = parseInt(outParts[0])*60 + parseInt(outParts[1]);
-          var workMin = outMin - inMin;
-          status = (workMin > 0 && workMin < 300) ? 'half' : 'present';
-        }
+        // 判斷出勤狀態：有打卡即為出勤
+        var status = 'present';
 
         // 找對應的人員 ID
         var member = members.find(function(m){ return m.name === nameVal; });
