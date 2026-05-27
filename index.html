@@ -6,44 +6,61 @@
 <title>施工及監造工作回報 — 減碳A標</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg: #F4F3EF;
-  --surface: #FFFFFF;
-  --border: #DDD9D0;
-  --border-light: #EAE7E0;
-  --text-primary: #1C1B18;
-  --text-secondary: #6B6860;
-  --text-muted: #9C9A93;
-  --c-blue: #2563EB;   --c-blue-bg: #EFF6FF;   --c-blue-border: #BFDBFE;
-  --c-green: #16A34A;  --c-green-bg: #F0FDF4;  --c-green-border: #BBF7D0;
-  --c-amber: #D97706;  --c-amber-bg: #FFFBEB;  --c-amber-border: #FDE68A;
-  --c-red: #DC2626;    --c-red-bg: #FEF2F2;    --c-red-border: #FECACA;
-  --c-purple: #7C3AED; --c-purple-bg: #F5F3FF; --c-purple-border: #DDD6FE;
-  --c-teal: #0d9488;   --c-teal-bg: #f0fdfa;   --c-teal-border: #99f6e4;
-  --radius: 10px; --radius-sm: 6px; --radius-lg: 14px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  /* ── DNV Brand Colors ── */
+  /* Primary */
+  --dnv-dark-blue:   #0F204B;   /* Dark Blue  - primary text / header bg */
+  --dnv-sea-blue:    #003591;   /* Sea Blue   - interactive / links / buttons */
+  --dnv-cyan:        #009FDA;   /* Cyan       - accent highlight */
+  --dnv-sky-blue:    #99D9F0;   /* Sky Blue   - light accent */
+  --dnv-digi-green:  #3F9C35;   /* Land Green - success / positive */
+  --dnv-energy-red:  #EB2A34;   /* Energy Red - error / alert */
+  --dnv-sunflower:   #FFE900;   /* Sunflower  - warning */
+  --dnv-sandstone:   #CCCBC9;   /* Sandstone  - border */
+  --dnv-warm-grey:   #988F86;   /* Warm Grey  - muted text */
+  --dnv-earth:       #F2E6D5;   /* Earth      - warm bg tint */
+
+  /* ── System Tokens (mapped to DNV) ── */
+  --bg:           #F3F2F2;       /* Sandstone 95 */
+  --surface:      #FFFFFF;
+  --border:       #CCCBC9;       /* Sandstone */
+  --border-light: #E6E6E5;       /* Sandstone-90 */
+  --text-primary:   #0F204B;     /* DNV Dark Blue */
+  --text-secondary: #4F4D4A;     /* Sandstone 30 */
+  --text-muted:     #908D89;     /* Sandstone-55 */
+
+  /* Action / status colors */
+  --c-blue:        #003591;      --c-blue-bg:   #E9F7FC;   --c-blue-border:   #D3EEF8;
+  --c-green:       #3F9C35;      --c-green-bg:  #EDF9EC;   --c-green-border:  #BBF7D0;
+  --c-amber:       #E98300;      --c-amber-bg:  #FFF3E0;   --c-amber-border:  #FDE68A;
+  --c-red:         #EB2A34;      --c-red-bg:    #FDE8E9;   --c-red-border:    #FECACA;
+  --c-purple:      #2B6173;      --c-purple-bg: #E9F7FC;   --c-purple-border: #D3EEF8;
+  --c-teal:        #009FDA;      --c-teal-bg:   #E9F7FC;   --c-teal-border:   #D3EEF8;
+
+  --radius: 8px; --radius-sm: 5px; --radius-lg: 12px;
+  --shadow: 0 1px 3px rgba(15,32,75,0.08), 0 1px 2px rgba(15,32,75,0.04);
+  --shadow-md: 0 4px 16px rgba(15,32,75,0.12);
+  --shadow-lg: 0 8px 32px rgba(15,32,75,0.15);
   --transition: .15s cubic-bezier(0.4,0,0.2,1);
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:15px;}
-body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5;}
+body{font-family:'Noto Sans TC','Source Han Sans TC','Source Han Sans',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5;font-feature-settings:'kern';}
 
 /* LOCK */
 #lock-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;}
 .lock-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 32px;width:340px;text-align:center;box-shadow:var(--shadow-md);}
-.lock-logo{width:48px;height:48px;background:var(--text-primary);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.lock-logo{width:48px;height:48px;background:var(--dnv-dark-blue);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
 .lock-logo svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .lock-card h2{font-size:18px;font-weight:700;margin-bottom:4px;}
 .lock-card p{font-size:13px;color:var(--text-secondary);margin-bottom:24px;}
 .lock-card input{width:100%;padding:11px 14px;font-family:'DM Mono',monospace;font-size:16px;letter-spacing:4px;border:1px solid var(--border);border-radius:var(--radius);outline:none;text-align:center;background:var(--bg);transition:border-color .15s,background .15s;}
 .lock-card input:focus{border-color:var(--text-primary);background:#fff;}
 .lock-card input.error{border-color:var(--c-red);background:var(--c-red-bg);animation:shake .3s;}
-.lock-btn{width:100%;margin-top:12px;padding:12px;font-family:inherit;font-size:14px;font-weight:600;background:var(--text-primary);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;}
+.lock-btn{width:100%;margin-top:12px;padding:12px;font-family:inherit;font-size:14px;font-weight:600;background:var(--dnv-dark-blue);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;}
 .lock-btn:hover{opacity:.85;}
 .lock-err{font-size:12px;color:var(--c-red);margin-top:10px;min-height:18px;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -51,11 +68,24 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 #app{display:none;}
 
 /* HEADER */
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
-.header-logo{width:34px;height:34px;background:var(--text-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.header-logo svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;}
+.header{
+  background:var(--dnv-dark-blue);
+  border-bottom:none;
+  padding:0 28px;
+  display:flex;align-items:center;gap:12px;
+  height:56px;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 8px rgba(15,32,75,0.18);
+}
+.header-logo{
+  width:32px;height:32px;
+  background:rgba(255,255,255,0.12);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.header-logo svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;}
 .header-title{flex:1;min-width:0;}
-.header-title h1{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-title h1{font-size:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.3px;}
 .header-title p{font-size:12px;color:var(--text-muted);}
 .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .sync-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.3px;}
@@ -67,10 +97,23 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .btn-icon:hover{background:var(--border-light);}
 
 /* TABS */
-.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px;overflow-x:auto;}
-.tab-btn{padding:12px 18px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text-secondary);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s;}
-.tab-btn.active{color:var(--text-primary);border-bottom-color:var(--text-primary);}
-.tab-btn:hover:not(.active){color:var(--text-primary);}
+.tabs{
+  background:var(--dnv-dark-blue);
+  border-bottom:none;
+  display:flex;padding:0 20px;
+  overflow-x:auto;
+}
+.tab-btn{
+  padding:10px 16px;
+  font-family:inherit;font-size:12px;font-weight:500;
+  color:rgba(255,255,255,0.6);
+  background:none;border:none;
+  border-bottom:3px solid transparent;
+  cursor:pointer;white-space:nowrap;
+  transition:color .15s,border-color .15s;
+}
+.tab-btn.active{color:#fff;border-bottom-color:var(--dnv-cyan);font-weight:700;}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,0.9);}
 .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:10px;font-weight:700;margin-left:6px;background:var(--c-red-bg);color:var(--c-red);}
 
 /* LAYOUT */
@@ -85,13 +128,13 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--text-primary);background:#fff;}
 .field textarea{resize:vertical;min-height:64px;line-height:1.5;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.btn-primary{padding:10px 16px;font-family:inherit;font-size:13px;font-weight:600;background:var(--text-primary);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:opacity var(--transition),transform var(--transition);width:100%;}
+.btn-primary{padding:10px 16px;font-family:inherit;font-size:13px;font-weight:600;background:var(--dnv-dark-blue);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:opacity var(--transition),transform var(--transition);width:100%;}
 .btn-primary:hover{opacity:.88;transform:translateY(-1px);}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
 .btn-secondary{padding:9px 16px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:background .15s;width:100%;}
-.btn-secondary:hover{background:var(--border-light);}
+.btn-secondary:hover{background:var(--border-light);border-color:var(--dnv-sea-blue);color:var(--dnv-sea-blue);}
 .main{flex:1;min-width:0;overflow-y:auto;}
-.tab-panel{display:none;padding:20px 24px;}
+.tab-panel{display:none;padding:20px 28px;max-width:1600px;margin:0 auto;}
 .tab-panel.active{display:block;}
 
 /* PROGRESS BAR SYSTEM */
@@ -113,9 +156,9 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .progress-controls{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--border-light);flex-wrap:wrap;}
 .progress-controls label{font-size:11px;font-weight:600;color:var(--text-secondary);white-space:nowrap;}
 .progress-slider{flex:1;min-width:120px;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;}
-.progress-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--text-primary);cursor:pointer;border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform .1s;}
+.progress-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--dnv-dark-blue);cursor:pointer;border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform .1s;}
 .progress-slider::-webkit-slider-thumb:hover{transform:scale(1.15);}
-.progress-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--text-primary);cursor:pointer;border:2px solid var(--surface);}
+.progress-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--dnv-dark-blue);cursor:pointer;border:2px solid var(--surface);}
 .progress-pct-input{width:56px;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);text-align:center;outline:none;}
 .progress-pct-input:focus{border-color:var(--text-primary);background:#fff;}
 .multi-progress-track{height:10px;border-radius:5px;overflow:hidden;display:flex;margin-bottom:8px;background:var(--border-light);}
@@ -282,7 +325,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .btn-export{font-family:inherit;font-size:13px;font-weight:600;padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:7px;}
 .btn-export:hover{opacity:.85;}
 .btn-export.csv{background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border);}
-.btn-export.print{background:var(--text-primary);color:#fff;}
+.btn-export.print{background:var(--dnv-dark-blue);color:#fff;}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:500;padding:24px 20px;}
@@ -293,7 +336,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .modal-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1;}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
 .btn-modal{font-family:inherit;font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);transition:background .12s;}
-.btn-modal.primary{background:var(--text-primary);color:#fff;border-color:transparent;}
+.btn-modal.primary{background:var(--dnv-dark-blue);color:#fff;border-color:transparent;}
 .btn-modal:hover:not(.primary){background:var(--border-light);}
 .btn-modal.primary:hover{opacity:.85;}
 
@@ -369,7 +412,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 .qi-month-box h3{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
 
 /* Fix 5: TOAST CONFIRM */
-.toast-confirm{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text-primary);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-md);z-index:9999;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;}
+.toast-confirm{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dnv-dark-blue);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-md);z-index:9999;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;}
 .toast-confirm.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
 .toast-btn-cancel{font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.3);background:transparent;color:rgba(255,255,255,0.8);cursor:pointer;}
 .toast-btn-cancel:hover{background:rgba(255,255,255,0.1);}
@@ -379,7 +422,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 
 /* QI TABLE */
 .qi-table{width:100%;border-collapse:collapse;font-size:12px;min-width:1100px;}
-.qi-table th{background:var(--text-primary);color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2;}
+.qi-table th{background:var(--dnv-dark-blue);color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2;}
 .qi-table td{padding:7px 10px;border-bottom:1px solid var(--border-light);vertical-align:middle;white-space:nowrap;}
 .qi-table tr:hover td{background:var(--bg);}
 .qi-table tr.row-completed td{background:rgba(22,163,74,0.04);}
@@ -1137,7 +1180,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 /* 月曆 */
 .att-cal-header {
   display:grid; grid-template-columns: repeat(7,1fr);
-  background:var(--text-primary); color:#fff;
+  background:var(--dnv-dark-blue); color:#fff;
   font-size:11px; font-weight:700; text-align:center;
 }
 .att-cal-header div { padding:8px 4px; }
@@ -1178,7 +1221,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
 /* 月報摘要表 */
 .att-summary-table { width:100%; border-collapse:collapse; font-size:12px; }
 .att-summary-table th {
-  background:var(--bg); color:var(--text-secondary);
+  background:var(--dnv-dark-blue); color:#fff;
   font-size:11px; font-weight:700; padding:8px 12px;
   text-align:left; border-bottom:2px solid var(--border);
 }
@@ -1209,7 +1252,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
   border: 1px solid var(--border);
 }
 .d-th {
-  background: #1C1B18; color: #fff;
+  background: var(--dnv-dark-blue); color: #fff;
   font-size: 11px; font-weight: 700;
   padding: 10px 12px; text-align: left;
   letter-spacing: .3px; white-space: nowrap;
@@ -1284,6 +1327,53 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
   .d-th, .d-cell { padding: 8px 8px; }
   .d-detail-panel { padding: 12px 14px; }
   .d-detail-panel > div[style*="grid"] { grid-template-columns: 1fr !important; }
+}
+
+
+/* ── 16:9 簡報截圖模式 ── */
+/* 整體版面適合 1920×1080 截圖 */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+/* content 區域填滿剩餘空間 */
+#app > .tabs + * {
+  flex: 1;
+}
+/* 統計卡在 16:9 下保持 6 欄 */
+@media (min-width: 1200px) {
+  .stat-grid { grid-template-columns: repeat(6, 1fr); }
+  .tab-panel { padding: 24px 36px; }
+}
+@media (min-width: 1600px) {
+  .tab-panel { padding: 24px 48px; }
+}
+
+/* DNV 色彩細節 */
+/* 滾動條 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--dnv-sandstone); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--dnv-warm-grey); }
+
+/* Focus ring */
+:focus-visible { outline: 2px solid var(--dnv-cyan); outline-offset: 2px; }
+
+/* DNV 表格 zebra stripe */
+.att-table tbody tr:nth-child(even) td,
+.att-summary-table tr:nth-child(even) td {
+  background: #F8F7F7;
+}
+
+/* 頁腳 DNV 品牌標記 */
+.dnv-brand-footer {
+  background: var(--dnv-dark-blue);
+  color: rgba(255,255,255,0.4);
+  font-size: 10px;
+  text-align: right;
+  padding: 6px 28px;
+  letter-spacing: .3px;
 }
 
 /* PRINT */
@@ -1996,7 +2086,9 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
         <div class="field"><label>出勤狀態</label>
           <select id="att-status">
             <option value="present">✅ 出勤</option>
+            <option value="half">🌗 半天</option>
             <option value="leave">📋 請假</option>
+            <option value="business">🚗 公出</option>
             <option value="holiday">🏖 例假</option>
           </select>
         </div>
@@ -2019,7 +2111,7 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <div class="modal-body">
         <div style="display:flex;gap:8px;margin-bottom:12px;">
           <input type="text" id="new-member-name" placeholder="輸入姓名" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
-          <input type="text" id="new-member-note" placeholder="備註（選填）" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
+          <input type="text" id="new-member-role" placeholder="職稱（選填）" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
           <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="addMember()">新增</button>
         </div>
         <div id="member-list" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;"></div>
@@ -2027,6 +2119,9 @@ body{font-family:'Noto Sans TC',-apple-system,'Microsoft JhengHei',sans-serif;ba
       <div class="modal-footer"><button class="btn-modal primary" onclick="closeMemberModal()">完成</button></div>
     </div>
   </div>
+
+  <!-- DNV Brand Footer -->
+  <div class="dnv-brand-footer" id="dnv-footer">DNV AS　減碳A標施工監造回報系統</div>
 
   <!-- Fix 5: Toast Confirm -->
   <div class="toast-confirm" id="toast-confirm">
@@ -4054,35 +4149,38 @@ function exportAttXLSX() {
   ws1Data.push([]); // 空行
 
   // 表頭
-ws1Data.push([
-    '姓名', '職稱',
-    '出勤天數', '請假天數', '例假天數',
-    '上班時數(hr)', '平均時數/天', '本月工作日', '出勤率'
+  ws1Data.push([
+    '姓名',
+    '出勤天數', '半天次數', '公出天數', '請假天數', '例假天數',
+    '總工作時數', '平均時數/天', '有效出勤', '本月工作日', '出勤率'
   ]);
 
   // 每個人的統計
   activeMembers.forEach(function(m) {
     var mRecs = monthRecs.filter(function(r){ return r.memberId === m.id; });
     var present  = mRecs.filter(function(r){ return r.status==='present'; }).length;
+    var half     = mRecs.filter(function(r){ return r.status==='half'; }).length;
+    var business = mRecs.filter(function(r){ return r.status==='business'; }).length;
     var leave    = mRecs.filter(function(r){ return r.status==='leave'; }).length;
     var holiday  = mRecs.filter(function(r){ return r.status==='holiday'; }).length;
-    var rate = workdays > 0 ? (present / workdays * 100).toFixed(1) + '%' : '—';
+    var effective = present + half * 0.5 + business;
+    var rate = workdays > 0 ? (effective / workdays * 100).toFixed(1) + '%' : '—';
     var totalMinXlsx = mRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
-    var totalHoursXlsx = (totalMinXlsx / 60).toFixed(1);
-    var avgHoursXlsx = present > 0 ? (totalMinXlsx / 60 / present).toFixed(1) : '—';
+    var presentDays = present + half + business;
+    var avgMinXlsx = presentDays > 0 ? Math.round(totalMinXlsx / presentDays) : 0;
     ws1Data.push([
-      m.name, m.role || '',
-      present, leave, holiday,
-      totalHoursXlsx, avgHoursXlsx, workdays, rate
+      m.name,
+      present, half, business, leave, holiday,
+      fmtMinutes(totalMinXlsx), fmtMinutes(avgMinXlsx), effective, workdays, rate
     ]);
   });
 
   ws1Data.push([]); // 空行
-  ws1Data.push(['備註：出勤率 = 出勤天數 ÷ 本月工作日']);
+  ws1Data.push(['備註：有效出勤 = 出勤天數 + 半天次數×0.5 + 公出天數']);
 
   var ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
- ws1['!cols'] = [
-    {wch:10},{wch:14},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:10}
+  ws1['!cols'] = [
+    {wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10}
   ];
   ws1['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:9} },
@@ -4259,7 +4357,7 @@ ws1Data.push([
   for (var d = 1; d <= daysInMonth; d++) {
     headerRow.push(d + '日');
   }
-  headerRow.push('出勤', '請假', '出勤率');
+  headerRow.push('出勤', '半天', '公出', '請假', '出勤率');
   ws3Data.push(headerRow);
 
   // 星期列
@@ -4275,23 +4373,26 @@ ws1Data.push([
   // 每個人一列
   activeMembers.forEach(function(m) {
     var row = [m.name];
-    var present=0, leave=0;
+    var present=0, half=0, business=0, leave=0;
     for (var d = 1; d <= daysInMonth; d++) {
       var dateStr2 = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       var rec = monthRecs.find(function(r){ return r.memberId===m.id && r.date===dateStr2; });
       if (rec) {
         row.push(STATUS_LABEL[rec.status] || '');
-          if (rec.status==='present') present++;
-          if (rec.status==='leave')   leave++;
-        } else {
-          var dow3 = new Date(y, mo-1, d).getDay();
-          row.push(dow3===0||dow3===6 ? '—' : '');
-        }
+        if (rec.status==='present')  present++;
+        if (rec.status==='half')     half++;
+        if (rec.status==='business') business++;
+        if (rec.status==='leave')    leave++;
+      } else {
+        var dow3 = new Date(y, mo-1, d).getDay();
+        row.push(dow3===0||dow3===6 ? '—' : '');
       }
-      var rate2 = workdays>0 ? (present/workdays*100).toFixed(1)+'%' : '—';
-      row.push(present, leave, rate2);
-      ws3Data.push(row);
-    });
+    }
+    var effective2 = present + half*0.5 + business;
+    var rate2 = workdays>0 ? (effective2/workdays*100).toFixed(1)+'%' : '—';
+    row.push(present, half, business, leave, rate2);
+    ws3Data.push(row);
+  });
 
   var ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
   // 固定寬度
@@ -4372,6 +4473,11 @@ ws1Data.push([
   downloadXLSX(wb, '監造人員出勤月報_' + month + '.xlsx');
 }
 
+function printReport() {
+  document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
+  switchTab('timeline');
+  setTimeout(function() { window.print(); }, 200);
+}
 function printReport() {
   document.getElementById('print-time').textContent = new Date().toLocaleString('zh-TW');
   switchTab('timeline');
@@ -4778,7 +4884,9 @@ var editingAttId = null;
 
 var ATT_STATUS = {
   present:  { label:'出勤',   icon:'✅', cls:'att-status-present'  },
+  half:     { label:'半天',   icon:'🌗', cls:'att-status-half'     },
   leave:    { label:'請假',   icon:'📋', cls:'att-status-leave'    },
+  business: { label:'公出',   icon:'🚗', cls:'att-status-business' },
   holiday:  { label:'例假',   icon:'🏖', cls:'att-status-holiday'  },
   absent:   { label:'缺勤',   icon:'❌', cls:'att-status-absent'   },
 };
@@ -4887,16 +4995,17 @@ function renderAttStats() {
   }
 
   var presentCount  = monthRecs.filter(function(r){ return r.status==='present'; }).length;
+  var halfCount     = monthRecs.filter(function(r){ return r.status==='half'; }).length;
   var leaveCount    = monthRecs.filter(function(r){ return r.status==='leave'; }).length;
+  var businessCount = monthRecs.filter(function(r){ return r.status==='business'; }).length;
 
   var el = document.getElementById('att-stat-grid'); if (!el) return;
-  var totalMins = monthRecs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
-  var totalHours = (totalMins / 60).toFixed(1);
   el.innerHTML =
     '<div class="stat-card blue"><div class="stat-label">本月工作日</div><div class="stat-value">' + workdays + '</div><div class="stat-sub">天</div></div>' +
     '<div class="stat-card green"><div class="stat-label">出勤記錄</div><div class="stat-value">' + presentCount + '</div><div class="stat-sub">人次</div></div>' +
+    '<div class="stat-card"><div class="stat-label">半天出勤</div><div class="stat-value">' + halfCount + '</div><div class="stat-sub">人次</div></div>' +
     '<div class="stat-card amber"><div class="stat-label">請假</div><div class="stat-value">' + leaveCount + '</div><div class="stat-sub">人次</div></div>' +
-    '<div class="stat-card teal"><div class="stat-label">累計上班時數</div><div class="stat-value">' + totalHours + '</div><div class="stat-sub">小時</div></div>' +
+    '<div class="stat-card purple"><div class="stat-label">公出</div><div class="stat-value">' + businessCount + '</div><div class="stat-sub">人次</div></div>' +
     '<div class="stat-card"><div class="stat-label">監造人員</div><div class="stat-value">' + activeM.length + '</div><div class="stat-sub">人</div></div>';
 }
 
@@ -4951,12 +5060,10 @@ function renderAttCalendar() {
         var m = members.find(function(x){ return x.id===r.memberId; });
         var st = ATT_STATUS[r.status] || ATT_STATUS.present;
         var name = m ? m.name : '—';
-        var role = m && m.role ? m.role : '';
         return '<span class="att-cal-pill ' + st.cls + '" ' +
           'data-id="' + esc(r.id) + '" onclick="editAttRecord(this.dataset.id)" ' +
-          'title="' + esc(name) + (role ? '　' + esc(role) : '') + '　' + st.label + (r.note?' | '+r.note:'') + '">' +
+          'title="' + esc(name) + '　' + st.label + (r.note?' | '+r.note:'') + '">' +
           st.icon + ' ' + esc(name.slice(0,3)) +
-          (role ? '<span style="font-size:8px;opacity:0.75;margin-left:2px;">(' + esc(role.slice(0,4)) + ')</span>' : '') +
         '</span>';
       }).join('');
 
@@ -5001,26 +5108,28 @@ function renderAttSummary() {
   }
 
   var html = '<table class="att-summary-table"><thead><tr>' +
-    '<th>姓名</th><th>職稱</th><th>出勤</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
+    '<th>姓名</th><th>出勤</th><th>半天</th><th>公出</th><th>請假</th><th>工作時數</th><th>出勤率</th><th>操作</th>' +
     '</tr></thead><tbody>';
 
   activeM.forEach(function(m) {
     var recs = attRecords.filter(function(r){ return r.date.startsWith(attCurrentMonth) && r.memberId === m.id; });
-    var present = recs.filter(function(r){ return r.status==='present'; }).length;
-    var leave   = recs.filter(function(r){ return r.status==='leave'; }).length;
-    var totalMins = recs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
-    var totalHours = (totalMins / 60).toFixed(1);
-    var rate = workdays ? Math.round(present/workdays*100) : 0;
+    var present  = recs.filter(function(r){ return r.status==='present'; }).length;
+    var half     = recs.filter(function(r){ return r.status==='half'; }).length;
+    var business = recs.filter(function(r){ return r.status==='business'; }).length;
+    var leave    = recs.filter(function(r){ return r.status==='leave'; }).length;
+    var effectiveDays = present + half*0.5 + business;
+    var rate = workdays ? Math.round(effectiveDays/workdays*100) : 0;
     var rateColor = rate >= 90 ? 'var(--c-green)' : rate >= 70 ? 'var(--c-amber)' : 'var(--c-red)';
 
     html += '<tr>' +
       '<td style="font-weight:600;">' + esc(m.name) + '</td>' +
-      '<td style="font-size:11px;color:var(--text-secondary);">' + esc(m.role || '—') + '</td>' +
+      
       '<td><span class="att-day-badge att-status-present">' + present + ' 天</span></td>' +
+      '<td><span class="att-day-badge att-status-half">' + half + ' 次</span></td>' +
+      '<td><span class="att-day-badge att-status-business">' + business + ' 天</span></td>' +
       '<td><span class="att-day-badge att-status-leave">' + leave + ' 天</span></td>' +
-      '<td style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:600;">' + totalHours + ' hr</td>' +
       '<td><strong style="color:' + rateColor + ';">' + rate + '%</strong>' +
-        '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">(' + present + '/' + workdays + ')</span>' +
+        '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">(' + effectiveDays + '/' + workdays + ')</span>' +
       '</td>' +
       '<td><button class="btn-sm" onclick="openAttModalForMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">新增記錄</button></td>' +
     '</tr>';
@@ -5124,69 +5233,24 @@ function renderMemberList() {
   var el = document.getElementById('member-list'); if (!el) return;
   if (!members.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:8px;">尚無人員</div>'; return; }
   el.innerHTML = members.map(function(m) {
-    return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);margin-bottom:6px;" id="mrow-' + m.id + '">' +
-      '<div style="width:34px;height:34px;border-radius:50%;background:var(--c-blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--c-blue);flex-shrink:0;opacity:' + (m.active ? 1 : 0.45) + ';">' +
-        (m.name ? m.name.slice(0,2) : '—') +
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);">' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:13px;font-weight:600;' + (m.active?'':'text-decoration:line-through;color:var(--text-muted);') + '">' + esc(m.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);">' + esc(m.role||'') + '</div>' +
       '</div>' +
-      '<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
-        '<div style="display:flex;flex-direction:column;gap:3px;">' +
-          '<label style="font-size:10px;font-weight:600;color:var(--text-muted);">姓名</label>' +
-          '<input type="text" value="' + esc(m.name||'') + '" ' +
-            'data-id="' + m.id + '" data-field="name" ' +
-            'oninput="updateMemberField(this)" ' +
-            'style="font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;width:100%;" ' +
-            'placeholder="姓名">' +
-        '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:3px;">' +
-          '<label style="font-size:10px;font-weight:600;color:var(--text-muted);">職稱</label>' +
-          '<input type="text" value="' + esc(m.role||'') + '" ' +
-            'data-id="' + m.id + '" data-field="role" ' +
-            'oninput="updateMemberField(this)" ' +
-            'style="font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;width:100%;" ' +
-            'placeholder="職稱（如：監造主任）">' +
-        '</div>' +
-        '<div style="grid-column:1/-1;display:flex;flex-direction:column;gap:3px;">' +
-          '<label style="font-size:10px;font-weight:600;color:var(--text-muted);">備註</label>' +
-          '<input type="text" value="' + esc(m.note||'') + '" ' +
-            'data-id="' + m.id + '" data-field="note" ' +
-            'oninput="updateMemberField(this)" ' +
-            'style="font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;width:100%;" ' +
-            'placeholder="備註（選填，如：聯絡電話）">' +
-        '</div>' +
-      '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">' +
-        '<button class="btn-sm" onclick="toggleMemberActive(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;' + (m.active ? '' : 'background:var(--c-green-bg);color:var(--c-green);') + '">' +
-          (m.active ? '停用' : '啟用') +
-        '</button>' +
-        '<button class="btn-sm del" onclick="deleteMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">刪除</button>' +
-      '</div>' +
+      '<button class="btn-sm" onclick="toggleMemberActive(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;' + (m.active?'':'background:var(--c-green-bg);color:var(--c-green);') + '">' +
+        (m.active ? '停用' : '啟用') +
+      '</button>' +
+      '<button class="btn-sm del" onclick="deleteMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">刪除</button>' +
     '</div>';
   }).join('');
-}
-
-function updateMemberField(el) {
-  var id = el.dataset.id, field = el.dataset.field;
-  var m = members.find(function(x) { return x.id === id; });
-  if (!m) return;
-  m[field] = el.value;
-  memberSave();
-  // 即時更新頭像縮寫
-  if (field === 'name') {
-    var row = document.getElementById('mrow-' + id);
-    if (row) {
-      var av = row.querySelector('div[style*="border-radius:50%"]');
-      if (av) av.textContent = el.value ? el.value.slice(0,2) : '—';
-    }
-  }
 }
 
 function addMember() {
   var name = document.getElementById('new-member-name').value.trim();
   var role = document.getElementById('new-member-role').value.trim();
   if (!name) { alert('請輸入姓名'); return; }
-  members.push({ id: 'm' + uid(), name, role, 
-  note: document.getElementById('new-member-note') ? document.getElementById('new-member-note').value.trim() : '', 
-  active: true });
+  members.push({ id: 'm' + uid(), name, role, active: true });
   memberSave();
   document.getElementById('new-member-name').value = '';
   document.getElementById('new-member-role').value = '';
