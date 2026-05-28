@@ -301,6 +301,103 @@ tr:hover td { background:#F8F9FF; }
   .stat-value { font-size:22px; }
   .modal { max-height:95vh; }
 }
+/* ── 水平時間軸 RWD ── */
+
+/* 平板（< 1024px）：縮小卡片和 padding */
+@media (max-width: 1023px) {
+  .htl-track {
+    padding: 160px 20px !important;
+  }
+  .htl-node { width: 160px !important; }
+  .htl-card {
+    width: 160px !important;
+    padding: 8px 10px;
+  }
+  .htl-title { font-size: 11px; }
+  .htl-sub   { font-size: 10px; }
+  .htl-status{ font-size: 8px; padding: 1px 5px; }
+  .tl-toolbar { flex-wrap: wrap; gap: 6px; }
+}
+
+/* 手機（< 600px）：垂直列表取代橫向 */
+@media (max-width: 599px) {
+  /* 隱藏橫向捲動時間軸，改用垂直流 */
+  .htl-scroll { overflow-x: visible; overflow-y: visible; }
+  .htl-track {
+    flex-direction: column !important;
+    padding: 16px !important;
+    gap: 0 !important;
+    min-width: unset !important;
+    align-items: stretch !important;
+  }
+  /* 隱藏中心橫線 */
+  .htl-track::before { display: none; }
+
+  /* 每個節點垂直排 */
+  .htl-node {
+    width: 100% !important;
+    flex-direction: row !important;
+    align-items: flex-start;
+    min-height: 0;
+    padding: 0 0 0 36px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  /* 左側垂直線取代橫線 */
+  .htl-node::before {
+    content: '';
+    position: absolute;
+    left: 10px; top: 0; bottom: -12px;
+    width: 2px;
+    background: var(--border);
+  }
+  .htl-node:last-child::before { display: none; }
+
+  /* dot 改到左側 */
+  .htl-dot {
+    position: absolute !important;
+    left: 4px !important; top: 12px !important;
+    transform: none !important;
+  }
+  .htl-node:hover .htl-dot { transform: scale(1.3) !important; }
+
+  /* 卡片：全寬，absolute → static */
+  .htl-card {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    bottom: auto !important;
+    top: auto !important;
+    left: auto !important;
+    display: block;
+    border-top-width: 3px;
+  }
+  /* 日期：顯示在卡片上方 */
+  .htl-date-label {
+    position: static !important;
+    transform: none !important;
+    top: auto !important; bottom: auto !important;
+    display: block;
+    font-size: 11px;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+  }
+  /* stem 隱藏 */
+  .htl-stem { display: none !important; }
+
+  /* 強制上方/下方卡片都正常顯示 */
+  .htl-node {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* 控制列 */
+  .tl-toolbar { display: none !important; }  /* 手機不顯示密度滑桿 */
+  .doc-filter-bar { gap: 6px; }
+}
+
+
 
 /* LOCK */
 #lock-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;}
@@ -1966,6 +2063,20 @@ id="panel-dashboard">
             <input type="checkbox" id="doc-filter-overdue" onchange="renderDocs()" style="accent-color:var(--c-red)"> 僅顯示逾期
           </label>
           <span class="filter-count" id="doc-count"></span>
+        </div>
+        <!-- 文件時間軸：密度控制列 -->
+        <div class="tl-toolbar" id="doc-tl-size-bar" style="display:none;">
+          <span class="tl-toolbar-label">卡片寬度</span>
+          <input type="range" class="tl-slider" id="doc-htl-w" min="140" max="320" value="200" oninput="applyDocHtlSize()">
+          <span id="doc-htl-w-val" style="font-size:11px;color:var(--text-muted);min-width:32px;">200</span>
+          <div class="tl-toolbar-sep"></div>
+          <span class="tl-toolbar-label">卡片高度</span>
+          <input type="range" class="tl-slider" id="doc-htl-h" min="100" max="260" value="160" oninput="applyDocHtlSize()">
+          <span id="doc-htl-h-val" style="font-size:11px;color:var(--text-muted);min-width:32px;">160</span>
+          <div class="tl-toolbar-sep"></div>
+          <span class="tl-toolbar-label">節點間距</span>
+          <input type="range" class="tl-slider" id="doc-htl-g" min="0" max="80" value="0" oninput="applyDocHtlSize()">
+          <span id="doc-htl-g-val" style="font-size:11px;color:var(--text-muted);min-width:28px;">0</span>
         </div>
         <div class="doc-list" id="doc-list"></div>
         <!-- 文件送審時間軸 -->
@@ -4039,18 +4150,36 @@ var docView = 'list';  // 'list' | 'timeline'
 
 function setDocView(mode) {
   docView = mode;
-  // 更新按鈕樣式
   var btnList = document.getElementById('doc-view-list');
   var btnTL   = document.getElementById('doc-view-timeline');
-  if (btnList) {
-    btnList.style.background = mode==='list' ? 'var(--dnv-dark-blue)' : 'none';
-    btnList.style.color      = mode==='list' ? '#fff' : 'var(--text-muted)';
-  }
-  if (btnTL) {
-    btnTL.style.background = mode==='timeline' ? 'var(--dnv-dark-blue)' : 'none';
-    btnTL.style.color      = mode==='timeline' ? '#fff' : 'var(--text-muted)';
-  }
+  var sizeBar = document.getElementById('doc-tl-size-bar');
+  if (btnList) { btnList.style.background = mode==='list'?'var(--dnv-dark-blue)':'none'; btnList.style.color = mode==='list'?'#fff':'var(--text-muted)'; }
+  if (btnTL)   { btnTL.style.background   = mode==='timeline'?'var(--dnv-dark-blue)':'none'; btnTL.style.color   = mode==='timeline'?'#fff':'var(--text-muted)'; }
+  if (sizeBar) sizeBar.style.display = mode==='timeline' ? 'flex' : 'none';
   renderDocs();
+}
+
+
+function applyDocHtlSize() {
+  var w = parseInt(document.getElementById('doc-htl-w').value);
+  var h = parseInt(document.getElementById('doc-htl-h').value);
+  var g = parseInt(document.getElementById('doc-htl-g').value);
+  document.getElementById('doc-htl-w-val').textContent = w;
+  document.getElementById('doc-htl-h-val').textContent = h;
+  document.getElementById('doc-htl-g-val').textContent = g;
+  var stemH = Math.max(14, Math.round(h * 0.12));
+  var vPad  = h + 60;
+  var track = document.getElementById('doc-htl-track');
+  if (track) {
+    track.style.padding = vPad + 'px ' + Math.max(20, g) + 'px';
+  }
+  document.querySelectorAll('#doc-htl-track .htl-node').forEach(function(n) { n.style.width = (w + 20) + 'px'; });
+  document.querySelectorAll('#doc-htl-track .htl-card').forEach(function(c) { c.style.width = w + 'px'; });
+  document.querySelectorAll('#doc-htl-track .htl-stem').forEach(function(s) { s.style.height = stemH + 'px'; });
+  document.querySelectorAll('#doc-htl-track .htl-card.above').forEach(function(c) { c.style.bottom = 'calc(50% + ' + stemH + 'px)'; });
+  document.querySelectorAll('#doc-htl-track .htl-card.below').forEach(function(c) { c.style.top    = 'calc(50% + ' + stemH + 'px)'; });
+  document.querySelectorAll('#doc-htl-track .htl-date-label.above').forEach(function(c) { c.style.top    = 'calc(50% + ' + (stemH+4) + 'px)'; });
+  document.querySelectorAll('#doc-htl-track .htl-date-label.below').forEach(function(c) { c.style.bottom = 'calc(50% + ' + (stemH+4) + 'px)'; });
 }
 
 function renderDocTimeline(filtered) {
@@ -4171,13 +4300,8 @@ function renderDocTimeline(filtered) {
       '</div>' +
     '</div>';
 
-  // 套用尺寸
-  setTimeout(function() {
-    var track = document.getElementById('doc-htl-track');
-    if (!track) return;
-    document.querySelectorAll('#doc-htl-track .htl-card').forEach(function(c){ c.style.width='200px'; });
-    document.querySelectorAll('#doc-htl-track .htl-node').forEach(function(n){ n.style.width='220px'; });
-  }, 0);
+  // 套用目前滑桿設定
+  setTimeout(applyDocHtlSize, 0);
 }
 
 function renderDocs() {
