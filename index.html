@@ -2745,6 +2745,117 @@ async function apiCall(params) {
   return json;
 }
 
+// ════════════════════════════════════════
+// ── 儀表板渲染 ──
+// ════════════════════════════════════════
+function renderDashboard() {
+  var d0 = new Date(); d0.setDate(1); d0.setMonth(d0.getMonth()-1);
+  var lastMonth = d0.getFullYear() + '-' + String(d0.getMonth()+1).padStart(2,'0');
+  var thisMonth = todayStr().slice(0,7);
+
+  var st = entries.reduce(function(acc, e) {
+    acc.total++;
+    if (e.status === 'issue')     acc.issues++;
+    if (e.status === 'pending')   acc.pending++;
+    if (e.status === 'milestone') acc.milestones++;
+    if (e.date.startsWith(thisMonth)) acc.thisMo++;
+    if (e.date.startsWith(lastMonth)) acc.lastMo++;
+    return acc;
+  }, { total:0, issues:0, pending:0, milestones:0, thisMo:0, lastMo:0 });
+
+  var openDef  = defects.filter(function(d) { return d.status !== 'closed'; }).length;
+  var qiPass   = qualityItems.filter(function(q) { return q.result === 'pass'; }).length;
+  var qiTotal  = qualityItems.length;
+  var qiRate   = qiTotal ? Math.round(qiPass / qiTotal * 100) + '%' : '—';
+
+  // 統計卡
+  var sg = document.getElementById('stat-grid');
+  if (sg) {
+    sg.innerHTML = [
+      { cls:'blue',   label:'時間軸記錄',  value: st.total,      sub: '本月 ' + st.thisMo + ' 筆' },
+      { cls:'red',    label:'異常 / 待決',  value: st.issues + st.pending, sub: '需關注' },
+      { cls:'green',  label:'里程碑',       value: st.milestones, sub: '個' },
+      { cls:'amber',  label:'未結案通知單', value: openDef,       sub: '張' },
+      { cls:'teal',   label:'查驗合格率',   value: qiRate,        sub: '共 ' + qiTotal + ' 項' },
+      { cls:'',       label:'文件送審',     value: docs.filter(function(d){ return d.status !== 'pending'; }).length, sub: '/ ' + docs.length + ' 份已送' },
+    ].map(function(s) {
+      return '<div class="stat-card ' + s.cls + '">' +
+        '<div class="stat-label">' + s.label + '</div>' +
+        '<div class="stat-value" style="font-size:28px;">' + s.value + '</div>' +
+        '<div class="stat-sub">' + s.sub + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // 狀態分布 bar
+  renderMultiProgress();
+
+  // 未結案改善事項
+  var od = document.getElementById('open-defects-list');
+  if (od) {
+    var openList = defects.filter(function(d) { return d.status !== 'closed'; })
+      .slice(0, 5);
+    var sLabel = { open:'未結案', replied:'已回覆', recheck:'複驗中' };
+    od.innerHTML = openList.length
+      ? openList.map(function(d) {
+          return '<div style="padding:8px 0;border-bottom:1px solid var(--border-light);display:flex;gap:8px;align-items:flex-start;">' +
+            '<span class="iss-' + d.status + '" style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;flex-shrink:0;margin-top:2px;">' + (sLabel[d.status]||d.status) + '</span>' +
+            '<div>' +
+              '<div style="font-size:12px;font-weight:600;">' + esc(d.no||'—') + '</div>' +
+              '<div style="font-size:11px;color:var(--text-muted);">' + esc((d.title||'').slice(0,40)) + (d.title&&d.title.length>40?'…':'') + '</div>' +
+              (d.deadline ? '<div style="font-size:10px;color:var(--c-amber);">⏰ 期限：' + d.deadline + '</div>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('')
+      : '<div style="font-size:13px;color:var(--text-muted);padding:12px 0;text-align:center">✅ 目前沒有未結案項目</div>';
+  }
+
+  // 近期時間軸
+  renderDashTimeline();
+}
+
+function renderDashTimeline() {
+  var area = document.getElementById('dash-tl-area');
+  if (!area) return;
+  var today = todayStr();
+  var recent = entries.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).slice(0, 14);
+  if (!recent.length) { area.innerHTML = ''; return; }
+
+  var SCLS = { normal:'#003591', milestone:'#3F9C35', warn:'#E98300', pending:'#E98300', issue:'#EB2A34' };
+  var SLBL = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常／已開單' };
+  var SBG  = { normal:'#EAF3FB', milestone:'#EDF9EC', warn:'#FFF4E0', pending:'#FFF4E0', issue:'#FDE8E9' };
+
+  var rows = recent.map(function(e) {
+    var isToday = e.date === today;
+    var sc = SCLS[e.status] || '#003591';
+    var sb = SBG[e.status]  || '#EAF3FB';
+    var t1 = e.title ? e.title.split('\n')[0].replace('一、工程進行情況：','').replace('一、工程進行情況:','').slice(0,60) : '';
+    var s1 = e.sub   ? e.sub.split('\n')[0].replace('三、督導環保及職安衛事項：','').replace('三、督導環保及職安衛事項:','').slice(0,50) : '';
+    return '<div class="dash-tl-row"' + (isToday?' style="background:#EAF3FB;"':'') + '>' +
+      '<div class="dash-tl-date">' +
+        '<div class="dash-tl-ymd">' + (e.date||'').slice(5).replace('-','/') + (isToday?'<br><span style="font-size:8px;background:#3F9C35;color:#fff;padding:0 3px;border-radius:2px;">今</span>':'') + '</div>' +
+        '<div class="dash-tl-w">' + esc(e.weather||'') + '</div>' +
+      '</div>' +
+      '<div class="dash-tl-sep"></div>' +
+      '<div style="width:3px;background:' + sc + ';flex-shrink:0;"></div>' +
+      '<div class="dash-tl-content">' +
+        '<span class="dash-tl-status" style="background:' + sb + ';color:' + sc + ';">' + (SLBL[e.status]||e.status) + '</span>' +
+        (t1 ? '<div class="dash-tl-text"><span style="font-size:9px;font-weight:700;color:' + sc + ';margin-right:4px;">工程</span>' + esc(t1) + (e.title&&e.title.length>60?'…':'') + '</div>' : '') +
+        (s1 ? '<div class="dash-tl-text" style="color:#E98300;"><span style="font-size:9px;font-weight:700;margin-right:4px;">職安</span>' + esc(s1) + (e.sub&&e.sub.length>50?'…':'') + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  area.innerHTML =
+    '<div class="dash-tl-wrap">' +
+      '<div class="dash-tl-header">' +
+        '<h3>📅 近期施工記錄</h3>' +
+        '<button class="btn-sm edit" data-tab="timeline" onclick="switchTab(this.dataset.tab)" style="font-size:11px;">查看完整時間軸 →</button>' +
+      '</div>' +
+      '<div class="dash-tl-inner">' + rows + '</div>' +
+    '</div>';
+}
+
 async function init() {
   try {
     defects = defectLoad();
