@@ -477,183 +477,113 @@ tr:hover td { background:#F8F9FF; }
 .filter-count{font-size:12px;color:var(--text-muted);margin-left:auto;white-space:nowrap;}
 
 /* ── TIMELINE ── */
-.alert-banner{background:var(--c-red-bg);border:1px solid var(--c-red-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px;}
+.alert-banner{background:var(--c-red-bg);border:1px solid var(--c-red-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:14px;font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px;}
 .alert-banner a{color:var(--c-red);font-weight:700;cursor:pointer;text-decoration:underline;}
-.info-banner{background:var(--c-blue-bg);border:1px solid var(--c-blue-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:13px;color:#1e3a8a;}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);}
 .legend-dot{width:8px;height:8px;border-radius:50%;}
-#search-input{font-family:inherit;font-size:13px;padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;transition:border-color var(--transition);width:180px;}
+#search-input{font-family:inherit;font-size:13px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;transition:border-color var(--transition);width:160px;}
 #search-input:focus{border-color:var(--dnv-sea-blue);}
 
-/* ════════════════════════════════════════
-   水平時間軸（捲動式，上下交錯節點）
-════════════════════════════════════════ */
-#timeline {
-  display: block;
-}
+/* ─── 工具列（密度控制 + 篩選）─── */
+.tl-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border-light);box-shadow:var(--shadow);}
+.tl-toolbar-label{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.04em;white-space:nowrap;}
+.tl-slider{width:80px;accent-color:var(--dnv-sea-blue);cursor:pointer;}
+.tl-toolbar-sep{width:1px;height:20px;background:var(--border-light);margin:0 4px;}
 
-/* 外層捲動容器 */
-.htl-scroll {
-  overflow-x: auto;
-  overflow-y: visible;
-  padding-bottom: 16px;
-  -webkit-overflow-scrolling: touch;
-}
-.htl-scroll::-webkit-scrollbar { height: 4px; }
-.htl-scroll::-webkit-scrollbar-track { background: var(--border-light); border-radius: 2px; }
-.htl-scroll::-webkit-scrollbar-thumb { background: var(--dnv-sandstone); border-radius: 2px; }
+/* ─── 水平時間軸捲動外框 ─── */
+.htl-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:12px;-webkit-overflow-scrolling:touch;}
+.htl-scroll::-webkit-scrollbar{height:4px;}
+.htl-scroll::-webkit-scrollbar-track{background:var(--border-light);border-radius:2px;}
+.htl-scroll::-webkit-scrollbar-thumb{background:var(--dnv-sandstone);border-radius:2px;}
 
-/* 時間軸主軌道 */
-.htl-track {
-  position: relative;
-  min-width: max-content;
-  display: flex;
-  align-items: center;
-  padding: 220px 48px 220px 48px;
-  gap: 0;
+/* ─── 軌道（CSS 變數控制間距與卡片尺寸）─── */
+.htl-track{
+  position:relative;
+  min-width:max-content;
+  display:flex;
+  align-items:center;
+  padding:var(--htl-card-h,160px) var(--htl-gap,32px);
+  gap:0;
 }
-
 /* 中心橫線 */
-.htl-track::before {
-  content: '';
-  position: absolute;
-  left: 0; right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--border) 5%, var(--border) 95%, transparent);
-  z-index: 0;
+.htl-track::before{
+  content:'';position:absolute;left:0;right:0;top:50%;
+  transform:translateY(-50%);height:2px;
+  background:linear-gradient(90deg,transparent,var(--border) 3%,var(--border) 97%,transparent);
+  z-index:0;
 }
 
-/* 每個節點 wrapper */
-.htl-node {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 200px;
-  flex-shrink: 0;
-  z-index: 1;
-  animation: htlFadeIn .3s ease both;
+/* ─── 節點 ─── */
+.htl-node{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  width:var(--htl-card-w,190px);
+  flex-shrink:0;z-index:1;
+  animation:htlFadeIn .25s ease both;
 }
-@keyframes htlFadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+@keyframes htlFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* 節點 dot（中線上的圓點） */
-.htl-dot {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  border: 3px solid var(--surface);
-  box-shadow: 0 0 0 2px var(--htl-color, var(--dnv-sea-blue));
-  background: var(--htl-color, var(--dnv-sea-blue));
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 3;
-  transition: transform .15s, box-shadow .15s;
-  cursor: pointer;
+/* dot */
+.htl-dot{
+  width:13px;height:13px;border-radius:50%;
+  border:3px solid var(--surface);
+  box-shadow:0 0 0 2px var(--htl-color,var(--dnv-sea-blue));
+  background:var(--htl-color,var(--dnv-sea-blue));
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);z-index:3;
+  transition:transform .15s,box-shadow .15s;cursor:pointer;
 }
-.htl-node:hover .htl-dot {
-  transform: translate(-50%, -50%) scale(1.35);
-  box-shadow: 0 0 0 3px var(--htl-color, var(--dnv-sea-blue)), 0 0 12px rgba(0,0,0,.12);
-}
+.htl-node:hover .htl-dot{transform:translate(-50%,-50%) scale(1.4);box-shadow:0 0 0 3px var(--htl-color,var(--dnv-sea-blue)),0 0 10px rgba(0,0,0,.15);}
 
-/* 垂直連接線（dot → card） */
-.htl-stem {
-  width: 1px;
-  background: var(--border);
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-}
+/* stem */
+.htl-stem{width:1px;background:var(--border);position:absolute;left:50%;transform:translateX(-50%);z-index:1;}
+.htl-stem.above{bottom:50%;height:var(--htl-stem-h,20px);}
+.htl-stem.below{top:50%;height:var(--htl-stem-h,20px);}
 
-/* 卡片（上方 / 下方） */
-.htl-card {
-  background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-top: 3px solid var(--htl-color, var(--dnv-sea-blue));
-  border-radius: var(--radius-lg);
-  padding: 12px 14px;
-  width: 184px;
-  box-shadow: var(--shadow);
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  transition: box-shadow var(--transition), transform var(--transition);
+/* ─── 卡片 ─── */
+.htl-card{
+  background:var(--surface);
+  border:1px solid var(--border-light);
+  border-top:3px solid var(--htl-color,var(--dnv-sea-blue));
+  border-radius:var(--radius-lg);
+  padding:10px 12px;
+  width:var(--htl-card-w,190px);
+  box-shadow:var(--shadow);
+  position:absolute;left:50%;
+  transform:translateX(-50%);
+  transition:box-shadow var(--transition),transform var(--transition);
+  box-sizing:border-box;
 }
-.htl-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateX(-50%) translateY(-2px);
-}
+.htl-card:hover{box-shadow:var(--shadow-md);transform:translateX(-50%) translateY(-2px);}
+.htl-card.above{bottom:calc(50% + var(--htl-stem-h,20px));}
+.htl-card.below{top:calc(50% + var(--htl-stem-h,20px));}
 
-/* 卡片位置：上方 / 下方 */
-.htl-card.above { bottom: calc(50% + 16px); }
-.htl-card.below { top:    calc(50% + 16px); }
-.htl-stem.above { bottom: 50%; height: 16px; }
-.htl-stem.below { top:    50%; height: 16px; }
-
-/* 日期標記（另一側） */
-.htl-date-label {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; font-weight: 700;
-  color: var(--dnv-dark-blue);
-  white-space: nowrap;
-  letter-spacing: .04em;
+/* 日期 label（對側） */
+.htl-date-label{
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--dnv-dark-blue);white-space:nowrap;text-align:center;
 }
-.htl-date-label.above { top: calc(50% + 22px); }
-.htl-date-label.below { bottom: calc(50% + 22px); }
-
-/* 今天標記 */
-.htl-today-pill {
-  font-size: 8px; font-weight: 700;
-  background: var(--dnv-digi-green); color: #fff;
-  padding: 1px 5px; border-radius: 3px;
-  display: block; text-align: center; margin-top: 2px;
-}
+.htl-date-label.above{top:calc(50% + var(--htl-stem-h,20px) + 4px);}
+.htl-date-label.below{bottom:calc(50% + var(--htl-stem-h,20px) + 4px);}
+.htl-today-pill{font-size:8px;font-weight:700;background:var(--dnv-digi-green);color:#fff;padding:1px 5px;border-radius:3px;display:block;text-align:center;margin-top:2px;}
 
 /* 卡片內容 */
-.htl-status {
-  font-size: 9px; font-weight: 700; letter-spacing: .04em;
-  padding: 2px 7px; border-radius: 6px;
-  display: inline-block; margin-bottom: 6px;
-}
-.htl-title {
-  font-size: 12px; font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.45;
-  margin-bottom: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.htl-sub {
-  font-size: 11px; color: var(--text-muted);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin-bottom: 4px;
-}
-.htl-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-.htl-actions {
-  display: flex; gap: 4px; margin-top: 6px;
-  opacity: 0; transition: opacity .15s;
-}
-.htl-card:hover .htl-actions { opacity: 1; }
-@media(hover:none){ .htl-actions { opacity: 1; } }
+.htl-status{font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:6px;display:inline-block;margin-bottom:5px;}
+.htl-title{font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.45;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.htl-sub{font-size:11px;color:var(--text-muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:3px;}
+.htl-cat-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;margin-right:3px;margin-bottom:3px;}
+.htl-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
+.htl-actions{display:flex;gap:4px;margin-top:5px;opacity:0;transition:opacity .15s;}
+.htl-card:hover .htl-actions{opacity:1;}
+@media(hover:none){.htl-actions{opacity:1;}}
 
 /* 狀態色 */
-.htl-normal    { --htl-color: var(--dnv-sea-blue); }
-.htl-milestone { --htl-color: var(--dnv-digi-green); }
-.htl-warn      { --htl-color: var(--c-amber); }
-.htl-pending   { --htl-color: var(--c-amber); }
-.htl-issue     { --htl-color: var(--dnv-energy-red); }
+.htl-normal   {--htl-color:var(--dnv-sea-blue);}
+.htl-milestone{--htl-color:var(--dnv-digi-green);}
+.htl-warn     {--htl-color:var(--c-amber);}
+.htl-pending  {--htl-color:var(--c-amber);}
+.htl-issue    {--htl-color:var(--dnv-energy-red);}
 
 /* badge */
 .badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap;letter-spacing:.03em;}
@@ -662,8 +592,6 @@ tr:hover td { background:#F8F9FF; }
 .s-warn     {background:#FFF4E0;color:var(--c-amber);}
 .s-pending  {background:#FFF4E0;color:var(--c-amber);}
 .s-issue    {background:#FDE8E9;color:var(--dnv-energy-red);}
-
-/* defect tag */
 .defect-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;cursor:pointer;}
 
 /* formatTitle 內容 */
@@ -672,12 +600,12 @@ tr:hover td { background:#F8F9FF; }
 .cs-label{display:none;}
 .cs-block{display:block;}
 
-/* 緊湊列表模式（filter-view=compact） */
-.compact-table { width:100%; border-collapse:collapse; background:var(--surface); border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--border-light); box-shadow:var(--shadow); }
-.compact-table th { background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 14px;text-align:left; }
-.compact-table td { padding:9px 14px;border-bottom:1px solid var(--border-light);font-size:13px;vertical-align:top; }
-.compact-table tr:last-child td { border-bottom:none; }
-.compact-table tr:hover td { background:#F8F9FF; }
+/* 緊湊列表 */
+.compact-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border-light);box-shadow:var(--shadow);}
+.compact-table th{background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 14px;text-align:left;}
+.compact-table td{padding:9px 14px;border-bottom:1px solid var(--border-light);font-size:13px;vertical-align:top;}
+.compact-table tr:last-child td{border-bottom:none;}
+.compact-table tr:hover td{background:#F8F9FF;}
 
 /* 儀表板內嵌時間軸 */
 .dash-tl-wrap{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
@@ -694,6 +622,10 @@ tr:hover td { background:#F8F9FF; }
 .dash-tl-content{flex:1;min-width:0;padding:10px 16px 10px 12px;display:flex;flex-direction:column;gap:3px;}
 .dash-tl-status{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;margin-bottom:4px;}
 .dash-tl-text{font-size:12px;color:var(--text-secondary);line-height:1.55;}
+
+/* 工項分類 Modal */
+.cat-list-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);margin-bottom:6px;}
+.cat-color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;cursor:pointer;}
 
 /* DEFECTS */
 .defect-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
@@ -1874,6 +1806,10 @@ tr:hover td { background:#F8F9FF; }
             <option value="warn">待注意</option><option value="pending">待決議</option><option value="issue">異常／已開單</option>
           </select>
         </div>
+        <div class="field">
+          <label>🏷 工項分類（可多選）</label>
+          <div id="f-cats" style="display:flex;flex-wrap:wrap;gap:5px;padding:6px 0;min-height:30px;"></div>
+        </div>
         <div class="field"><label>一、工程進行情況</label><textarea id="f-title-1" placeholder="描述本日工程進行情況…" style="min-height:56px;"></textarea></div>
         <div class="field"><label>二、品質查驗工作項目</label><textarea id="f-title-2" placeholder="描述品質抽查驗相關工作…" style="min-height:56px;"></textarea></div>
         <div class="field"><label>三、督導環保及職安衛事項</label><textarea id="f-title-3" placeholder="描述環保、職業安全衛生督導情況…" style="min-height:56px;"></textarea></div>
@@ -1930,8 +1866,9 @@ id="panel-dashboard">
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-amber)"></div>待注意／待決議</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--c-red)"></div>異常／已開單</div>
         </div>
-        <div class="filter-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-          <input type="search" id="search-input" placeholder="搜尋工項說明…" oninput="render()" style="width:180px;">
+        <!-- 篩選列 -->
+        <div class="filter-bar" style="flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center;">
+          <input type="search" id="search-input" placeholder="搜尋工項…" oninput="render()">
           <select class="filter-select" id="filter-status" onchange="render()">
             <option value="">全部狀態</option>
             <option value="normal">正常施工</option>
@@ -1939,6 +1876,9 @@ id="panel-dashboard">
             <option value="warn">待注意</option>
             <option value="pending">待決議</option>
             <option value="issue">異常／已開單</option>
+          </select>
+          <select class="filter-select" id="filter-cat" onchange="render()">
+            <option value="">全部工項</option>
           </select>
           <select class="filter-select" id="filter-section" onchange="render()">
             <option value="">全部類型</option>
@@ -1948,10 +1888,25 @@ id="panel-dashboard">
           </select>
           <select class="filter-select" id="filter-month" onchange="render()"><option value="">全部月份</option></select>
           <select class="filter-select" id="filter-view" onchange="render()">
-            <option value="timeline">橫向時間軸</option>
+            <option value="timeline">水平時間軸</option>
             <option value="compact">緊湊列表</option>
           </select>
-          <span class="filter-count" id="filter-count" style="margin-left:auto;"></span>
+          <button class="btn-sm" onclick="openCatModal()" style="font-size:11px;" title="管理工項分類">🏷 工項分類</button>
+          <span class="filter-count" id="filter-count" style="margin-left:auto;font-size:12px;"></span>
+        </div>
+        <!-- 密度 / 尺寸控制列 -->
+        <div class="tl-toolbar" id="tl-size-bar">
+          <span class="tl-toolbar-label">卡片寬度</span>
+          <input type="range" class="tl-slider" id="htl-width-slider" min="140" max="300" value="190" oninput="applyHtlSize()">
+          <span id="htl-width-val" style="font-size:11px;color:var(--text-muted);min-width:32px;">190</span>
+          <div class="tl-toolbar-sep"></div>
+          <span class="tl-toolbar-label">卡片高度</span>
+          <input type="range" class="tl-slider" id="htl-height-slider" min="100" max="240" value="160" oninput="applyHtlSize()">
+          <span id="htl-height-val" style="font-size:11px;color:var(--text-muted);min-width:32px;">160</span>
+          <div class="tl-toolbar-sep"></div>
+          <span class="tl-toolbar-label">節點間距</span>
+          <input type="range" class="tl-slider" id="htl-gap-slider" min="0" max="60" value="0" oninput="applyHtlSize()">
+          <span id="htl-gap-val" style="font-size:11px;color:var(--text-muted);min-width:28px;">0</span>
         </div>
         <div id="timeline"></div>
       </div>
@@ -2415,6 +2370,30 @@ id="panel-dashboard">
     </div>
   </div>
 
+
+  <!-- 工項分類 Modal -->
+  <div class="modal-overlay" id="cat-modal" style="display:none;">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h3>🏷 工項分類管理</h3>
+        <button class="modal-close" onclick="closeCatModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">可新增、編輯、刪除工項分類。分類標籤會顯示在時間軸卡片上，並可用來篩選。</div>
+        <!-- 新增列 -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+          <input type="color" id="new-cat-color" value="#003591" style="width:32px;height:32px;border:none;border-radius:6px;cursor:pointer;padding:0;">
+          <input type="text" id="new-cat-label" placeholder="工項名稱（如：土木、機電…）" style="flex:1;font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);outline:none;">
+          <button class="btn-sm edit" onclick="addCat()" style="font-size:11px;padding:6px 12px;">新增</button>
+        </div>
+        <!-- 現有分類列表 -->
+        <div id="cat-list" style="display:flex;flex-direction:column;gap:0;max-height:320px;overflow-y:auto;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal primary" onclick="closeCatModal()">完成</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Attendance Modal -->
   <div class="modal-overlay" id="att-modal" style="display:none">
@@ -3002,6 +2981,7 @@ document.getElementById('f-status').addEventListener('change', function() {
 // Fix 2: resetFormState 自動帶入今天日期
 function resetFormState() {
   editingId = null;
+  renderCatCheckboxes([]);
   document.getElementById('f-date').value    = todayStr();
   document.getElementById('f-title-1').value = '';
   document.getElementById('f-title-2').value = '';
@@ -3046,8 +3026,8 @@ async function submitEntry() {
   if (API_URL) {
     setSync('儲存中…', 'sync-busy');
     try {
-      if (editingId) await apiCall({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo });
-      else           await apiCall({ action:'add', date, weather, status, title, sub, alert:alertTx, defectNo });
+      if (editingId) await apiCall({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo, cats:JSON.stringify(getSelectedCats()) });
+      else           await apiCall({ action:'add', date, weather, status, title, sub, alert:alertTx, defectNo, cats:JSON.stringify(getSelectedCats()) });
       var data = await apiCall({ action:'getAll' });
       entries = (data.entries || []).map(sanitizeEntry).filter(function(e) { return e.date; });
       localSave();
@@ -3056,9 +3036,9 @@ async function submitEntry() {
   } else {
     if (editingId) {
       var idx = entries.findIndex(function(e) { return e.id === editingId; });
-      if (idx !== -1) entries[idx] = { id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo };
+      if (idx !== -1) entries[idx] = { id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo, cats:getSelectedCats() };
     } else {
-      entries.push({ id:uid(), date, weather, status, title, sub, alert:alertTx, defectNo });
+      entries.push({ id:uid(), date, weather, status, title, sub, alert:alertTx, defectNo, cats:getSelectedCats() });
     }
     localSave();
   }
@@ -3088,6 +3068,7 @@ function editEntry(id) {
   document.getElementById('f-sub').value     = e.sub || '';
   document.getElementById('f-alert').value   = e.alert || '';
   document.getElementById('f-defect-no').value = e.defectNo || '';
+  renderCatCheckboxes(e.cats || []);
   document.getElementById('f-defect-wrap').style.display = (e.status === 'issue' || e.status === 'warn') ? 'flex' : 'none';
   document.getElementById('form-title').textContent  = '✏️ 編輯工項';
   document.getElementById('btn-submit').textContent  = '儲存變更';
@@ -3226,10 +3207,160 @@ function render() {
     if (!filtered.length) { tl.innerHTML = '<div class="empty">沒有符合條件的記錄</div>'; return; }
     var today = todayStr();
 
-    // 取得檢視模式與類型篩選
+    // ════════════════════════════
+// ── 工項分類系統 ──
+// ════════════════════════════
+var CAT_KEY = 'construction_cats_v1';
+var workCats = [];  // [{ id, label, color }]
+
+function catLoad() {
+  try {
+    var r = localStorage.getItem(CAT_KEY);
+    return r ? JSON.parse(r) : getDefaultCats();
+  } catch(e) { return getDefaultCats(); }
+}
+function catSave() {
+  try { localStorage.setItem(CAT_KEY, JSON.stringify(workCats)); } catch(e) {}
+}
+function getDefaultCats() {
+  return [
+    { id:'cat-civil',    label:'土木結構', color:'#003591' },
+    { id:'cat-mep',      label:'機電設備', color:'#009FDA' },
+    { id:'cat-env',      label:'環保安衛', color:'#3F9C35' },
+    { id:'cat-admin',    label:'行政管理', color:'#E98300' },
+  ];
+}
+
+
+// ── 工項分類表單輔助 ──
+function renderCatCheckboxes(selectedIds) {
+  var el = document.getElementById('f-cats');
+  if (!el) return;
+  if (!workCats.length) { el.innerHTML = '<span style="font-size:11px;color:var(--text-muted);">尚無工項分類，點篩選列的「工項分類」新增</span>'; return; }
+  el.innerHTML = workCats.map(function(c) {
+    var checked = selectedIds && selectedIds.indexOf(c.id) >= 0;
+    return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:' + (checked ? c.color+'22' : 'var(--bg)') + ';color:' + (checked ? c.color : 'var(--text-muted)') + ';border:1px solid ' + (checked ? c.color+'66' : 'var(--border)') + ';transition:all .12s;">' +
+      '<input type="checkbox" data-catid="' + c.id + '" ' + (checked?'checked':'') + ' onchange="updateCatCheckStyle(this)" style="display:none;">' +
+      esc(c.label) +
+    '</label>';
+  }).join('');
+}
+function updateCatCheckStyle(cb) {
+  var catId = cb.dataset.catid;
+  var cat   = workCats.find(function(c){ return c.id===catId; });
+  if (!cat) return;
+  var lbl = cb.parentElement;
+  if (cb.checked) {
+    lbl.style.background = cat.color + '22';
+    lbl.style.color      = cat.color;
+    lbl.style.borderColor= cat.color + '66';
+  } else {
+    lbl.style.background = 'var(--bg)';
+    lbl.style.color      = 'var(--text-muted)';
+    lbl.style.borderColor= 'var(--border)';
+  }
+}
+function getSelectedCats() {
+  var el = document.getElementById('f-cats');
+  if (!el) return [];
+  return Array.from(el.querySelectorAll('input[type=checkbox]:checked')).map(function(cb){ return cb.dataset.catid; });
+}
+
+function initCats() {
+  workCats = catLoad();
+  updateCatFilter();
+  renderCatCheckboxes([]);
+}
+
+function updateCatFilter() {
+  var sel = document.getElementById('filter-cat');
+  if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">全部工項</option>' +
+    workCats.map(function(c) {
+      return '<option value="' + esc(c.id) + '"' + (c.id===cur?' selected':'') + '>' + esc(c.label) + '</option>';
+    }).join('');
+}
+
+function openCatModal() {
+  renderCatList();
+  document.getElementById('cat-modal').style.display = 'flex';
+}
+function closeCatModal() {
+  document.getElementById('cat-modal').style.display = 'none';
+  updateCatFilter();
+  render();
+}
+
+function renderCatList() {
+  var el = document.getElementById('cat-list');
+  if (!el) return;
+  if (!workCats.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:8px;">尚無工項分類</div>'; return; }
+  el.innerHTML = workCats.map(function(c) {
+    return '<div class="cat-list-item">' +
+      '<input type="color" value="' + esc(c.color) + '" data-id="' + esc(c.id) + '" onchange="updateCatColor(this.dataset.id,this.value)" style="width:28px;height:28px;border:none;border-radius:5px;cursor:pointer;padding:0;flex-shrink:0;">' +
+      '<input type="text" value="' + esc(c.label) + '" data-id="' + esc(c.id) + '" onchange="updateCatLabel(this.dataset.id,this.value)" style="flex:1;font-family:inherit;font-size:13px;border:none;border-bottom:1px dashed var(--border);background:transparent;outline:none;padding:2px 4px;">' +
+      '<button class="btn-sm del" data-id="' + esc(c.id) + '" onclick="deleteCat(this.dataset.id)" style="font-size:10px;flex-shrink:0;">刪除</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addCat() {
+  var label = document.getElementById('new-cat-label').value.trim();
+  var color = document.getElementById('new-cat-color').value;
+  if (!label) return;
+  workCats.push({ id:'cat-' + uid(), label:label, color:color });
+  catSave();
+  renderCatList();
+  document.getElementById('new-cat-label').value = '';
+}
+function updateCatLabel(id, label) {
+  var c = workCats.find(function(x){ return x.id===id; });
+  if (c) { c.label = label.trim(); catSave(); }
+}
+function updateCatColor(id, color) {
+  var c = workCats.find(function(x){ return x.id===id; });
+  if (c) { c.color = color; catSave(); renderCatList(); }
+}
+async function deleteCat(id) {
+  if (!await toastConfirm('確定要刪除此工項分類？已套用的標籤不會自動移除。')) return;
+  workCats = workCats.filter(function(c){ return c.id!==id; });
+  catSave(); renderCatList();
+}
+
+// ── 密度 / 尺寸控制 ──
+function applyHtlSize() {
+  var w  = parseInt(document.getElementById('htl-width-slider').value);
+  var h  = parseInt(document.getElementById('htl-height-slider').value);
+  var g  = parseInt(document.getElementById('htl-gap-slider').value);
+  document.getElementById('htl-width-val').textContent  = w;
+  document.getElementById('htl-height-val').textContent = h;
+  document.getElementById('htl-gap-val').textContent    = g;
+  var track = document.querySelector('.htl-track');
+  if (track) {
+    track.style.setProperty('--htl-card-w', w + 'px');
+    track.style.setProperty('--htl-card-h', h + 'px');
+    track.style.setProperty('--htl-stem-h', Math.max(12, Math.round(h*0.12)) + 'px');
+    track.style.setProperty('--htl-gap',    g + 'px');
+    track.style.padding = h + 'px ' + Math.max(24,g) + 'px';
+  }
+  // 更新所有節點寬度
+  document.querySelectorAll('.htl-node').forEach(function(n) { n.style.width = w + 'px'; });
+  document.querySelectorAll('.htl-card').forEach(function(c) { c.style.width = w + 'px'; });
+}
+
+// 隱藏/顯示工具列依檢視模式
+function toggleSizeBar() {
+  var viewMode = (document.getElementById('filter-view')||{value:'timeline'}).value || 'timeline';
+  var bar = document.getElementById('tl-size-bar');
+  if (bar) bar.style.display = (viewMode==='compact') ? 'none' : 'flex';
+}
+
+// 取得檢視模式與類型篩選
   var viewMode     = (document.getElementById('filter-view')||{value:'timeline'}).value || 'timeline';
   var filterSection= (document.getElementById('filter-section')||{value:''}).value || '';
 
+  var filterCat     = (document.getElementById('filter-cat')||{value:''}).value || '';
   if (filterSection) {
     filtered = filtered.filter(function(e) {
       if (filterSection === 'alert') return !!(e.alert);
@@ -3238,6 +3369,12 @@ function render() {
       return true;
     });
   }
+  if (filterCat) {
+    filtered = filtered.filter(function(e) {
+      return e.cats && e.cats.indexOf(filterCat) >= 0;
+    });
+  }
+  toggleSizeBar();
 
   if (viewMode === 'compact') {
     // ── 緊湊列表模式 ──
@@ -3260,7 +3397,9 @@ function render() {
             (isToday?'<br><span style="font-size:8px;background:#3F9C35;color:#fff;padding:0 4px;border-radius:2px;">今天</span>':'') +
           '</td>' +
           '<td><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:' + sc + '22;color:' + sc + ';">' + (statusLabel[e.status]||e.status) + '</span></td>' +
-          '<td style="font-size:12px;color:var(--text-secondary);line-height:1.6;">' + (e.title ? formatTitle(e.title) : '<span style="color:var(--text-muted)">—</span>') + '</td>' +
+          '<td style="font-size:12px;color:var(--text-secondary);line-height:1.6;">' +
+            (e.cats&&e.cats.length ? e.cats.map(function(cid){ var cat=workCats.find(function(c){return c.id===cid;}); return cat?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:'+cat.color+'22;color:'+cat.color+';margin-right:3px;">'+esc(cat.label)+'</span>':''; }).join('')+'<br>' : '') +
+            (e.title ? formatTitle(e.title) : '<span style="color:var(--text-muted)">—</span>') + '</td>' +
           '<td style="font-size:12px;color:var(--text-secondary);line-height:1.6;">' + (e.sub ? esc(e.sub) : '<span style="color:var(--text-muted)">—</span>') + '</td>' +
         '</tr>';
       }).join('') +
@@ -3294,7 +3433,15 @@ function render() {
     var subHtml   = e.sub   ? '<div class="htl-sub">' + esc(e.sub.split('\n')[0].slice(0,60)) + (e.sub.length>60?'…':'') + '</div>' : '';
     var alertHtml = e.alert ? '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;border-left:2px solid var(--border);padding-left:5px;">' + esc(e.alert.slice(0,40)) + '</div>' : '';
 
-    var defect = e.defectNo ? defects.find(function(d){ return d.no===e.defectNo; }) : null;
+    var defect  = e.defectNo ? defects.find(function(d){ return d.no===e.defectNo; }) : null;
+    // 工項分類標籤
+    var catTagsHtml = '';
+    if (e.cats && e.cats.length) {
+      catTagsHtml = e.cats.map(function(cid) {
+        var cat = workCats.find(function(c){ return c.id===cid; });
+        return cat ? '<span class="htl-cat-tag" style="background:' + cat.color + '22;color:' + cat.color + ';border:1px solid ' + cat.color + '44;">' + esc(cat.label) + '</span>' : '';
+      }).join('');
+    }
     var defectTag = defect
       ? '<span class="defect-tag iss-' + defect.status + '" data-tab="defects" onclick="event.stopPropagation();switchTab(this.dataset.tab)" style="font-size:9px;padding:1px 5px;">📋 ' + esc(defect.no) + '</span>'
       : (e.defectNo ? '<span class="defect-tag iss-open" data-tab="defects" onclick="event.stopPropagation();switchTab(this.dataset.tab)" style="font-size:9px;padding:1px 5px;">📋 ' + esc(e.defectNo) + '</span>' : '');
@@ -3303,6 +3450,7 @@ function render() {
       '<div class="htl-card ' + (isAbove?'above':'below') + '" style="border-top-color:' + sc + ';">' +
         '<span class="htl-status" style="background:' + sb + ';color:' + sc + ';">' + (STATUS_LABEL[e.status]||e.status) + '</span>' +
         titleHtml + subHtml + alertHtml +
+        (catTagsHtml ? '<div class="htl-tags">' + catTagsHtml + '</div>' : '') +
         (defectTag ? '<div class="htl-tags">' + defectTag + '</div>' : '') +
         '<div class="htl-actions">' +
           '<button class="btn-sm edit" data-id="' + e.id + '" onclick="event.stopPropagation();editEntry(this.dataset.id)">編輯</button>' +
