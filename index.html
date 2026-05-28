@@ -1939,7 +1939,12 @@ id="panel-dashboard">
           <div class="doc-progress-segments" id="doc-progress-segments"></div>
         </div>
 
-        <div class="doc-filter-bar">
+        <div class="doc-filter-bar" style="flex-wrap:wrap;gap:8px;align-items:center;">
+          <!-- 檢視模式切換 -->
+          <div style="display:flex;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px;">
+            <button id="doc-view-list" onclick="setDocView('list')" style="font-family:inherit;font-size:11px;font-weight:700;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;background:var(--dnv-dark-blue);color:#fff;transition:all .15s;">📋 清單</button>
+            <button id="doc-view-timeline" onclick="setDocView('timeline')" style="font-family:inherit;font-size:11px;font-weight:700;padding:5px 12px;border:none;border-radius:4px;cursor:pointer;background:none;color:var(--text-muted);transition:all .15s;">📅 時間軸</button>
+          </div>
           <select class="filter-select" id="doc-filter-type" onchange="renderDocs()">
             <option value="">全部類型</option>
             <option value="plan">計畫書</option>
@@ -1963,6 +1968,8 @@ id="panel-dashboard">
           <span class="filter-count" id="doc-count"></span>
         </div>
         <div class="doc-list" id="doc-list"></div>
+        <!-- 文件送審時間軸 -->
+        <div id="doc-timeline" style="display:none;"></div>
       </div>
 
       <!-- Quality -->
@@ -4023,6 +4030,156 @@ function filterDocsByType(type) {
   if (sel) { sel.value = type; renderDocs(); }
 }
 
+
+// ════════════════════════════════════════
+// ── 文件送審時間軸 ──
+// ════════════════════════════════════════
+
+var docView = 'list';  // 'list' | 'timeline'
+
+function setDocView(mode) {
+  docView = mode;
+  // 更新按鈕樣式
+  var btnList = document.getElementById('doc-view-list');
+  var btnTL   = document.getElementById('doc-view-timeline');
+  if (btnList) {
+    btnList.style.background = mode==='list' ? 'var(--dnv-dark-blue)' : 'none';
+    btnList.style.color      = mode==='list' ? '#fff' : 'var(--text-muted)';
+  }
+  if (btnTL) {
+    btnTL.style.background = mode==='timeline' ? 'var(--dnv-dark-blue)' : 'none';
+    btnTL.style.color      = mode==='timeline' ? '#fff' : 'var(--text-muted)';
+  }
+  renderDocs();
+}
+
+function renderDocTimeline(filtered) {
+  var tl = document.getElementById('doc-timeline');
+  var listEl = document.getElementById('doc-list');
+  if (!tl) return;
+
+  // 顯示/隱藏
+  tl.style.display = 'block';
+  if (listEl) listEl.style.display = 'none';
+
+  // 展開所有版次為節點，依送審日排序
+  var nodes = [];
+  filtered.forEach(function(doc) {
+    (doc.versions || []).forEach(function(v, vi) {
+      if (!v.date) return;
+      nodes.push({ doc:doc, v:v, vi:vi });
+    });
+    // 未送審的文件也加一個「未送」節點
+    if (!doc.versions || !doc.versions.length) {
+      nodes.push({ doc:doc, v:null, vi:-1 });
+    }
+  });
+  // 按送審日排序（新到舊）
+  nodes.sort(function(a, b) {
+    var da = (a.v && a.v.date) ? a.v.date : '0000';
+    var db = (b.v && b.v.date) ? b.v.date : '0000';
+    return db.localeCompare(da);
+  });
+
+  if (!nodes.length) {
+    tl.innerHTML = '<div class="empty">沒有符合條件的文件記錄</div>';
+    return;
+  }
+
+  var RESULT_COLOR = {
+    approved:       '#3F9C35',
+    approved_mod:   '#009FDA',
+    approved_after: '#3F9C35',
+    rejected:       '#EB2A34',
+    sent:           '#003591',
+    reviewing:      '#E98300',
+    pending:        '#908D89',
+  };
+  var RESULT_BG = {
+    approved:       '#EDF9EC',
+    approved_mod:   '#EAF3FB',
+    approved_after: '#EDF9EC',
+    rejected:       '#FDE8E9',
+    sent:           '#EAF3FB',
+    reviewing:      '#FFF4E0',
+    pending:        '#F3F2F2',
+  };
+  var RESULT_LABEL = {
+    approved:       '核定',
+    approved_mod:   '核定（有修正）',
+    approved_after: '修正後核定',
+    rejected:       '退回修正',
+    sent:           '審查中',
+    reviewing:      '廠商修正中',
+    pending:        '未送',
+  };
+  var TYPE_LABEL = { plan:'計畫書', drawing:'細部設計圖說', subplan:'分項計畫書', other:'其他' };
+
+  var nodeHtml = nodes.map(function(n, i) {
+    var doc = n.doc, v = n.v;
+    var isAbove  = (i % 2 === 0);
+    var result   = v ? (v.result || 'sent') : 'pending';
+    var sc = RESULT_COLOR[result] || '#908D89';
+    var sb = RESULT_BG[result]   || '#F3F2F2';
+    var rlabel = RESULT_LABEL[result] || result;
+    var delay = 'animation-delay:' + Math.min(i*0.025, 0.5) + 's';
+
+    // 日期顯示
+    var dateDisp = v ? v.date.slice(5).replace('-','/') : '未送';
+    var revDisp  = v ? (v.revision || 'A版') : '';
+
+    // 卡片內容
+    var cardHtml =
+      '<div class="htl-card ' + (isAbove?'above':'below') + '" style="border-top-color:' + sc + ';width:200px;">' +
+        '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">' +
+          '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:5px;background:' + sb + ';color:' + sc + ';">' + rlabel + '</span>' +
+          (revDisp ? '<span style="font-size:9px;color:var(--text-muted);font-weight:700;">' + esc(revDisp) + '</span>' : '') +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">' +
+          esc(doc.name) +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">' +
+          esc(TYPE_LABEL[doc.type]||doc.type) +
+        '</div>' +
+        (v && v.replyDate ?
+          '<div style="font-size:10px;color:var(--text-muted);">回覆：' + v.replyDate.slice(5).replace('-','/') + '</div>' : '') +
+        (v && v.comment ?
+          '<div style="font-size:10px;color:var(--text-secondary);margin-top:3px;border-left:2px solid ' + sc + ';padding-left:5px;">' + esc(v.comment.slice(0,40)) + (v.comment.length>40?'…':'') + '</div>' : '') +
+        '<div class="htl-actions" style="margin-top:5px;">' +
+          '<button class="btn-sm edit" data-id="' + esc(doc.id) + '" onclick="event.stopPropagation();openEditDocModal(this.dataset.id)">編輯</button>' +
+        '</div>' +
+      '</div>';
+
+    var stem     = '<div class="htl-stem ' + (isAbove?'above':'below') + '"></div>';
+    var dot      = '<div class="htl-dot" style="background:' + sc + ';box-shadow:0 0 0 2px ' + sc + ';"></div>';
+    var dateEl   =
+      '<div class="htl-date-label ' + (isAbove?'above':'below') + '">' +
+        '<span>' + dateDisp + '</span>' +
+      '</div>';
+
+    return '<div class="htl-node" style="width:220px;' + delay + '">' +
+      (isAbove ? cardHtml : dateEl) +
+      stem + dot +
+      (isAbove ? dateEl : cardHtml) +
+    '</div>';
+  }).join('');
+
+  tl.innerHTML =
+    '<div class="htl-scroll">' +
+      '<div class="htl-track" id="doc-htl-track" style="padding:220px 32px;">' +
+        nodeHtml +
+      '</div>' +
+    '</div>';
+
+  // 套用尺寸
+  setTimeout(function() {
+    var track = document.getElementById('doc-htl-track');
+    if (!track) return;
+    document.querySelectorAll('#doc-htl-track .htl-card').forEach(function(c){ c.style.width='200px'; });
+    document.querySelectorAll('#doc-htl-track .htl-node').forEach(function(n){ n.style.width='220px'; });
+  }, 0);
+}
+
 function renderDocs() {
   renderDocProgress();
   renderDocDashboard();
@@ -4037,7 +4194,17 @@ function renderDocs() {
   });
   var countEl = document.getElementById('doc-count');
   if (countEl) countEl.textContent = '共 ' + filtered.length + ' 份文件';
+  // 時間軸模式
+  var tl = document.getElementById('doc-timeline');
   var list = document.getElementById('doc-list');
+  if (docView === 'timeline') {
+    if (list) list.style.display = 'none';
+    renderDocTimeline(filtered);
+    return;
+  }
+  // 清單模式
+  if (tl) tl.style.display = 'none';
+  if (list) list.style.display = '';
   if (!list) return;
   if (!filtered.length) { list.innerHTML = '<div class="empty">目前沒有文件記錄。</div>'; return; }
 
