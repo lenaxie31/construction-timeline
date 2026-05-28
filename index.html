@@ -503,7 +503,7 @@ tr:hover td { background:#F8F9FF; }
   min-width:max-content;
   display:flex;
   align-items:center;
-  padding:var(--htl-card-h,160px) var(--htl-gap,32px);
+  padding:180px 32px;   /* 上下 padding 決定軌道高度，初始 180px */
   gap:0;
 }
 /* 中心橫線 */
@@ -537,8 +537,8 @@ tr:hover td { background:#F8F9FF; }
 
 /* stem */
 .htl-stem{width:1px;background:var(--border);position:absolute;left:50%;transform:translateX(-50%);z-index:1;}
-.htl-stem.above{bottom:50%;height:var(--htl-stem-h,20px);}
-.htl-stem.below{top:50%;height:var(--htl-stem-h,20px);}
+.htl-stem.above{bottom:50%;height:20px;}
+.htl-stem.below{top:50%;height:20px;}
 
 /* ─── 卡片 ─── */
 .htl-card{
@@ -555,8 +555,8 @@ tr:hover td { background:#F8F9FF; }
   box-sizing:border-box;
 }
 .htl-card:hover{box-shadow:var(--shadow-md);transform:translateX(-50%) translateY(-2px);}
-.htl-card.above{bottom:calc(50% + var(--htl-stem-h,20px));}
-.htl-card.below{top:calc(50% + var(--htl-stem-h,20px));}
+.htl-card.above{bottom:calc(50% + 20px);}
+.htl-card.below{top:calc(50% + 20px);}
 
 /* 日期 label（對側） */
 .htl-date-label{
@@ -564,8 +564,8 @@ tr:hover td { background:#F8F9FF; }
   font-family:'DM Mono',monospace;font-size:11px;font-weight:700;
   color:var(--dnv-dark-blue);white-space:nowrap;text-align:center;
 }
-.htl-date-label.above{top:calc(50% + var(--htl-stem-h,20px) + 4px);}
-.htl-date-label.below{bottom:calc(50% + var(--htl-stem-h,20px) + 4px);}
+.htl-date-label.above{top:calc(50% + 24px);}
+.htl-date-label.below{bottom:calc(50% + 24px);}
 .htl-today-pill{font-size:8px;font-weight:700;background:var(--dnv-digi-green);color:#fff;padding:1px 5px;border-radius:3px;display:block;text-align:center;margin-top:2px;}
 
 /* 卡片內容 */
@@ -2030,6 +2030,7 @@ id="panel-dashboard">
               📥 匯入打卡鐘 XLS
               <input type="file" id="punch-import-file" accept=".xls,.xlsx" style="display:none;" onchange="importPunchXLS(this)">
             </label>
+            <button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openHolidayModal()">📅 行事曆</button>
             <button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openMemberModal()">👤 管理人員名單</button>
           </div>
         </div>
@@ -2370,6 +2371,23 @@ id="panel-dashboard">
     </div>
   </div>
 
+
+  <!-- 台灣行事曆 Modal -->
+  <div class="modal-overlay" id="holiday-modal" style="display:none;">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3 id="holiday-modal-title">📅 行事曆設定</h3>
+        <button class="modal-close" onclick="closeHolidayModal()">×</button>
+      </div>
+      <div class="modal-body" style="padding:16px 20px;max-height:70vh;overflow-y:auto;">
+        <div id="holiday-modal-body"></div>
+      </div>
+      <div class="modal-footer" style="justify-content:space-between;">
+        <button class="btn-modal" onclick="resetHolidays()" style="color:var(--c-amber);border-color:var(--c-amber-border);background:var(--c-amber-bg);">🔄 還原預設假日</button>
+        <button class="btn-modal primary" onclick="closeHolidayModal()">完成</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 工項分類 Modal -->
   <div class="modal-overlay" id="cat-modal" style="display:none;">
@@ -3185,29 +3203,7 @@ function formatTitle(raw) {
   return html;
 }
 
-function render() {
-  try {
-    var filtered = getFiltered().sort(function(a,b) { return b.date.localeCompare(a.date); });
-    var countEl = document.getElementById('filter-count');
-    if (countEl) countEl.textContent = '共 ' + filtered.length + ' 筆';
-
-    var ba = document.getElementById('alert-banner-area');
-    if (ba) {
-      var issCount = entries.filter(function(e) { return e.status === 'issue'; }).length;
-      var penCount = entries.filter(function(e) { return e.status === 'pending'; }).length;
-      if (issCount + penCount > 0) {
-        var msgs = [];
-        if (issCount) msgs.push('<strong>' + issCount + ' 筆異常</strong>');
-        if (penCount) msgs.push('<strong>' + penCount + ' 筆待決議</strong>');
-        ba.innerHTML = '<div class="alert-banner">⚠️ 目前有 ' + msgs.join('、') + ' 項目需要關注。<a onclick="switchTab(\'defects\')">查看改善事項追蹤 →</a></div>';
-      } else { ba.innerHTML = ''; }
-    }
-
-    var tl = document.getElementById('timeline');
-    if (!filtered.length) { tl.innerHTML = '<div class="empty">沒有符合條件的記錄</div>'; return; }
-    var today = todayStr();
-
-    // ════════════════════════════
+// ════════════════════════════
 // ── 工項分類系統 ──
 // ════════════════════════════
 var CAT_KEY = 'construction_cats_v1';
@@ -3336,17 +3332,21 @@ function applyHtlSize() {
   document.getElementById('htl-width-val').textContent  = w;
   document.getElementById('htl-height-val').textContent = h;
   document.getElementById('htl-gap-val').textContent    = g;
+  var stemH = Math.max(14, Math.round(h * 0.12));
   var track = document.querySelector('.htl-track');
   if (track) {
-    track.style.setProperty('--htl-card-w', w + 'px');
-    track.style.setProperty('--htl-card-h', h + 'px');
-    track.style.setProperty('--htl-stem-h', Math.max(12, Math.round(h*0.12)) + 'px');
-    track.style.setProperty('--htl-gap',    g + 'px');
-    track.style.padding = h + 'px ' + Math.max(24,g) + 'px';
+    track.style.padding = h + 'px ' + Math.max(20, g) + 'px';
   }
-  // 更新所有節點寬度
+  // 更新節點、卡片寬度
   document.querySelectorAll('.htl-node').forEach(function(n) { n.style.width = w + 'px'; });
   document.querySelectorAll('.htl-card').forEach(function(c) { c.style.width = w + 'px'; });
+  // 更新 stem 高度
+  document.querySelectorAll('.htl-stem').forEach(function(s) { s.style.height = stemH + 'px'; });
+  // 更新 card 位置
+  document.querySelectorAll('.htl-card.above').forEach(function(c) { c.style.bottom = 'calc(50% + ' + stemH + 'px)'; });
+  document.querySelectorAll('.htl-card.below').forEach(function(c) { c.style.top    = 'calc(50% + ' + stemH + 'px)'; });
+  document.querySelectorAll('.htl-date-label.above').forEach(function(c) { c.style.top    = 'calc(50% + ' + (stemH+4) + 'px)'; });
+  document.querySelectorAll('.htl-date-label.below').forEach(function(c) { c.style.bottom = 'calc(50% + ' + (stemH+4) + 'px)'; });
 }
 
 // 隱藏/顯示工具列依檢視模式
@@ -3356,7 +3356,30 @@ function toggleSizeBar() {
   if (bar) bar.style.display = (viewMode==='compact') ? 'none' : 'flex';
 }
 
-// 取得檢視模式與類型篩選
+
+function render() {
+  try {
+    var filtered = getFiltered().sort(function(a,b) { return b.date.localeCompare(a.date); });
+    var countEl = document.getElementById('filter-count');
+    if (countEl) countEl.textContent = '共 ' + filtered.length + ' 筆';
+
+    var ba = document.getElementById('alert-banner-area');
+    if (ba) {
+      var issCount = entries.filter(function(e) { return e.status === 'issue'; }).length;
+      var penCount = entries.filter(function(e) { return e.status === 'pending'; }).length;
+      if (issCount + penCount > 0) {
+        var msgs = [];
+        if (issCount) msgs.push('<strong>' + issCount + ' 筆異常</strong>');
+        if (penCount) msgs.push('<strong>' + penCount + ' 筆待決議</strong>');
+        ba.innerHTML = '<div class="alert-banner">⚠️ 目前有 ' + msgs.join('、') + ' 項目需要關注。<a onclick="switchTab(\'defects\')">查看改善事項追蹤 →</a></div>';
+      } else { ba.innerHTML = ''; }
+    }
+
+    var tl = document.getElementById('timeline');
+    if (!filtered.length) { tl.innerHTML = '<div class="empty">沒有符合條件的記錄</div>'; return; }
+    var today = todayStr();
+
+    // 取得檢視模式與類型篩選
   var viewMode     = (document.getElementById('filter-view')||{value:'timeline'}).value || 'timeline';
   var filterSection= (document.getElementById('filter-section')||{value:''}).value || '';
 
@@ -5370,6 +5393,200 @@ var ATT_STATUS = {
 };
 
 
+
+// ════════════════════════════════════════
+// ── 台灣國定假日系統 ──
+// ════════════════════════════════════════
+
+var TW_HOLIDAYS_KEY = 'construction_tw_holidays_v1';
+
+// 預設台灣 2025-2026 國定假日（YYYY-MM-DD）
+var TW_HOLIDAYS_DEFAULT = {
+  // 2025
+  '2025-01-01': '元旦',
+  '2025-01-27': '春節',
+  '2025-01-28': '春節',
+  '2025-01-29': '春節',
+  '2025-01-30': '春節',
+  '2025-01-31': '春節',
+  '2025-02-28': '和平紀念日',
+  '2025-04-03': '兒童節/清明節（調整放假）',
+  '2025-04-04': '兒童節/清明節',
+  '2025-05-01': '勞動節',
+  '2025-05-29': '端午節（調整放假）',
+  '2025-05-31': '端午節',
+  '2025-10-06': '國慶日（調整放假）',
+  '2025-10-09': '重陽節（補假）',
+  '2025-10-10': '國慶日',
+  '2025-10-31': '萬聖節前夕（補假）',
+  // 2026
+  '2026-01-01': '元旦',
+  '2026-01-15': '農曆除夕（調整放假）',
+  '2026-01-16': '春節',
+  '2026-01-17': '春節',
+  '2026-01-18': '春節',
+  '2026-01-19': '春節',
+  '2026-01-20': '春節',
+  '2026-02-28': '和平紀念日',
+  '2026-04-03': '兒童節',
+  '2026-04-04': '清明節',
+  '2026-05-01': '勞動節',
+  '2026-06-19': '端午節',
+  '2026-09-25': '中秋節（調整）',
+  '2026-09-26': '中秋節',
+  '2026-10-10': '國慶日',
+};
+
+var twHolidays = {};   // { 'YYYY-MM-DD': '節日名稱' }
+var twWorkdays = {};   // { 'YYYY-MM-DD': '補班日名稱' } 補班日
+
+function holidayLoad() {
+  try {
+    var r = localStorage.getItem(TW_HOLIDAYS_KEY);
+    return r ? JSON.parse(r) : { holidays: TW_HOLIDAYS_DEFAULT, workdays: {} };
+  } catch(e) { return { holidays: TW_HOLIDAYS_DEFAULT, workdays: {} }; }
+}
+function holidaySave() {
+  try { localStorage.setItem(TW_HOLIDAYS_KEY, JSON.stringify({ holidays: twHolidays, workdays: twWorkdays })); } catch(e) {}
+}
+function resetHolidays() {
+  twHolidays = JSON.parse(JSON.stringify(TW_HOLIDAYS_DEFAULT));
+  twWorkdays = {};
+  holidaySave();
+  renderHolidayModal();
+}
+
+function initHolidays() {
+  var data = holidayLoad();
+  twHolidays = data.holidays || TW_HOLIDAYS_DEFAULT;
+  twWorkdays = data.workdays || {};
+}
+
+// 判斷某日是否為放假日（週末 or 國定假日，且非補班日）
+function isHolidayDate(dateStr) {
+  if (twWorkdays[dateStr]) return false;  // 補班日優先
+  if (twHolidays[dateStr]) return true;   // 國定假日
+  var d = new Date(dateStr);
+  return d.getDay() === 0 || d.getDay() === 6;  // 週末
+}
+
+// 取得某日的假日名稱（null 表示工作日）
+function getHolidayName(dateStr) {
+  if (twWorkdays[dateStr]) return null;
+  if (twHolidays[dateStr]) return twHolidays[dateStr];
+  var d = new Date(dateStr);
+  if (d.getDay() === 0) return '週日';
+  if (d.getDay() === 6) return '週六';
+  return null;
+}
+
+// 計算指定年月的實際工作日數（扣假日加補班）
+function calcWorkdays(y, mo) {
+  var days = new Date(y, mo, 0).getDate();
+  var count = 0;
+  for (var d = 1; d <= days; d++) {
+    var dateStr = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    if (!isHolidayDate(dateStr)) count++;
+  }
+  return count;
+}
+
+// ── 行事曆管理 Modal ──
+function openHolidayModal() {
+  var titleEl = document.getElementById('holiday-modal-title');
+  if (titleEl) titleEl.textContent = '📅 行事曆設定 — ' + attCurrentMonth;
+  renderHolidayModal();
+  document.getElementById('holiday-modal').style.display = 'flex';
+}
+function closeHolidayModal() {
+  document.getElementById('holiday-modal').style.display = 'none';
+  renderAttendance();
+}
+
+function renderHolidayModal() {
+  var parts  = attCurrentMonth.split('-');
+  var y = parseInt(parts[0]), mo = parseInt(parts[1]);
+  var daysInMonth = new Date(y, mo, 0).getDate();
+  var DAYS = ['日','一','二','三','四','五','六'];
+
+  var rows = '';
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dateStr  = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var dow      = new Date(dateStr).getDay();
+    var isWeekend = (dow === 0 || dow === 6);
+    var holName  = twHolidays[dateStr] || '';
+    var wdName   = twWorkdays[dateStr] || '';
+    var isHol    = !!(twHolidays[dateStr]);
+    var isWd     = !!(twWorkdays[dateStr]);
+    var isHoliday = isHolidayDate(dateStr);
+
+    var rowStyle = isWeekend ? 'background:#FEF2F2;' : '';
+    if (isWd) rowStyle = 'background:#EDF9EC;';
+
+    rows += '<tr style="' + rowStyle + 'border-bottom:1px solid var(--border-light);">' +
+      '<td style="padding:6px 10px;font-family:DM Mono,monospace;font-size:12px;font-weight:700;color:var(--dnv-dark-blue);white-space:nowrap;">' +
+        (mo) + '/' + d + ' <span style="font-size:10px;color:var(--text-muted);">（' + DAYS[dow] + '）</span>' +
+      '</td>' +
+      '<td style="padding:6px 10px;">' +
+        '<span style="font-size:11px;padding:1px 6px;border-radius:4px;' +
+          (isHoliday && !isWd ? 'background:#FDE8E9;color:var(--dnv-energy-red);' : isWd ? 'background:#EDF9EC;color:var(--dnv-digi-green);' : 'color:var(--text-muted);') + '">' +
+          (isWd ? '✅ 補班' : isHoliday ? '🔴 ' + (holName||'例假') : '工作日') +
+        '</span>' +
+      '</td>' +
+      '<td style="padding:6px 10px;">' +
+        '<input type="text" value="' + esc(holName) + '" data-date="' + dateStr + '" ' +
+          'placeholder="國定假日名稱" ' +
+          'oninput="updateHoliday(this.dataset.date,this.value,false)" ' +
+          'style="font-family:inherit;font-size:11px;padding:3px 7px;border:1px solid var(--border);border-radius:4px;width:140px;outline:none;">' +
+      '</td>' +
+      '<td style="padding:6px 10px;">' +
+        '<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;">' +
+          '<input type="checkbox" ' + (isWd?'checked':'') + ' data-date="' + dateStr + '" ' +
+            'onchange="updateWorkday(this.dataset.date,this.checked)" ' +
+            'style="accent-color:var(--dnv-digi-green);">' +
+          '補班日' +
+        '</label>' +
+      '</td>' +
+    '</tr>';
+  }
+
+  var modalBody = document.getElementById('holiday-modal-body');
+  if (modalBody) {
+    modalBody.innerHTML =
+      '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">' +
+        '紅色 = 假日 ｜ 綠色 = 補班日 ｜ 可直接編輯假日名稱或標記補班' +
+      '</div>' +
+      '<div style="overflow-x:auto;">' +
+      '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+      '<thead><tr style="background:var(--dnv-dark-blue);color:#fff;">' +
+        '<th style="padding:8px 10px;text-align:left;font-size:11px;">日期</th>' +
+        '<th style="padding:8px 10px;text-align:left;font-size:11px;">狀態</th>' +
+        '<th style="padding:8px 10px;text-align:left;font-size:11px;">假日名稱</th>' +
+        '<th style="padding:8px 10px;text-align:left;font-size:11px;">補班</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+      '</table></div>';
+  }
+}
+
+function updateHoliday(date, name, save) {
+  if (name.trim()) {
+    twHolidays[date] = name.trim();
+  } else {
+    delete twHolidays[date];
+  }
+  holidaySave();
+}
+function updateWorkday(date, checked) {
+  if (checked) {
+    twWorkdays[date] = '補班';
+  } else {
+    delete twWorkdays[date];
+  }
+  holidaySave();
+  renderHolidayModal();
+}
+
 // ── 計算工作時數（分鐘）──
 function calcWorkMinutes(timeIn, timeOut) {
   if (!timeIn || !timeOut) return 0;
@@ -5462,15 +5679,10 @@ function renderAttStats() {
   var monthRecs = attRecords.filter(function(r){ return r.date.startsWith(attCurrentMonth); });
   var activeM = members.filter(function(m){ return m.active; });
 
-  // 計算本月工作日（週一到週五）
+  // 計算本月實際工作日（含國定假日）
   var parts = attCurrentMonth.split('-');
   var y = parseInt(parts[0]), mo = parseInt(parts[1]);
-  var daysInMonth = new Date(y, mo, 0).getDate();
-  var workdays = 0;
-  for (var d = 1; d <= daysInMonth; d++) {
-    var dow = new Date(y, mo-1, d).getDay();
-    if (dow !== 0 && dow !== 6) workdays++;
-  }
+  var workdays = calcWorkdays(y, mo);
 
   var presentCount = monthRecs.filter(function(r){ return r.status==='present'; }).length;
   var leaveCount   = monthRecs.filter(function(r){ return r.status==='leave'; }).length;
@@ -5529,10 +5741,12 @@ function renderAttCalendar() {
       var isToday = dateStr === today;
       var isWeekend = dow === 0 || dow === 6;
 
+      var holName  = isThisMonth ? getHolidayName(dateStr) : null;
+      var isHolDay = isThisMonth ? isHolidayDate(dateStr) : false;
       var cls = 'att-cal-cell';
       if (!isThisMonth) cls += ' other-month';
       else if (isToday) cls += ' today';
-      else if (isWeekend) cls += ' weekend';
+      else if (isHolDay && !isToday) cls += ' weekend';
 
       var recs = recMap[dateStr] || [];
       var pillsHtml = recs.map(function(r) {
@@ -5549,7 +5763,7 @@ function renderAttCalendar() {
       var addBtn = isThisMonth ? '<span class="att-cal-add" onclick="quickAddAtt(this.dataset.date)" data-date="' + dateStr + '">＋</span>' : '';
 
       html += '<div class="' + cls + '">' +
-        '<div class="att-cal-day">' + cur.getDate() + '</div>' +
+        '<div class="att-cal-day">' + cur.getDate() + (holName && !isToday ? ' <span style="font-size:8px;color:var(--dnv-energy-red);font-weight:700;">' + holName.slice(0,4) + '</span>' : '') + '</div>' +
         pillsHtml + addBtn +
       '</div>';
     }
@@ -5577,46 +5791,55 @@ function renderAttSummary() {
 
   var parts = attCurrentMonth.split('-');
   var y = parseInt(parts[0]), mo = parseInt(parts[1]);
-  var daysInMonth = new Date(y, mo, 0).getDate();
 
-  // 計算工作日
-  var workdays = 0;
-  for (var d = 1; d <= daysInMonth; d++) {
-    var dow = new Date(y, mo-1, d).getDay();
-    if (dow !== 0 && dow !== 6) workdays++;
-  }
+  // 計算工作日（排除週末 + 國定假日）
+  var workdays = calcWorkdays(y, mo);
 
-  var html = '<table class="att-summary-table"><thead><tr>' +
-    '<th>姓名</th><th>職稱</th><th>出勤</th><th>請假</th><th>工作時數（H）</th><th>出勤率</th><th>操作</th>' +
+  var html = '<div style="overflow-x:auto;">' +
+    '<table class="att-summary-table"><thead><tr>' +
+    '<th style="min-width:70px;">姓名</th>' +
+    '<th style="min-width:80px;">職稱</th>' +
+    '<th style="min-width:64px;text-align:center;">出勤</th>' +
+    '<th style="min-width:64px;text-align:center;">請假</th>' +
+    '<th style="min-width:64px;text-align:center;">例假</th>' +
+    '<th style="min-width:100px;text-align:right;">工作時數</th>' +
+    '<th style="min-width:90px;text-align:center;">出勤率</th>' +
+    '<th style="min-width:54px;text-align:center;">操作</th>' +
     '</tr></thead><tbody>';
 
   activeM.forEach(function(m) {
-    var recs = attRecords.filter(function(r){ return r.date.startsWith(attCurrentMonth) && r.memberId === m.id; });
-    var present  = recs.filter(function(r){ return r.status==='present'; }).length;
-    var half     = recs.filter(function(r){ return r.status==='half'; }).length;
-    var business = recs.filter(function(r){ return r.status==='business'; }).length;
-    var leave    = recs.filter(function(r){ return r.status==='leave'; }).length;
-    var effectiveDays = present + half*0.5 + business;
-    var rate = workdays ? Math.round(effectiveDays/workdays*100) : 0;
+    var recs    = attRecords.filter(function(r){ return r.date.startsWith(attCurrentMonth) && r.memberId === m.id; });
+    var present = recs.filter(function(r){ return r.status==='present'; }).length;
+    var leave   = recs.filter(function(r){ return r.status==='leave'; }).length;
+    var holiday = recs.filter(function(r){ return r.status==='holiday'; }).length;
+    var totalMin = recs.reduce(function(s,r){ return s + calcWorkMinutes(r.timeIn, r.timeOut); }, 0);
+    var totalH   = (totalMin / 60).toFixed(1);
+    var avgH     = present > 0 ? (totalMin / 60 / present).toFixed(1) : '—';
+    var rate     = workdays ? Math.round(present / workdays * 100) : 0;
     var rateColor = rate >= 90 ? 'var(--c-green)' : rate >= 70 ? 'var(--c-amber)' : 'var(--c-red)';
 
     html += '<tr>' +
-      '<td style="font-weight:600;">' + esc(m.name) + '</td>' +
-      
-      '<td><span class="att-day-badge att-status-present">' + present + ' 天</span></td>' +
-      '<td><span class="att-day-badge att-status-half">' + half + ' 次</span></td>' +
-      '<td><span class="att-day-badge att-status-business">' + business + ' 天</span></td>' +
-      '<td><span class="att-day-badge att-status-leave">' + leave + ' 天</span></td>' +
-      '<td><strong style="color:' + rateColor + ';">' + rate + '%</strong>' +
-        '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">(' + effectiveDays + '/' + workdays + ')</span>' +
+      '<td style="font-weight:700;">' + esc(m.name) + '</td>' +
+      '<td style="font-size:11px;color:var(--text-muted);">' + esc(m.role||'—') + '</td>' +
+      '<td style="text-align:center;"><span class="att-day-badge att-status-present">' + present + ' 天</span></td>' +
+      '<td style="text-align:center;"><span class="att-day-badge att-status-leave">' + leave + ' 天</span></td>' +
+      '<td style="text-align:center;"><span class="att-day-badge att-status-holiday">' + holiday + ' 天</span></td>' +
+      '<td style="text-align:right;font-size:13px;">' +
+        '<strong>' + totalH + ' H</strong>' +
+        '<span style="font-size:10px;color:var(--text-muted);margin-left:5px;">均 ' + avgH + ' H/天</span>' +
       '</td>' +
-      '<td><button class="btn-sm" onclick="openAttModalForMember(this.dataset.id)" data-id="' + m.id + '" style="font-size:10px;">新增記錄</button></td>' +
+      '<td style="text-align:center;">' +
+        '<strong style="color:' + rateColor + ';">' + rate + '%</strong>' +
+        '<span style="font-size:10px;color:var(--text-muted);margin-left:3px;">(' + present + '/' + workdays + ')</span>' +
+      '</td>' +
+      '<td style="text-align:center;"><button class="btn-sm" data-id="' + m.id + '" onclick="openAttModalForMember(this.dataset.id)" style="font-size:10px;">新增</button></td>' +
     '</tr>';
   });
 
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   el.innerHTML = html;
 }
+
 
 // ── Modal 操作 ──
 function openAttModal() {
