@@ -492,7 +492,7 @@ tr:hover td { background:#F8F9FF; }
 .tl-toolbar-sep{width:1px;height:20px;background:var(--border-light);margin:0 4px;}
 
 /* ─── 水平時間軸捲動外框 ─── */
-.htl-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:12px;-webkit-overflow-scrolling:touch;}
+.htl-scroll{overflow-x:auto;overflow-y:visible;padding-bottom:16px;padding-top:8px;-webkit-overflow-scrolling:touch;}
 .htl-scroll::-webkit-scrollbar{height:4px;}
 .htl-scroll::-webkit-scrollbar-track{background:var(--border-light);border-radius:2px;}
 .htl-scroll::-webkit-scrollbar-thumb{background:var(--dnv-sandstone);border-radius:2px;}
@@ -503,8 +503,9 @@ tr:hover td { background:#F8F9FF; }
   min-width:max-content;
   display:flex;
   align-items:center;
-  padding:180px 32px;   /* 上下 padding 決定軌道高度，初始 180px */
+  padding:240px 32px 240px;   /* 確保卡片不被截 */
   gap:0;
+  overflow:visible;
 }
 /* 中心橫線 */
 .htl-track::before{
@@ -3281,37 +3282,19 @@ function parseTitle(raw) {
 
 function formatTitle(raw) {
   if (!raw) return '';
-  var HDRS = ['一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛事項','四、其他重要事項'];
-  var CLS  = ['cs-1','cs-2','cs-3',''];
-  var ICONS = ['🏗','🔍','🌿','📌'];
   var fields = parseTitle(raw);
-  var html = '<div class="card-sections">';
-  fields.forEach(function(text, i) {
-    if (!text || i === 3) return; // skip empty and 四 (handled separately)
-    html += '<div class="card-section ' + CLS[i] + '">' +
-      '<div class="card-section-header">' +
-        '<div class="card-section-dot"></div>' +
-        esc(HDRS[i]) +
-      '</div>' +
-      '<div class="card-section-body">' + esc(text) + '</div>' +
-    '</div>';
-  });
-  // 四、其他重要事項 (index 3) - 紅色
-  if (fields[3]) {
-    html += '<div class="card-section" style="background:#FEF2F2;">' +
-      '<div class="card-section-header" style="background:#FECACA;color:#991B1B;">' +
-        '<div class="card-section-dot" style="background:#DC2626;"></div>' +
-        '四、其他重要事項' +
-      '</div>' +
-      '<div class="card-section-body" style="color:#7F1D1D;">' + esc(fields[3]) + '</div>' +
-    '</div>';
-  }
-  html += '</div>';
-  // Fallback: if no structured content, show raw text
-  if (!fields.some(function(f){ return f; })) {
-    return '<div class="card-section-body" style="padding:0;">' + esc(raw).replace(/\n/g,'<br>') + '</div>';
-  }
-  return html;
+  var parts = [];
+  // 一、工程進行情況（index 0）
+  if (fields[0]) parts.push('<div class="cs-text">' + esc(fields[0]).replace(/\n/g,'<br>') + '</div>');
+  // 二、品質查驗（index 1）
+  if (fields[1]) parts.push('<div class="cs-text" style="color:var(--dnv-digi-green);">' + esc(fields[1]).replace(/\n/g,'<br>') + '</div>');
+  // 三、督導環保（index 2）—— 這欄通常另外由 e.sub 顯示，這裡只補充
+  if (fields[2]) parts.push('<div class="cs-text" style="color:var(--c-amber);">' + esc(fields[2]).replace(/\n/g,'<br>') + '</div>');
+  // 四、其他重要事項（index 3）
+  if (fields[3]) parts.push('<div class="cs-text" style="color:var(--dnv-energy-red);font-weight:600;">' + esc(fields[3]).replace(/\n/g,'<br>') + '</div>');
+  if (parts.length) return '<div class="card-sections">' + parts.join('') + '</div>';
+  // Fallback: raw text
+  return '<div class="cs-text">' + esc(raw).replace(/\n/g,'<br>') + '</div>';
 }
 
 // ════════════════════════════
@@ -3446,7 +3429,8 @@ function applyHtlSize() {
   var stemH = Math.max(14, Math.round(h * 0.12));
   var track = document.querySelector('.htl-track');
   if (track) {
-    track.style.padding = h + 'px ' + Math.max(20, g) + 'px';
+    var vPad = h + 60;  // 卡片高度 + 安全餘量
+    track.style.padding = vPad + 'px ' + Math.max(20, g) + 'px';
   }
   // 更新節點、卡片寬度
   document.querySelectorAll('.htl-node').forEach(function(n) { n.style.width = w + 'px'; });
@@ -3615,6 +3599,8 @@ function render() {
         nodes +
       '</div>' +
     '</div>';
+  // 套用目前滑桿設定
+  applyHtlSize();
   } catch(err) { console.error('render error', err); }
 }
 
