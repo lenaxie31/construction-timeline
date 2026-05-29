@@ -9,16 +9,19 @@
 /* ══ 統計卡 ══ */
 #qi-stat-grid { margin-bottom:16px; }
 
-/* ══ Excel 拖放區 ══ */
-#xls-drop-zone {
-  border:2px dashed var(--border);border-radius:var(--radius);
-  padding:14px 10px;text-align:center;cursor:pointer;
-  transition:border-color .15s,background .15s;background:var(--bg);
+/* ══ Excel 上傳按鈕 ══ */
+#xls-upload-btn {
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;font-size:12px;font-weight:600;
+  border:1.5px dashed var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--text-secondary);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+  font-family:inherit;
 }
-#xls-drop-zone:hover, #xls-drop-zone.drag-over {
-  border-color:var(--dnv-sea-blue);background:#EAF3FB;
+#xls-upload-btn:hover, #xls-upload-btn.drag-over {
+  border-color:var(--dnv-sea-blue);color:var(--dnv-sea-blue);
+  background:#EAF3FB;border-style:solid;
 }
-#xls-drop-zone.drag-over { border-style:solid; }
 
 /* ══ 快捷篩選列 ══ */
 .qi-quick-bar {
@@ -214,20 +217,6 @@
       <div class="sidebar-section-title">快速連結</div>
       <a href="defects.html" class="btn-secondary" style="text-decoration:none;text-align:center;">📋 改善事項</a>
       <a href="dashboard.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 儀表板</a>
-      <div class="sidebar-section-title" style="margin-top:14px;">Excel 同步</div>
-      <!-- 拖放區 -->
-      <div id="xls-drop-zone"
-        ondragover="event.preventDefault();this.classList.add('drag-over')"
-        ondragleave="this.classList.remove('drag-over')"
-        ondrop="handleXlsDrop(event)">
-        <div style="font-size:22px;margin-bottom:6px;">📊</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">拖放 Excel 至此</div>
-        <div style="font-size:10px;color:var(--text-muted);">或點擊選擇檔案</div>
-        <input type="file" id="xls-input" accept=".xlsx,.xls" style="display:none" onchange="handleXlsFile(this.files[0])">
-      </div>
-      <button class="btn-secondary" onclick="document.getElementById('xls-input').click()"
-        style="font-size:11px;margin-top:6px;">📂 選擇 Excel 檔案</button>
-      <div id="xls-status" style="font-size:10px;color:var(--text-muted);line-height:1.7;margin-top:4px;"></div>
       <div class="sidebar-section-title" style="margin-top:14px;">初始資料</div>
       <button class="btn-secondary" onclick="forceImportCSV()"
         style="font-size:11px;color:var(--c-amber);border-color:var(--c-amber-border);">↺ 還原 CSV 預設資料</button>
@@ -241,7 +230,21 @@
       <!-- 標題列 -->
       <div class="page-header">
         <h2>監造查驗紀錄</h2>
-        <button class="btn-primary" style="width:auto;padding:8px 16px;font-size:12px;" onclick="openAddQiModal()">＋ 新增查驗紀錄</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <!-- Excel 上傳區 -->
+          <input type="file" id="xls-input" accept=".xlsx,.xls" style="display:none" onchange="handleXlsFile(this.files[0])">
+          <div id="xls-upload-btn"
+            ondragover="event.preventDefault();this.classList.add('drag-over')"
+            ondragleave="this.classList.remove('drag-over')"
+            ondrop="handleXlsDrop(event)"
+            onclick="document.getElementById('xls-input').click()"
+            title="點擊或拖放 Excel 檔案以匯入">
+            <span style="font-size:14px;">📊</span>
+            <span>匯入 Excel</span>
+          </div>
+          <span id="xls-status" style="font-size:11px;color:var(--text-muted);max-width:160px;line-height:1.4;"></span>
+          <button class="btn-primary" style="width:auto;padding:8px 16px;font-size:12px;" onclick="openAddQiModal()">＋ 新增查驗紀錄</button>
+        </div>
       </div>
 
       <!-- 統計卡 -->
@@ -341,6 +344,10 @@
             <input type="date" id="qi-self-date">
           </div>
         </div>
+        <div class="field">
+          <label>自檢表編號（選填）</label>
+          <input type="text" id="qi-self-no" placeholder="例：EL-1150127-1">
+        </div>
       </div>
 
       <!-- 申請抽驗 -->
@@ -358,6 +365,10 @@
             <label>申請日期</label>
             <input type="date" id="qi-req-date">
           </div>
+        </div>
+        <div class="field">
+          <label>申請表編號（選填）</label>
+          <input type="text" id="qi-req-no" placeholder="例：EB-1150127-1">
         </div>
       </div>
 
@@ -388,6 +399,16 @@
           <div class="field">
             <label>查驗人</label>
             <input type="text" id="qi-inspector" placeholder="例：王中平">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>抽驗紀錄表號（選填）</label>
+            <input type="text" id="qi-insp-rec-no" placeholder="例：MCCT-10490817_001.1a">
+          </div>
+          <div class="field">
+            <label>抽驗報告號（選填）</label>
+            <input type="text" id="qi-report-no" placeholder="例：MCSCR-10490817_001.1a">
           </div>
         </div>
       </div>
@@ -1196,7 +1217,7 @@ function handleXlsFile(file) {
 
 function handleXlsDrop(event) {
   event.preventDefault();
-  document.getElementById('xls-drop-zone').classList.remove('drag-over');
+  document.getElementById('xls-upload-btn').classList.remove('drag-over');
   const file = event.dataTransfer.files[0];
   if (!file) return;
   if (!file.name.match(/\.xlsx?$/i)) { setXlsStatus('⚠️ 請上傳 .xlsx 或 .xls 檔案', 'orange'); return; }
@@ -1208,7 +1229,8 @@ function openAddQiModal() {
   editingQiId = null;
   document.getElementById('qi-modal-title').textContent = '新增查驗紀錄';
   document.getElementById('qi-delete-btn').style.display = 'none';
-  ['qi-item','qi-inspector','qi-notice-no','qi-notes','qi-chase-note'].forEach(id => {
+  ['qi-item','qi-inspector','qi-notice-no','qi-notes','qi-chase-note',
+   'qi-self-no','qi-req-no','qi-insp-rec-no','qi-report-no'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   ['qi-date','qi-self-date','qi-req-date','qi-deadline'].forEach(id => {
@@ -1233,19 +1255,23 @@ function editQi(id) {
   editingQiId = id;
   document.getElementById('qi-modal-title').textContent = '編輯查驗紀錄';
   document.getElementById('qi-delete-btn').style.display = 'block';
-  document.getElementById('qi-type').value          = q.type     || '材料抽驗';
-  document.getElementById('qi-item').value          = q.item     || '';
-  document.getElementById('qi-self-check').value    = q.selfCheck|| '0';
-  document.getElementById('qi-self-date').value     = q.selfDate || '';
-  document.getElementById('qi-req-check').value     = q.reqCheck || '0';
-  document.getElementById('qi-req-date').value      = q.reqDate  || '';
-  document.getElementById('qi-insp-check').value    = q.inspCheck|| '0';
-  document.getElementById('qi-date').value          = q.inspDate || q.date || '';
-  document.getElementById('qi-progress').value      = q.progress || '製作中';
-  document.getElementById('qi-inspector').value     = q.inspector|| '';
-  document.getElementById('qi-notice-no').value     = q.noticeNo || '';
-  document.getElementById('qi-deadline').value      = q.deadline || '';
-  document.getElementById('qi-notes').value         = q.notes    || '';
+  document.getElementById('qi-type').value          = q.type      || '材料抽驗';
+  document.getElementById('qi-item').value          = q.item      || '';
+  document.getElementById('qi-self-check').value    = q.selfCheck || '0';
+  document.getElementById('qi-self-date').value     = q.selfDate  || '';
+  document.getElementById('qi-self-no').value       = q.selfNo    || '';
+  document.getElementById('qi-req-check').value     = q.reqCheck  || '0';
+  document.getElementById('qi-req-date').value      = q.reqDate   || '';
+  document.getElementById('qi-req-no').value        = q.reqNo     || '';
+  document.getElementById('qi-insp-check').value    = q.inspCheck || '0';
+  document.getElementById('qi-date').value          = q.inspDate  || q.date || '';
+  document.getElementById('qi-insp-rec-no').value   = q.inspRecNo || '';
+  document.getElementById('qi-report-no').value     = q.reportNo  || '';
+  document.getElementById('qi-progress').value      = q.progress  || '製作中';
+  document.getElementById('qi-inspector').value     = q.inspector || '';
+  document.getElementById('qi-notice-no').value     = q.noticeNo  || '';
+  document.getElementById('qi-deadline').value      = q.deadline  || '';
+  document.getElementById('qi-notes').value         = q.notes     || '';
   document.getElementById('qi-doc-self-check').value= q.docSelfCheck || '待補';
   document.getElementById('qi-doc-req-form').value  = q.docReqForm   || '待補';
   document.getElementById('qi-doc-record').value    = q.docRecord    || '待補';
@@ -1267,11 +1293,15 @@ function saveQi() {
     item,
     selfCheck:    document.getElementById('qi-self-check').value,
     selfDate:     document.getElementById('qi-self-date').value,
+    selfNo:       document.getElementById('qi-self-no').value.trim(),
     reqCheck:     document.getElementById('qi-req-check').value,
     reqDate:      document.getElementById('qi-req-date').value,
+    reqNo:        document.getElementById('qi-req-no').value.trim(),
     inspCheck:    document.getElementById('qi-insp-check').value,
     inspDate:     document.getElementById('qi-date').value,
     date:         document.getElementById('qi-date').value,
+    inspRecNo:    document.getElementById('qi-insp-rec-no').value.trim(),
+    reportNo:     document.getElementById('qi-report-no').value.trim(),
     progress:     document.getElementById('qi-progress').value,
     inspector:    document.getElementById('qi-inspector').value.trim(),
     noticeNo:     document.getElementById('qi-notice-no').value.trim(),
