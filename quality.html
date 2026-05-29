@@ -9,6 +9,17 @@
 /* ══ 統計卡 ══ */
 #qi-stat-grid { margin-bottom:16px; }
 
+/* ══ Excel 拖放區 ══ */
+#xls-drop-zone {
+  border:2px dashed var(--border);border-radius:var(--radius);
+  padding:14px 10px;text-align:center;cursor:pointer;
+  transition:border-color .15s,background .15s;background:var(--bg);
+}
+#xls-drop-zone:hover, #xls-drop-zone.drag-over {
+  border-color:var(--dnv-sea-blue);background:#EAF3FB;
+}
+#xls-drop-zone.drag-over { border-style:solid; }
+
 /* ══ 快捷篩選列 ══ */
 .qi-quick-bar {
   display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;
@@ -203,8 +214,23 @@
       <div class="sidebar-section-title">快速連結</div>
       <a href="defects.html" class="btn-secondary" style="text-decoration:none;text-align:center;">📋 改善事項</a>
       <a href="dashboard.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 儀表板</a>
-      <div class="sidebar-section-title" style="margin-top:14px;">資料</div>
-      <button class="btn-secondary" onclick="forceImportCSV()" style="font-size:11px;color:var(--c-amber);border-color:var(--c-amber-border);">⬆ 重新匯入 CSV 資料</button>
+      <div class="sidebar-section-title" style="margin-top:14px;">Excel 同步</div>
+      <!-- 拖放區 -->
+      <div id="xls-drop-zone"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleXlsDrop(event)">
+        <div style="font-size:22px;margin-bottom:6px;">📊</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:3px;">拖放 Excel 至此</div>
+        <div style="font-size:10px;color:var(--text-muted);">或點擊選擇檔案</div>
+        <input type="file" id="xls-input" accept=".xlsx,.xls" style="display:none" onchange="handleXlsFile(this.files[0])">
+      </div>
+      <button class="btn-secondary" onclick="document.getElementById('xls-input').click()"
+        style="font-size:11px;margin-top:6px;">📂 選擇 Excel 檔案</button>
+      <div id="xls-status" style="font-size:10px;color:var(--text-muted);line-height:1.7;margin-top:4px;"></div>
+      <div class="sidebar-section-title" style="margin-top:14px;">初始資料</div>
+      <button class="btn-secondary" onclick="forceImportCSV()"
+        style="font-size:11px;color:var(--c-amber);border-color:var(--c-amber-border);">↺ 還原 CSV 預設資料</button>
       <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0;">覆蓋現有記錄並同步至雲端</div>
     </div>
   </div>
@@ -877,6 +903,32 @@ function renderQi() {
               </div>
             </div>
             <div class="qi-detail-box">
+              <div class="qi-detail-box-label">申請表編號 / 申請日</div>
+              <div class="qi-detail-box-val" style="font-family:monospace;font-size:11px;">
+                ${esc(q.reqNo||'—')}<br>
+                <span style="color:var(--text-muted);">${q.reqDate||'—'}</span>
+              </div>
+            </div>
+            <div class="qi-detail-box">
+              <div class="qi-detail-box-label">自檢表編號 / 自檢日</div>
+              <div class="qi-detail-box-val" style="font-family:monospace;font-size:11px;">
+                ${esc(q.selfNo||'—')}<br>
+                <span style="color:var(--text-muted);">${q.selfDate||'—'}</span>
+              </div>
+            </div>
+            <div class="qi-detail-box">
+              <div class="qi-detail-box-label">抽驗紀錄表號</div>
+              <div class="qi-detail-box-val" style="font-family:monospace;font-size:11px;color:${q.inspRecNo?'var(--c-blue)':'var(--text-muted)'};">
+                ${esc(q.inspRecNo||'—')}
+              </div>
+            </div>
+            <div class="qi-detail-box">
+              <div class="qi-detail-box-label">抽驗報告號</div>
+              <div class="qi-detail-box-val" style="font-family:monospace;font-size:11px;color:${q.reportNo?'var(--c-blue)':'var(--text-muted)'};">
+                ${esc(q.reportNo||'—')}
+              </div>
+            </div>
+            <div class="qi-detail-box">
               <div class="qi-detail-box-label">齊件狀態（全覽）</div>
               <div class="qi-detail-box-val" style="display:flex;flex-wrap:wrap;gap:3px;">
                 ${['自檢表:'+q.docSelfCheck,'申請單:'+q.docReqForm,'紀錄表:'+q.docRecord,'報告:'+q.docReport,'改善單:'+q.docImprove].map(p=>{
@@ -945,6 +997,210 @@ function saveQuickNote(id, val) {
 function goToDefect(noticeNo) {
   sessionStorage.setItem('defect_highlight', noticeNo);
   window.location.href = 'defects.html';
+}
+
+/* ══════════════════════════════════════════════
+   Excel 匯入  ─  欄位對應 & 更新邏輯
+   ══════════════════════════════════════════════ */
+
+/* Excel 欄位名稱 → 系統欄位的對應表（容忍各種大小寫/空格變體） */
+const XLS_COL_MAP = {
+  // 申請表
+  '申請表':        'reqCheckRaw',
+  '申請表編號':    'reqNo',
+  '申請日':        'reqDateRaw',
+  // 施工類型
+  '材料進場或施工':'type',
+  '施工項目':      'group',
+  '項目名稱':      'item',
+  // 自檢表
+  '自檢表':        'selfCheckRaw',
+  '自檢表編號':    'selfNo',
+  '自檢日':        'selfDateRaw',
+  // 抽查
+  '抽查(驗)紀錄':  'inspCheckRaw',
+  '抽驗日期':      'inspDateRaw',
+  '辦理進度':      'progress',
+  '抽驗紀錄表號':  'inspRecNo',
+  '抽驗報告號':    'reportNo',
+  '抽驗人':        'inspector',
+  // 改善
+  '改善通知單':    'noticeNo',
+  '改善期限':      'deadlineRaw',
+};
+
+/* Excel 日期值（序列數 or 字串）→ YYYY-MM-DD */
+function xlsDate(val) {
+  if (!val && val !== 0) return '';
+  if (typeof val === 'number') {
+    // Excel 序列日期
+    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth()+1).padStart(2,'0');
+    const dd= String(d.getUTCDate()).padStart(2,'0');
+    return `${y}-${m}-${dd}`;
+  }
+  return normalizeDate(String(val));
+}
+
+/* TRUE/FALSE/"TRUE"/"FALSE"/1/0 → '1'/'0' */
+function xlsBool(val) {
+  if (val === true  || String(val).trim().toUpperCase() === 'TRUE'  || val === 1) return '1';
+  return '0';
+}
+
+/* 正規化欄位名稱（去空格、全形→半形） */
+function normKey(k) {
+  return String(k||'').replace(/\s+/g,'').replace(/（/g,'(').replace(/）/g,')').replace(/，/g,',');
+}
+
+/* 把一列 Excel row 物件轉成系統欄位 */
+function xlsRowToPayload(row) {
+  const raw = {};
+  Object.keys(row).forEach(k => { raw[normKey(k)] = row[k]; });
+
+  const get = (...keys) => {
+    for (const k of keys) {
+      const nk = normKey(k);
+      if (raw[nk] !== undefined && raw[nk] !== null && raw[nk] !== '') return raw[nk];
+    }
+    return '';
+  };
+
+  const item = String(get('項目名稱') || '').trim();
+  if (!item) return null;   // 空列略過
+
+  const type = String(get('材料進場或施工','type') || '').trim();
+  // 只接受合法分類
+  const VALID_TYPES = { '材料抽驗':1,'施工抽查':1,'不定期抽查':1 };
+  const resolvedType = VALID_TYPES[type] ? type : '施工抽查';
+
+  const reqCheck  = xlsBool(get('申請表'));
+  const selfCheck = xlsBool(get('自檢表'));
+  const inspCheck = xlsBool(get('抽查(驗)紀錄','抽查(驗)紀錄'));
+  const reqDate   = xlsDate(get('申請日'));
+  const selfDate  = xlsDate(get('自檢日'));
+  const inspDate  = xlsDate(get('抽驗日期'));
+  const deadline  = xlsDate(get('改善期限'));
+  const progress  = String(get('辦理進度') || '').trim() || (inspCheck==='1' ? 'Completed' : '製作中');
+  const inspector = String(get('抽驗人') || '').trim();
+  const noticeNo  = String(get('改善通知單') || '').trim();
+  const reqNo     = String(get('申請表編號') || '').trim();
+  const selfNo    = String(get('自檢表編號') || '').trim();
+  const inspRecNo = String(get('抽驗紀錄表號') || '').trim();
+  const reportNo  = String(get('抽驗報告號') || '').trim();
+  const group     = String(get('施工項目') || '').trim();
+
+  const docStatus  = (inspRecNo && reportNo) || progress==='Completed' ? '已收' : '待補';
+  const reqDocSt   = reqCheck==='1' ? '已收' : '待補';
+  const selfDocSt  = selfCheck==='1' ? '已收' : '待補';
+
+  const payload = {
+    type: resolvedType, group, item,
+    reqCheck, reqDate, reqNo,
+    selfCheck, selfDate, selfNo,
+    inspCheck, inspDate, date: inspDate,
+    progress, inspector,
+    noticeNo, deadline,
+    inspRecNo, reportNo,
+    docSelfCheck: selfDocSt,
+    docReqForm:   reqDocSt,
+    docRecord:    docStatus,
+    docReport:    docStatus,
+    docImprove:   noticeNo ? '已收' : '不需要',
+    notes: [inspRecNo, reportNo].filter(Boolean).join('　'),
+  };
+  payload.overallStatus = calcOverallStatus(payload);
+  payload.result = payload.progress === 'Completed' ? 'pass' : 'recheck';
+  return payload;
+}
+
+/* 核心：讀取 ArrayBuffer → 解析 → 更新/新增資料 */
+function processXlsBuffer(buffer) {
+  const XLSX = window.XLSX;
+  if (!XLSX) { setXlsStatus('❌ SheetJS 未載入，請重新整理', 'red'); return; }
+
+  const wb   = XLSX.read(buffer, { type:'array', cellDates:false });
+  const ws   = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
+
+  if (!rows.length) { setXlsStatus('⚠️ 讀不到資料列', 'orange'); return; }
+
+  let updated = 0, added = 0, skipped = 0;
+
+  rows.forEach(row => {
+    const payload = xlsRowToPayload(row);
+    if (!payload) { skipped++; return; }
+
+    // 比對策略：先用 inspRecNo 精確比對；找不到就用 item + type + inspDate 組合
+    let existing = null;
+    if (payload.inspRecNo) {
+      existing = qualityItems.find(q => q.inspRecNo === payload.inspRecNo);
+    }
+    if (!existing && payload.item) {
+      existing = qualityItems.find(q =>
+        q.item === payload.item &&
+        q.type === payload.type &&
+        (q.inspDate||q.date||'') === (payload.inspDate||'')
+      );
+    }
+
+    if (existing) {
+      // 更新：保留網頁端手動填的 chaseNote / overallStatus（若使用者曾手動改）
+      const keepChase  = existing.chaseNote || '';
+      Object.assign(existing, payload);
+      existing.chaseNote = keepChase;
+      updated++;
+    } else {
+      qualityItems.push({ id: uid(), contractItem: true, chaseNote: '', ...payload });
+      added++;
+    }
+  });
+
+  qiSave();
+
+  const msg = `✅ 匯入完成\n更新 ${updated} 筆　新增 ${added} 筆${skipped?`　略過 ${skipped} 筆`:''}`;
+  setXlsStatus(msg.replace('\n','　'), 'green');
+
+  // 同步雲端
+  setSync('同步中…','sync-busy');
+  cloudSaveAll('qi', qualityItems)
+    .then(() => setSync('已同步 ✓','sync-ok'))
+    .catch(() => setSync('本機已儲存','sync-local'));
+
+  populateQiMonthFilter();
+  renderQiStats();
+  renderQi();
+
+  // 顯示摘要 alert
+  alert(msg + `\n\n共 ${qualityItems.length} 筆記錄`);
+}
+
+function setXlsStatus(msg, color) {
+  const el = document.getElementById('xls-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color==='green'?'var(--c-green)':color==='red'?'var(--c-red)':'var(--c-amber)';
+}
+
+function handleXlsFile(file) {
+  if (!file) return;
+  setXlsStatus('讀取中…', 'orange');
+  const reader = new FileReader();
+  reader.onload = e => processXlsBuffer(e.target.result);
+  reader.onerror = () => setXlsStatus('❌ 讀取失敗', 'red');
+  reader.readAsArrayBuffer(file);
+  // 清空 input 讓同一檔案可重複選
+  document.getElementById('xls-input').value = '';
+}
+
+function handleXlsDrop(event) {
+  event.preventDefault();
+  document.getElementById('xls-drop-zone').classList.remove('drag-over');
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  if (!file.name.match(/\.xlsx?$/i)) { setXlsStatus('⚠️ 請上傳 .xlsx 或 .xls 檔案', 'orange'); return; }
+  handleXlsFile(file);
 }
 
 /* ── Modal ── */
@@ -1064,5 +1320,6 @@ async function deleteQiBtn(id) {
 
 init();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
