@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>時間軸 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── 水平時間軸 ── */
+.htl-scroll { overflow-x:auto;overflow-y:visible;padding-bottom:16px;padding-top:8px;-webkit-overflow-scrolling:touch; }
+.htl-scroll::-webkit-scrollbar { height:4px; }
+.htl-scroll::-webkit-scrollbar-track { background:var(--border-light);border-radius:2px; }
+.htl-scroll::-webkit-scrollbar-thumb { background:var(--dnv-sandstone);border-radius:2px; }
+.htl-track {
+  position:relative;min-width:max-content;display:flex;align-items:center;
+  padding:220px 32px;gap:0;overflow:visible;
+}
+.htl-track::before {
+  content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:2px;
+  background:linear-gradient(90deg,transparent,var(--border) 3%,var(--border) 97%,transparent);z-index:0;
+}
+.htl-node { position:relative;display:flex;flex-direction:column;align-items:center;width:190px;flex-shrink:0;z-index:1;animation:htlFadeIn .25s ease both; }
+@keyframes htlFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.htl-dot {
+  width:13px;height:13px;border-radius:50%;border:3px solid var(--surface);
+  box-shadow:0 0 0 2px var(--htl-color,var(--dnv-sea-blue));background:var(--htl-color,var(--dnv-sea-blue));
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;transition:transform .15s,box-shadow .15s;cursor:pointer;
+}
+.htl-node:hover .htl-dot { transform:translate(-50%,-50%) scale(1.4);box-shadow:0 0 0 3px var(--htl-color,var(--dnv-sea-blue)),0 0 10px rgba(0,0,0,.15); }
+.htl-stem { width:1px;background:var(--border);position:absolute;left:50%;transform:translateX(-50%);z-index:1; }
+.htl-stem.above { bottom:50%;height:20px; }
+.htl-stem.below { top:50%;height:20px; }
+.htl-card {
+  background:var(--surface);border:1px solid var(--border-light);border-top:3px solid var(--htl-color,var(--dnv-sea-blue));
+  border-radius:var(--radius-lg);padding:10px 12px;width:190px;box-shadow:var(--shadow);
+  position:absolute;left:50%;transform:translateX(-50%);transition:box-shadow var(--transition),transform var(--transition);box-sizing:border-box;
+}
+.htl-card:hover { box-shadow:var(--shadow-md);transform:translateX(-50%) translateY(-2px); }
+.htl-card.above { bottom:calc(50% + 20px); }
+.htl-card.below { top:calc(50% + 20px); }
+.htl-date-label { position:absolute;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--dnv-dark-blue);white-space:nowrap;text-align:center; }
+.htl-date-label.above { top:calc(50% + 24px); }
+.htl-date-label.below { bottom:calc(50% + 24px); }
+.htl-today-pill { font-size:8px;font-weight:700;background:var(--dnv-digi-green);color:#fff;padding:1px 5px;border-radius:3px;display:block;text-align:center;margin-top:2px; }
+.htl-status { font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:6px;display:inline-block;margin-bottom:5px; }
+.htl-title  { font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.45;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden; }
+.htl-sub    { font-size:11px;color:var(--text-muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:3px; }
+.htl-cat-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;margin-right:3px;margin-bottom:3px; }
+.htl-actions { display:flex;gap:4px;margin-top:5px;opacity:0;transition:opacity .15s; }
+.htl-card:hover .htl-actions { opacity:1; }
+@media(hover:none) { .htl-actions { opacity:1; } }
+/* 狀態色 */
+.htl-normal    { --htl-color:var(--dnv-sea-blue); }
+.htl-milestone { --htl-color:var(--dnv-digi-green); }
+.htl-warn      { --htl-color:var(--c-amber); }
+.htl-pending   { --htl-color:var(--c-amber); }
+.htl-issue     { --htl-color:var(--dnv-energy-red); }
+/* 緊湊列表 */
+.compact-table { width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border-light);box-shadow:var(--shadow); }
+.compact-table th { background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 14px;text-align:left; }
+.compact-table td { padding:9px 14px;border-bottom:1px solid var(--border-light);font-size:13px;vertical-align:top; }
+.compact-table tr:last-child td { border-bottom:none; }
+.compact-table tr:hover td { background:#F8F9FF; }
+/* 工具列 */
+.tl-toolbar { display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border-light);box-shadow:var(--shadow); }
+.tl-toolbar-label { font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.04em;white-space:nowrap; }
+.tl-slider { width:80px;accent-color:var(--dnv-sea-blue);cursor:pointer; }
+.tl-sep { width:1px;height:20px;background:var(--border-light);margin:0 4px; }
+.legend { display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px; }
+.legend-item { display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary); }
+.legend-dot { width:8px;height:8px;border-radius:50%; }
+.alert-banner { background:var(--c-red-bg);border:1px solid var(--c-red-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:14px;font-size:13px;color:#7f1d1d;display:flex;align-items:center;gap:8px; }
+.cs-text { font-size:12px;color:var(--text-primary);line-height:1.5; }
+.card-sections { display:flex;flex-direction:column;gap:1px; }
+/* ── 工項新增側欄 ── */
+.sidebar-inner .field label { font-size:11px;font-weight:600;color:var(--text-secondary); }
+#f-cats { display:flex;flex-wrap:wrap;gap:5px;padding:6px 0;min-height:30px; }
+/* Mobile */
+@media(max-width:599px) {
+  .htl-track { flex-direction:column!important;padding:16px!important;gap:0!important;min-width:unset!important;align-items:stretch!important; }
+  .htl-track::before { display:none; }
+  .htl-node { width:100%!important;flex-direction:column!important;align-items:stretch!important;margin-bottom:12px; }
+  .htl-card { position:static!important;transform:none!important;width:100%!important; }
+  .htl-date-label { position:static!important;transform:none!important;display:block;font-size:11px;margin-bottom:4px;color:var(--text-muted); }
+  .htl-stem { display:none!important; }
+  .tl-toolbar { display:none!important; }
+}
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+
+<div class="layout">
+  <!-- 新增工項側欄 -->
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title" id="form-title">新增工項</div>
+      <div class="field-row">
+        <div class="field"><label>施工日期</label><input type="date" id="f-date"></div>
+        <div class="field"><label>天氣</label>
+          <select id="f-weather">
+            <option>☀️ 晴</option><option>⛅ 陰</option><option>🌧 雨</option><option>⛈ 豪雨</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>狀態</label>
+        <select id="f-status" onchange="onStatusChange()">
+          <option value="normal">正常施工</option><option value="milestone">里程碑／進展</option>
+          <option value="warn">待注意</option><option value="pending">待決議</option><option value="issue">異常／已開單</option>
+        </select>
+      </div>
+      <div class="field"><label>一、工程進行情況</label><textarea id="f-title-1" style="min-height:56px;" placeholder="描述本日工程進行情況…"></textarea></div>
+      <div class="field"><label>二、品質查驗工作項目</label><textarea id="f-title-2" style="min-height:56px;" placeholder="描述品質抽查驗相關工作…"></textarea></div>
+      <div class="field"><label>三、督導環保及職安衛事項</label><textarea id="f-title-3" style="min-height:56px;" placeholder="描述環保、職業安全衛生督導情況…"></textarea></div>
+      <div class="field"><label>四、其他重要事項</label><textarea id="f-title-4" style="min-height:48px;" placeholder="其他重要事項…"></textarea></div>
+      <div class="field">
+        <label>出工人數</label>
+        <input type="text" id="f-sub" placeholder="例：出工 13人（施工 9、管理 4）">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;align-items:center;">
+          <span style="font-size:10px;color:var(--text-muted);">快速：施</span>
+          <input type="number" id="wk-labor" min="0" placeholder="0" oninput="fillWorkers()" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;">
+          <span style="font-size:10px;color:var(--text-muted);">管</span>
+          <input type="number" id="wk-mgmt"  min="0" placeholder="0" oninput="fillWorkers()" style="width:48px;font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);text-align:center;">
+        </div>
+      </div>
+      <div class="field"><label>異常／備註（選填）</label><textarea id="f-alert" placeholder="如有異常或待追蹤事項請填寫"></textarea></div>
+      <div class="field" id="f-defect-wrap" style="display:none">
+        <label>連結改善通知單（選填）</label><input type="text" id="f-defect-no" placeholder="例：10490817_0001">
+      </div>
+      <button class="btn-primary" id="btn-submit" onclick="submitEntry()">新增到時間軸</button>
+      <button class="btn-secondary" id="btn-cancel" onclick="cancelEdit()" style="display:none">取消編輯</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <button class="sidebar-float-btn" id="sidebar-float-btn" onclick="toggleSidebarCollapse()">＋</button>
+    <div class="tab-panel">
+      <div id="alert-banner-area"></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-green)"></div>里程碑</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-blue)"></div>正常施工</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-amber)"></div>待注意／待決議</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--c-red)"></div>異常／已開單</div>
+      </div>
+      <!-- 篩選列 -->
+      <div class="filter-bar">
+        <input type="search" id="search-input" placeholder="搜尋工項…" oninput="render()">
+        <select class="filter-select" id="filter-status" onchange="render()">
+          <option value="">全部狀態</option><option value="normal">正常施工</option>
+          <option value="milestone">里程碑</option><option value="warn">待注意</option>
+          <option value="pending">待決議</option><option value="issue">異常／已開單</option>
+        </select>
+        <select class="filter-select" id="filter-month" onchange="render()"><option value="">全部月份</option></select>
+        <select class="filter-select" id="filter-view" onchange="render()">
+          <option value="timeline">水平時間軸</option>
+          <option value="compact">緊湊列表</option>
+        </select>
+        <span class="filter-count" id="filter-count"></span>
+      </div>
+      <!-- 密度控制列 -->
+      <div class="tl-toolbar" id="tl-size-bar">
+        <span class="tl-toolbar-label">卡片寬度</span>
+        <input type="range" class="tl-slider" id="htl-width-slider" min="140" max="300" value="190" oninput="applyHtlSize()">
+        <span id="htl-width-val" style="font-size:11px;color:var(--text-muted);min-width:32px;">190</span>
+        <div class="tl-sep"></div>
+        <span class="tl-toolbar-label">節點間距</span>
+        <input type="range" class="tl-slider" id="htl-gap-slider" min="0" max="60" value="0" oninput="applyHtlSize()">
+        <span id="htl-gap-val" style="font-size:11px;color:var(--text-muted);min-width:28px;">0</span>
+      </div>
+      <div id="timeline"></div>
+    </div>
+  </div>
+</div>
+
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+<div class="toast-confirm" id="toast-confirm">
+  <span id="toast-msg">確定要刪除？</span>
+  <div style="display:flex;gap:8px;">
+    <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+let entries = [], defects = [];
+let editingId = null;
+const workCats = loadCats();
+
+const STATUS_COLOR = { normal:'var(--dnv-sea-blue)', milestone:'var(--dnv-digi-green)', warn:'var(--c-amber)', pending:'var(--c-amber)', issue:'var(--dnv-energy-red)' };
+const STATUS_BG    = { normal:'#EAF3FB', milestone:'#EDF9EC', warn:'#FFF4E0', pending:'#FFF4E0', issue:'#FDE8E9' };
+const STATUS_LABEL = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常／已開單' };
+const VALID_STATUS = { normal:1, milestone:1, warn:1, pending:1, issue:1 };
+
+function loadCats() {
+  try { const r=localStorage.getItem('construction_cats_v1'); return r?JSON.parse(r):[]; } catch(e) { return []; }
+}
+
+async function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('時間軸');
+  initSidebarState();
+  renderNav('timeline');
+  document.getElementById('f-date').value = todayStr();
+
+  const data = await loadAllData();
+  entries = data.entries;
+  defects = data.defects;
+  populateMonthFilter();
+  render();
+}
+
+function onStatusChange() {
+  const v = document.getElementById('f-status').value;
+  document.getElementById('f-defect-wrap').style.display = (v==='issue'||v==='warn') ? 'flex' : 'none';
+}
+
+function populateMonthFilter() {
+  const seen={}, months=[];
+  entries.forEach(e => { const m=e.date.slice(0,7); if(!seen[m]){seen[m]=1;months.push(m);} });
+  months.sort();
+  const sel=document.getElementById('filter-month');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">全部月份</option>'+months.map(m=>
+    `<option value="${m}"${m===cur?' selected':''}>${m.replace('-','年')}月</option>`).join('');
+}
+
+function getFiltered() {
+  const q  = (document.getElementById('search-input').value||'').trim().toLowerCase();
+  const st = document.getElementById('filter-status').value;
+  const mo = document.getElementById('filter-month').value;
+  return entries.filter(e =>
+    (!q  || e.title.toLowerCase().includes(q) || (e.alert||'').toLowerCase().includes(q)) &&
+    (!st || e.status===st) &&
+    (!mo || e.date.startsWith(mo))
+  );
+}
+
+function render() {
+  const filtered = getFiltered().sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('filter-count').textContent = '共 '+filtered.length+' 筆';
+
+  const ba = document.getElementById('alert-banner-area');
+  const issN = entries.filter(e=>e.status==='issue').length;
+  const penN = entries.filter(e=>e.status==='pending').length;
+  ba.innerHTML = (issN+penN>0)
+    ? `<div class="alert-banner">⚠️ 目前有 ${issN?'<strong>'+issN+' 筆異常</strong>':''} ${penN?'<strong>'+penN+' 筆待決議</strong>':''} 項目需關注。</div>` : '';
+
+  const viewMode = document.getElementById('filter-view').value;
+  document.getElementById('tl-size-bar').style.display = viewMode==='compact' ? 'none' : 'flex';
+  const tl = document.getElementById('timeline');
+  if (!filtered.length) { tl.innerHTML='<div class="empty">沒有符合條件的記錄</div>'; return; }
+
+  const today = todayStr();
+  if (viewMode==='compact') {
+    tl.innerHTML = `<table class="compact-table"><thead><tr>
+      <th style="width:80px;">日期</th><th style="width:80px;">狀態</th>
+      <th>工程進行情況</th><th>督導環保及職安衛</th>
+    </tr></thead><tbody>${filtered.map(e => {
+      const sc = {normal:'#003591',milestone:'#3F9C35',warn:'#E98300',pending:'#E98300',issue:'#EB2A34'}[e.status]||'#003591';
+      const sl = STATUS_LABEL[e.status]||e.status;
+      const fs = parseTitle(e.title||'');
+      return `<tr><td style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;">${(e.date||'').slice(5).replace('-','/')}</td>
+        <td><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:${sc}22;color:${sc};">${sl}</span></td>
+        <td style="font-size:12px;line-height:1.6;">${formatTitle(e.title)||'—'}</td>
+        <td style="font-size:12px;line-height:1.6;">${esc(fs[2]||e.sub||'—')}</td></tr>`;
+    }).join('')}</tbody></table>`;
+    return;
+  }
+
+  // 水平時間軸
+  const nodes = filtered.map((e, i) => {
+    const isAbove = i%2===0;
+    const isToday = e.date===today;
+    const sc = STATUS_COLOR[e.status]||STATUS_COLOR.normal;
+    const sb = STATUS_BG[e.status]  ||STATUS_BG.normal;
+    const delay = `animation-delay:${Math.min(i*0.035,0.5)}s`;
+    const htlCls = 'htl-'+(e.status||'normal');
+    const fs = parseTitle(e.title||'');
+
+    const catTags = (e.cats||[]).map(cid => {
+      const cat = workCats.find(c=>c.id===cid);
+      return cat ? `<span class="htl-cat-tag" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44;">${esc(cat.label)}</span>` : '';
+    }).join('');
+
+    const card = `<div class="htl-card ${isAbove?'above':'below'}" style="border-top-color:${sc};">
+      <span class="htl-status" style="background:${sb};color:${sc};">${STATUS_LABEL[e.status]||e.status}</span>
+      ${e.title?`<div class="htl-title">${formatTitle(e.title)}</div>`:''}
+      ${fs[2]?`<div class="htl-sub" style="color:var(--c-amber);">${esc(fs[2].slice(0,60))}${fs[2].length>60?'…':''}</div>`:''}
+      ${e.alert?`<div style="font-size:10px;color:var(--text-muted);margin-top:4px;border-left:2px solid var(--border);padding-left:5px;">${esc(e.alert.slice(0,40))}</div>`:''}
+      ${catTags?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${catTags}</div>`:''}
+      <div class="htl-actions">
+        <button class="btn-sm edit" data-id="${e.id}" onclick="event.stopPropagation();editEntry(this.dataset.id)">編輯</button>
+        <button class="btn-sm del"  data-id="${e.id}" onclick="event.stopPropagation();deleteEntry(this.dataset.id)">刪除</button>
+      </div>
+    </div>`;
+
+    const stem    = `<div class="htl-stem ${isAbove?'above':'below'}"></div>`;
+    const dot     = `<div class="htl-dot" style="background:${sc};box-shadow:0 0 0 2px ${sc};"></div>`;
+    const dateEl  = `<div class="htl-date-label ${isAbove?'above':'below'}">
+      <span>${(e.date||'').slice(5).replace('-','/')}</span>
+      ${isToday?'<span class="htl-today-pill">今天</span>':''}
+      <div style="font-size:10px;color:var(--text-muted);text-align:center;">${esc(e.weather||'')}</div>
+    </div>`;
+
+    return `<div class="htl-node ${htlCls}" style="${delay}">
+      ${isAbove?card:dateEl}${stem}${dot}${isAbove?dateEl:card}
+    </div>`;
+  }).join('');
+
+  tl.innerHTML = `<div class="htl-scroll"><div class="htl-track">${nodes}</div></div>`;
+  applyHtlSize();
+}
+
+function applyHtlSize() {
+  const w = parseInt(document.getElementById('htl-width-slider').value);
+  const g = parseInt(document.getElementById('htl-gap-slider').value);
+  document.getElementById('htl-width-val').textContent = w;
+  document.getElementById('htl-gap-val').textContent   = g;
+  const track = document.querySelector('.htl-track');
+  if (track) track.style.padding = '220px '+Math.max(20,g)+'px';
+  document.querySelectorAll('.htl-node').forEach(n=>n.style.width=w+'px');
+  document.querySelectorAll('.htl-card').forEach(c=>c.style.width=w+'px');
+}
+
+// ── CRUD ──
+async function submitEntry() {
+  const date = document.getElementById('f-date').value;
+  const t1 = document.getElementById('f-title-1').value.trim();
+  const t2 = document.getElementById('f-title-2').value.trim();
+  const t3 = document.getElementById('f-title-3').value.trim();
+  const t4 = document.getElementById('f-title-4').value.trim();
+  const titleParts = [];
+  if (t1) titleParts.push('一、工程進行情況\n'+t1);
+  if (t2) titleParts.push('二、品質查驗工作項目\n'+t2);
+  if (t3) titleParts.push('三、督導環保及職安衛事項\n'+t3);
+  if (t4) titleParts.push('四、其他重要事項\n'+t4);
+  const title  = titleParts.join('\n\n');
+  const weather= document.getElementById('f-weather').value;
+  const status = document.getElementById('f-status').value;
+  const sub    = document.getElementById('f-sub').value.trim();
+  const alertTx= document.getElementById('f-alert').value.trim();
+  const defectNo=document.getElementById('f-defect-no').value.trim();
+  if (!date) { alert('請填寫日期'); return; }
+  if (!title) { alert('請至少填寫一項工項說明（一～四）'); return; }
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  setSync('儲存中…','sync-busy');
+  try {
+    if (editingId) await apiCall({ action:'update', id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo });
+    else           await apiCall({ action:'add', date, weather, status, title, sub, alert:alertTx, defectNo });
+    const data = await apiCall({ action:'getAll' });
+    entries = (data.entries||[]).map(sanitizeEntry).filter(e=>e.date);
+    localSave(entries);
+    setSync('已同步 ✓','sync-ok');
+  } catch(e) {
+    // offline fallback
+    if (editingId) {
+      const idx = entries.findIndex(x=>x.id===editingId);
+      if (idx!==-1) entries[idx] = { id:editingId, date, weather, status, title, sub, alert:alertTx, defectNo };
+    } else {
+      entries.push({ id:uid(), date, weather, status, title, sub, alert:alertTx, defectNo });
+    }
+    localSave(entries);
+    setSync('本機儲存','sync-local');
+  }
+  btn.disabled = false;
+  resetForm();
+  populateMonthFilter();
+  render();
+}
+
+function editEntry(id) {
+  const e = entries.find(x=>x.id===id); if (!e) return;
+  editingId = id;
+  document.getElementById('f-date').value    = e.date;
+  document.getElementById('f-weather').value = e.weather||'☀️ 晴';
+  document.getElementById('f-status').value  = e.status;
+  const fs = parseTitle(e.title||'');
+  document.getElementById('f-title-1').value = fs[0];
+  document.getElementById('f-title-2').value = fs[1];
+  document.getElementById('f-title-3').value = fs[2];
+  document.getElementById('f-title-4').value = fs[3];
+  document.getElementById('f-sub').value     = e.sub||'';
+  document.getElementById('f-alert').value   = e.alert||'';
+  document.getElementById('f-defect-no').value = e.defectNo||'';
+  document.getElementById('f-defect-wrap').style.display = (e.status==='issue'||e.status==='warn')?'flex':'none';
+  document.getElementById('form-title').textContent  = '✏️ 編輯工項';
+  document.getElementById('btn-submit').textContent  = '儲存變更';
+  document.getElementById('btn-cancel').style.display = 'block';
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay-bg').classList.add('show');
+}
+
+function cancelEdit() { resetForm(); render(); }
+
+async function deleteEntry(id) {
+  if (!await toastConfirm('確定要刪除這筆施工記錄？')) return;
+  setSync('刪除中…','sync-busy');
+  try {
+    await apiCall({ action:'delete', id });
+    entries = entries.filter(e=>e.id!==id);
+    localSave(entries);
+    setSync('已同步 ✓','sync-ok');
+  } catch(e) {
+    entries = entries.filter(e=>e.id!==id);
+    localSave(entries);
+    setSync('本機刪除','sync-local');
+  }
+  if (editingId===id) resetForm();
+  populateMonthFilter(); render();
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById('f-date').value    = todayStr();
+  document.getElementById('f-title-1').value = '';
+  document.getElementById('f-title-2').value = '';
+  document.getElementById('f-title-3').value = '';
+  document.getElementById('f-title-4').value = '';
+  document.getElementById('f-sub').value     = '';
+  document.getElementById('f-alert').value   = '';
+  document.getElementById('f-defect-no').value = '';
+  document.getElementById('f-status').value  = 'normal';
+  document.getElementById('f-weather').value = '☀️ 晴';
+  document.getElementById('f-defect-wrap').style.display = 'none';
+  document.getElementById('form-title').textContent  = '新增工項';
+  document.getElementById('btn-submit').textContent  = '新增到時間軸';
+  document.getElementById('btn-cancel').style.display = 'none';
+  const wl=document.getElementById('wk-labor'); if(wl) wl.value='';
+  const wm=document.getElementById('wk-mgmt');  if(wm) wm.value='';
+}
+
+init();
+</script>
+</body>
+</html>

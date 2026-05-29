@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>監造查驗 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.qi-table { width:100%;border-collapse:collapse;font-size:12px;min-width:1100px; }
+.qi-table th { background:var(--dnv-dark-blue);color:#fff;padding:8px 10px;text-align:left;font-size:11px;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2; }
+.qi-table td { padding:7px 10px;border-bottom:1px solid var(--border-light);vertical-align:middle;white-space:nowrap; }
+.qi-table tr:hover td { background:var(--bg); }
+.qi-table tr.row-completed td { background:rgba(22,163,74,0.04); }
+.qi-group-row td { background:#1C1B18!important;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;letter-spacing:.4px; }
+.qi-group-tag { display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:8px;vertical-align:middle; }
+.qi-group-contract { background:#2563EB;color:#fff; }
+.qi-group-vol      { background:#7C3AED;color:#fff; }
+.qi-check-yes { color:var(--c-green);font-weight:700;font-size:14px; }
+.qi-check-no  { color:var(--text-muted);font-size:14px; }
+.qi-progress-done { display:inline-block;background:var(--c-green);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px; }
+.qi-progress-wip  { display:inline-block;background:var(--c-amber-bg);color:var(--c-amber);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--c-amber-border); }
+.qi-notice { display:inline-block;background:var(--c-red-bg);color:var(--c-red);font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;border:1px solid var(--c-red-border); }
+.doc-pill { display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap; }
+.dp-ok   { background:#DCFCE7;color:#166534; }
+.dp-pend { background:#FEF3C7;color:#92400E; }
+.dp-no   { background:#F1F5F9;color:#64748B; }
+.dp-fix  { background:#FEE2E2;color:#991B1B; }
+.os-done { background:#DCFCE7;color:#166534;border:1px solid #BBF7D0; }
+.os-pend { background:#FEF3C7;color:#92400E;border:1px solid #FDE68A; }
+.os-none { background:#F1F5F9;color:#475569;border:1px solid #E2E8F0; }
+.os-wip  { background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE; }
+.overall-badge { display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap; }
+@media(max-width:767px) { .qi-table { min-width:780px;font-size:10px; } .qi-table th,.qi-table td { padding:5px 5px; } }
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+<div class="layout">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="defects.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 改善事項</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="tab-panel">
+      <div class="page-header">
+        <h2>監造查驗紀錄</h2>
+        <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddQiModal()">＋ 新增查驗紀錄</button>
+      </div>
+      <div class="stat-grid" id="qi-stat-grid" style="margin-bottom:16px;"></div>
+      <div class="filter-bar" style="margin-bottom:12px;">
+        <select class="filter-select" id="qi-filter-type" onchange="renderQi()">
+          <option value="">全部分類</option><option value="材料抽驗">材料抽驗</option><option value="施工抽查">施工抽查</option><option value="不定期抽查">不定期抽查</option>
+        </select>
+        <select class="filter-select" id="qi-filter-overall" onchange="renderQi()">
+          <option value="">全部狀態</option><option value="完成">✅ 完成</option><option value="文件待補">⚠️ 文件待補</option><option value="製作中">🔄 製作中</option><option value="未開始">○ 未開始</option>
+        </select>
+        <select class="filter-select" id="qi-filter-month" onchange="renderQi()"><option value="">全部月份</option></select>
+        <span class="filter-count" id="qi-count"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="qi-table">
+          <thead>
+            <tr>
+              <th>N</th><th>分類</th><th>抽驗項目</th><th style="min-width:120px;">齊件狀態</th><th>整體狀態</th>
+              <th>自檢☑</th><th>自檢日期</th><th>申請者☑</th><th>申請日期</th><th>抽查紀錄☑</th>
+              <th>查驗日期</th><th>辦理進度</th><th>查驗人</th><th>改善通知單</th><th>改善期限</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="qi-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+
+<!-- 查驗 Modal -->
+<div class="modal-overlay" id="qi-modal" style="display:none">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header"><h3 id="qi-modal-title">新增查驗紀錄</h3><button class="modal-close" onclick="closeQiModal()">×</button></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>類型</label>
+          <select id="qi-type"><option value="材料抽驗">材料抽驗</option><option value="施工抽查">施工抽查</option><option value="不定期抽查">不定期抽查</option></select>
+        </div>
+        <div class="field"><label>項目名稱</label><input type="text" id="qi-item" placeholder="例：圍籬大小門、防溢座尺寸"></div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">自主檢查</div>
+        <div class="field-row">
+          <div class="field"><label>自檢完成</label><select id="qi-self-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
+          <div class="field"><label>自檢日期</label><input type="date" id="qi-self-date"></div>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">申請抽驗</div>
+        <div class="field-row">
+          <div class="field"><label>申請完成</label><select id="qi-req-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
+          <div class="field"><label>申請日期</label><input type="date" id="qi-req-date"></div>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">抽查（驗）紀錄</div>
+        <div class="field-row">
+          <div class="field"><label>抽查完成</label><select id="qi-insp-check"><option value="0">☐ 未完成</option><option value="1">☑ 已完成</option></select></div>
+          <div class="field"><label>查驗日期</label><input type="date" id="qi-date"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>辦理進度</label><select id="qi-progress"><option value="製作中">製作中</option><option value="Completed">Completed</option></select></div>
+          <div class="field"><label>查驗人</label><input type="text" id="qi-inspector" placeholder="例：王中平"></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>改善通知單號（選填）</label><input type="text" id="qi-notice-no" placeholder="例：10490817_0002"></div>
+        <div class="field"><label>改善期限（選填）</label><input type="date" id="qi-deadline"></div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">📂 齊件收件狀態</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="field"><label>自檢表</label><select id="qi-doc-self-check"><option value="待補">🟡 待補</option><option value="已收">✅ 已收</option><option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option></select></div>
+          <div class="field"><label>申請單</label><select id="qi-doc-req-form"><option value="待補">🟡 待補</option><option value="已收">✅ 已收</option><option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option></select></div>
+          <div class="field"><label>抽查紀錄表</label><select id="qi-doc-record"><option value="待補">🟡 待補</option><option value="已收">✅ 已收</option><option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option></select></div>
+          <div class="field"><label>抽查報告</label><select id="qi-doc-report"><option value="待補">🟡 待補</option><option value="已收">✅ 已收</option><option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option></select></div>
+          <div class="field"><label>改善單</label><select id="qi-doc-improve"><option value="不需要">⚫ 不需要</option><option value="待補">🟡 待補</option><option value="已收">✅ 已收</option><option value="改善中">🔴 改善中</option></select></div>
+          <div class="field"><label>整體狀態</label><select id="qi-overall-status"><option value="未開始">○ 未開始</option><option value="文件待補">⚠️ 文件待補</option><option value="製作中">🔄 製作中</option><option value="完成">✅ 完成</option></select></div>
+        </div>
+        <div class="field" style="margin-top:8px;"><label>催件備註</label><input type="text" id="qi-chase-note" placeholder="催件說明、承商回覆狀況等"></div>
+      </div>
+      <div class="field"><label>備註（選填）</label><textarea id="qi-notes" style="min-height:48px;" placeholder="備註說明…"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-modal" onclick="closeQiModal()">取消</button><button class="btn-modal primary" onclick="saveQi()">儲存</button></div>
+  </div>
+</div>
+
+<div class="toast-confirm" id="toast-confirm">
+  <span id="toast-msg">確定要刪除？</span>
+  <div style="display:flex;gap:8px;">
+    <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+let qualityItems = [];
+let editingQiId = null;
+
+const TYPE_BG  = { '材料抽驗':'#DBEAFE', '施工抽查':'#F3E8FF', '不定期抽查':'#FEF3C7' };
+const TYPE_FG  = { '材料抽驗':'#1E40AF', '施工抽查':'#6B21A8', '不定期抽查':'#92400E' };
+
+function qiSave() {
+  try { localStorage.setItem('construction_qi_v2', JSON.stringify(qualityItems)); } catch(e) {}
+  setTimeout(()=>cloudSaveAll('qi',qualityItems).catch(()=>{}), 500);
+}
+
+function docPill(val) {
+  if (!val||val==='待補') return '<span class="doc-pill dp-pend">待補</span>';
+  if (val==='已收') return '<span class="doc-pill dp-ok">已收</span>';
+  if (val==='不需要') return '<span class="doc-pill dp-no">不需要</span>';
+  if (val==='改善中') return '<span class="doc-pill dp-fix">改善中</span>';
+  return `<span class="doc-pill dp-pend">${esc(val)}</span>`;
+}
+function overallBadge(val) {
+  const cls = val==='完成'?'os-done':val==='文件待補'?'os-pend':val==='未開始'?'os-none':'os-wip';
+  const icon = val==='完成'?'✅':val==='文件待補'?'⚠️':val==='未開始'?'○':'🔄';
+  return `<span class="overall-badge ${cls}">${icon} ${esc(val||'未開始')}</span>`;
+}
+
+async function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('監造查驗');
+  initSidebarState();
+  renderNav('quality');
+  const data = await loadAllData();
+  qualityItems = data.qualityItems;
+  populateQiMonthFilter();
+  renderQiStats();
+  renderQi();
+}
+
+function populateQiMonthFilter() {
+  const seen={},months=[];
+  qualityItems.forEach(q=>{ const m=(q.inspDate||q.date||'').slice(0,7); if(m&&!seen[m]){seen[m]=1;months.push(m);} });
+  months.sort();
+  const sel=document.getElementById('qi-filter-month'); if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">全部月份</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m.replace('-','年')}月</option>`).join('');
+}
+
+function renderQiStats() {
+  const total=qualityItems.length;
+  const done =qualityItems.filter(q=>q.progress==='Completed').length;
+  const wip  =total-done;
+  const notice=qualityItems.filter(q=>q.noticeNo).length;
+  const el=document.getElementById('qi-stat-grid'); if(!el) return;
+  el.innerHTML = [
+    {cls:'',label:'總抽驗項目',value:total,sub:'筆記錄'},
+    {cls:'teal',label:'Completed',value:done,sub:(total?Math.round(done/total*100)+'%':'—')+' 完成率'},
+    {cls:'amber',label:'製作中',value:wip,sub:'待完成'},
+    {cls:'red',label:'已開改善通知',value:notice,sub:'筆'},
+  ].map(s=>`<div class="stat-card ${s.cls}"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+}
+
+function renderQi() {
+  const typeF   = document.getElementById('qi-filter-type').value;
+  const overallF= document.getElementById('qi-filter-overall').value;
+  const monthF  = document.getElementById('qi-filter-month').value;
+  const filtered = qualityItems.filter(q =>
+    (!typeF    || q.type===typeF) &&
+    (!overallF || (q.overallStatus||'未開始')===overallF) &&
+    (!monthF   || (q.inspDate||q.date||'').startsWith(monthF))
+  ).sort((a,b)=>(a.inspDate||a.date||'').localeCompare(b.inspDate||b.date||''));
+  document.getElementById('qi-count').textContent='共 '+filtered.length+' 筆';
+
+  const tbody=document.getElementById('qi-tbody'); if(!tbody) return;
+  if (!filtered.length) { tbody.innerHTML='<tr><td colspan="16" style="text-align:center;padding:40px;color:var(--text-muted);">目前沒有查驗紀錄</td></tr>'; return; }
+
+  let rows='', lastGroup=null, rowNum=0;
+  filtered.forEach(q => {
+    const group = q.group||'';
+    const isContract = q.contractItem!==false;
+    if (group!==lastGroup) {
+      lastGroup=group;
+      const tag = isContract
+        ? '<span class="qi-group-tag qi-group-contract">契約19項</span>'
+        : '<span class="qi-group-tag qi-group-vol">承商自主加做</span>';
+      rows+=`<tr class="qi-group-row"><td colspan="16">${esc(group)}${tag}</td></tr>`;
+    }
+    rowNum++;
+    const rowCls = q.progress==='Completed'?'row-completed':'';
+    const chk = v => v=='1'?'<span class="qi-check-yes">☑</span>':'<span class="qi-check-no">☐</span>';
+    const typeBg=TYPE_BG[q.type]||'#F1F5F9';
+    const typeFg=TYPE_FG[q.type]||'#475569';
+    const prog = q.progress==='Completed'
+      ?'<span class="qi-progress-done">Completed</span>'
+      :'<span class="qi-progress-wip">製作中</span>';
+    const notice = q.noticeNo?`<span class="qi-notice">${esc(q.noticeNo)}</span>`:'<span style="color:var(--text-muted)">—</span>';
+    const docCells = docPill(q.docSelfCheck)+' '+docPill(q.docReqForm)+'<br>'+docPill(q.docRecord)+' '+docPill(q.docReport);
+    rows+=`<tr class="${rowCls}">
+      <td style="color:var(--text-muted);font-size:11px;">${rowNum}</td>
+      <td><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:${typeBg};color:${typeFg};">${esc(q.type||'—')}</span></td>
+      <td style="max-width:160px;font-weight:600;font-size:12px;white-space:normal;">${esc(q.item||'—')}${q.chaseNote?`<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;white-space:normal;">${esc(q.chaseNote)}</div>`:''}</td>
+      <td style="line-height:1.8;">${docCells}</td>
+      <td>${overallBadge(q.overallStatus)}</td>
+      <td style="text-align:center;">${chk(q.selfCheck)}</td>
+      <td style="font-family:monospace;font-size:11px;">${q.selfDate||'—'}</td>
+      <td style="text-align:center;">${chk(q.reqCheck)}</td>
+      <td style="font-family:monospace;font-size:11px;">${q.reqDate||'—'}</td>
+      <td style="text-align:center;">${chk(q.inspCheck)}</td>
+      <td style="font-family:monospace;font-size:11px;">${q.inspDate||'—'}</td>
+      <td>${prog}</td>
+      <td style="font-size:11px;">${esc(q.inspector||'—')}</td>
+      <td>${notice}</td>
+      <td style="font-family:monospace;font-size:11px;">${q.deadline||'—'}</td>
+      <td>
+        <button class="btn-sm edit" data-id="${q.id}" onclick="editQi(this.dataset.id)">編輯</button>
+        <button class="btn-sm del"  data-id="${q.id}" onclick="deleteQi(this.dataset.id)">刪</button>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML=rows;
+}
+
+function openAddQiModal() {
+  editingQiId=null;
+  document.getElementById('qi-modal-title').textContent='新增查驗紀錄';
+  ['qi-item','qi-inspector','qi-notice-no','qi-notes','qi-chase-note'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['qi-date','qi-self-date','qi-req-date','qi-deadline'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('qi-type').value='材料抽驗';
+  document.getElementById('qi-self-check').value='0';
+  document.getElementById('qi-req-check').value='0';
+  document.getElementById('qi-insp-check').value='0';
+  document.getElementById('qi-progress').value='製作中';
+  document.getElementById('qi-doc-self-check').value='待補';
+  document.getElementById('qi-doc-req-form').value='待補';
+  document.getElementById('qi-doc-record').value='待補';
+  document.getElementById('qi-doc-report').value='待補';
+  document.getElementById('qi-doc-improve').value='不需要';
+  document.getElementById('qi-overall-status').value='未開始';
+  document.getElementById('qi-modal').style.display='flex';
+}
+function editQi(id) {
+  const q=qualityItems.find(x=>x.id===id); if(!q) return;
+  editingQiId=id;
+  document.getElementById('qi-modal-title').textContent='編輯查驗紀錄';
+  document.getElementById('qi-type').value=q.type||'材料抽驗';
+  document.getElementById('qi-item').value=q.item||'';
+  document.getElementById('qi-self-check').value=q.selfCheck||'0';
+  document.getElementById('qi-self-date').value=q.selfDate||'';
+  document.getElementById('qi-req-check').value=q.reqCheck||'0';
+  document.getElementById('qi-req-date').value=q.reqDate||'';
+  document.getElementById('qi-insp-check').value=q.inspCheck||'0';
+  document.getElementById('qi-date').value=q.inspDate||q.date||'';
+  document.getElementById('qi-progress').value=q.progress||'製作中';
+  document.getElementById('qi-inspector').value=q.inspector||'';
+  document.getElementById('qi-notice-no').value=q.noticeNo||'';
+  document.getElementById('qi-deadline').value=q.deadline||'';
+  document.getElementById('qi-notes').value=q.notes||'';
+  document.getElementById('qi-doc-self-check').value=q.docSelfCheck||'待補';
+  document.getElementById('qi-doc-req-form').value=q.docReqForm||'待補';
+  document.getElementById('qi-doc-record').value=q.docRecord||'待補';
+  document.getElementById('qi-doc-report').value=q.docReport||'待補';
+  document.getElementById('qi-doc-improve').value=q.docImprove||'不需要';
+  document.getElementById('qi-overall-status').value=q.overallStatus||'未開始';
+  document.getElementById('qi-chase-note').value=q.chaseNote||'';
+  document.getElementById('qi-modal').style.display='flex';
+}
+function closeQiModal() { document.getElementById('qi-modal').style.display='none'; }
+function saveQi() {
+  const item=document.getElementById('qi-item').value.trim(); if(!item){alert('請填寫項目名稱');return;}
+  const payload={
+    type:document.getElementById('qi-type').value,item,
+    selfCheck:document.getElementById('qi-self-check').value,selfDate:document.getElementById('qi-self-date').value,
+    reqCheck:document.getElementById('qi-req-check').value,reqDate:document.getElementById('qi-req-date').value,
+    inspCheck:document.getElementById('qi-insp-check').value,inspDate:document.getElementById('qi-date').value,
+    progress:document.getElementById('qi-progress').value,inspector:document.getElementById('qi-inspector').value.trim(),
+    noticeNo:document.getElementById('qi-notice-no').value.trim(),deadline:document.getElementById('qi-deadline').value,
+    notes:document.getElementById('qi-notes').value.trim(),
+    docSelfCheck:document.getElementById('qi-doc-self-check').value,docReqForm:document.getElementById('qi-doc-req-form').value,
+    docRecord:document.getElementById('qi-doc-record').value,docReport:document.getElementById('qi-doc-report').value,
+    docImprove:document.getElementById('qi-doc-improve').value,overallStatus:document.getElementById('qi-overall-status').value,
+    chaseNote:document.getElementById('qi-chase-note').value.trim(),
+    date:document.getElementById('qi-date').value,
+    result:document.getElementById('qi-progress').value==='Completed'?'pass':'recheck',
+  };
+  if(editingQiId){const idx=qualityItems.findIndex(q=>q.id===editingQiId);if(idx!==-1)qualityItems[idx]={...qualityItems[idx],...payload};}
+  else qualityItems.push({id:uid(),...payload});
+  qiSave();closeQiModal();populateQiMonthFilter();renderQiStats();renderQi();
+}
+async function deleteQi(id) {
+  if(!await toastConfirm('確定要刪除此查驗紀錄？'))return;
+  qualityItems=qualityItems.filter(q=>q.id!==id);
+  qiSave();populateQiMonthFilter();renderQiStats();renderQi();
+}
+
+init();
+</script>
+</body>
+</html>

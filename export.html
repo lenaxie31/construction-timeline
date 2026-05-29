@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>匯出 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.export-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:28px; }
+.export-card {
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:20px 20px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  transition:box-shadow var(--transition),transform var(--transition);
+}
+.export-card:hover { box-shadow:var(--shadow-md);transform:translateY(-1px); }
+.export-card::before { content:'';position:absolute;top:0;left:0;right:0;height:3px; }
+.export-card.tl::before     { background:linear-gradient(90deg,var(--c-blue),var(--c-teal)); }
+.export-card.def::before    { background:linear-gradient(90deg,var(--c-red),var(--c-amber)); }
+.export-card.qi::before     { background:linear-gradient(90deg,var(--c-teal),var(--c-green)); }
+.export-card.att::before    { background:linear-gradient(90deg,#7c3aed,#2563eb); }
+.export-card.diag::before   { background:linear-gradient(90deg,var(--dnv-warm-grey),var(--dnv-dark-blue)); }
+.export-icon { font-size:28px;margin-bottom:10px;display:block; }
+.export-card h3 { font-size:14px;font-weight:700;margin-bottom:4px; }
+.export-card p  { font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px; }
+.export-btn {
+  display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-family:inherit;
+  font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer;transition:opacity .15s,transform .12s;
+}
+.export-btn:hover { opacity:.85;transform:translateY(-1px); }
+.export-btn:disabled { opacity:.4;cursor:not-allowed;transform:none; }
+.export-btn.blue   { background:var(--c-blue);color:#fff; }
+.export-btn.green  { background:var(--c-green);color:#fff; }
+.export-btn.teal   { background:var(--c-teal);color:#fff; }
+.export-btn.purple { background:#7c3aed;color:#fff; }
+.export-btn.grey   { background:var(--dnv-dark-blue);color:#fff; }
+.export-btn.outline{ background:transparent;border:1px solid var(--border);color:var(--text-secondary); }
+.export-btn-row { display:flex;gap:8px;flex-wrap:wrap; }
+.month-select {
+  font-family:inherit;font-size:12px;padding:6px 10px;border:1px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--bg);color:var(--text-secondary);outline:none;margin-bottom:10px;cursor:pointer;
+}
+/* 診斷 */
+.diag-section { margin-top:24px; }
+.diag-section h3 { font-size:13px;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:6px; }
+.diag-row { display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border-light); }
+.diag-row:last-child { border-bottom:none; }
+.diag-key   { font-size:12px;color:var(--text-secondary);font-family:monospace; }
+.diag-value { font-size:12px;font-weight:600;font-family:monospace; }
+.diag-ok    { color:var(--c-green); }
+.diag-warn  { color:var(--c-amber); }
+.diag-err   { color:var(--c-red); }
+.diag-log {
+  font-size:11px;font-family:monospace;background:#0F204B;color:#99D9F0;
+  padding:12px 14px;border-radius:8px;max-height:200px;overflow-y:auto;line-height:1.8;
+  word-break:break-all;white-space:pre-wrap;
+}
+@media(max-width:767px) { .export-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+<div class="layout">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="dashboard.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 儀表板</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="tab-panel">
+      <div class="page-header"><h2>資料匯出 &amp; 診斷工具</h2></div>
+      <div class="export-grid">
+
+        <!-- 時間軸 -->
+        <div class="export-card tl">
+          <span class="export-icon">📅</span>
+          <h3>時間軸施工記錄</h3>
+          <p>匯出全部施工日誌，含日期、天氣、狀態、工程說明、出工人數、備註，格式化為可列印的 Excel 表格。</p>
+          <div class="export-btn-row">
+            <button class="export-btn blue" onclick="exportTimelineXLSX()">⬇ XLSX 匯出</button>
+            <button class="export-btn outline" onclick="window.print()">🖨 列印</button>
+          </div>
+        </div>
+
+        <!-- 改善事項 -->
+        <div class="export-card def">
+          <span class="export-icon">📋</span>
+          <h3>改善事項通知單</h3>
+          <p>匯出全部改善事項記錄，含通知單標號、開立日期、期限、狀態、改善經過及結果。</p>
+          <div class="export-btn-row">
+            <button class="export-btn blue" onclick="exportDefectsXLSX()">⬇ XLSX 匯出</button>
+          </div>
+        </div>
+
+        <!-- 監造查驗 -->
+        <div class="export-card qi">
+          <span class="export-icon">🔬</span>
+          <h3>監造查驗紀錄</h3>
+          <p>匯出全部查驗紀錄，含分類、項目、各步驟完成狀態、查驗日期、查驗人、改善通知單等。</p>
+          <div class="export-btn-row">
+            <button class="export-btn teal" onclick="exportQiXLSX()">⬇ XLSX 匯出</button>
+          </div>
+        </div>
+
+        <!-- 出勤月報 -->
+        <div class="export-card att">
+          <span class="export-icon">👷</span>
+          <h3>出勤月報</h3>
+          <p>選擇月份匯出出勤統計，含個人出勤、遲到、缺勤、請假天數及出勤率月報。</p>
+          <select class="month-select" id="att-export-month"></select>
+          <div class="export-btn-row">
+            <button class="export-btn purple" onclick="exportAttXLSX()">⬇ XLSX 月報匯出</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 資料診斷 -->
+      <div class="export-card diag" id="diag-card">
+        <span class="export-icon">🔧</span>
+        <h3>資料診斷工具</h3>
+        <p>檢查各模組資料數量、localStorage 用量，以及手動進行雲端同步操作。</p>
+        <div class="export-btn-row" style="margin-bottom:14px;">
+          <button class="export-btn grey" onclick="diagStorage()">📊 診斷資料</button>
+          <button class="export-btn grey" onclick="forceReload()">🔄 強制雲端拉取</button>
+          <button class="export-btn outline" onclick="rescueDownload()">💾 備份本機資料</button>
+          <button class="export-btn outline" onclick="rescueUpload()">⬆ 還原本機資料</button>
+          <input type="file" id="rescue-file" accept=".json" style="display:none;" onchange="rescueRestore(this)">
+        </div>
+        <div class="diag-section" id="diag-output" style="display:none;">
+          <h3>🔍 診斷結果</h3>
+          <div id="diag-rows"></div>
+          <div class="diag-log" id="diag-log" style="margin-top:12px;display:none;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+
+<div class="toast-confirm" id="toast-confirm">
+  <span id="toast-msg">確定？</span>
+  <div style="display:flex;gap:8px;">
+    <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">確定</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+let allEntries = [], allDefects = [], allQi = [], allAtt = [], allMembers = [];
+
+async function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('匯出');
+  initSidebarState();
+  renderNav('export');
+  setSync('載入中…','sync-busy');
+  try {
+    const data = await loadAllData();
+    allEntries = data.entries;
+    allDefects = data.defects;
+    allQi      = data.qualityItems;
+    allAtt     = data.attRecords;
+    allMembers = data.members;
+    setSync('已同步 ✓','sync-ok');
+  } catch(e) {
+    allEntries = localLoad() || [];
+    allDefects = storageLoad('construction_defects_v1',[]);
+    allQi      = storageLoad('construction_qi_v2',[]);
+    allAtt     = storageLoad('construction_att_v1',[]);
+    allMembers = storageLoad('construction_members_v1', getDefaultMembers());
+    setSync('本機模式','sync-local');
+  }
+  populateAttMonthSelect();
+}
+
+// ── 月份選擇器 ──
+function populateAttMonthSelect() {
+  const sel = document.getElementById('att-export-month'); if (!sel) return;
+  const seen={}, months=[];
+  allAtt.forEach(r => { const m=r.date.slice(0,7); if(!seen[m]){seen[m]=1;months.push(m);} });
+  // add current & previous 6 months
+  for (let i=0;i<=5;i++) {
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const m=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if (!seen[m]){seen[m]=1;months.push(m);}
+  }
+  months.sort().reverse();
+  const today = todayStr().slice(0,7);
+  sel.innerHTML = months.map(m => `<option value="${m}"${m===today?' selected':''}>${m.replace('-','年')}月</option>`).join('');
+}
+
+// ── XLSX 共用函式 ──
+function downloadXLSX(wb, filename) {
+  XLSX.writeFile(wb, filename);
+}
+function s(txt) { return String(txt||''); }
+
+function applyHeaderStyle(ws, range, bgColor) {
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({ r: range.s.r, c: C });
+    if (!ws[addr]) continue;
+    ws[addr].s = {
+      fill: { fgColor:{ rgb: bgColor||'0F204B' } },
+      font: { bold:true, color:{ rgb:'FFFFFF' }, sz:10 },
+      alignment: { horizontal:'center', vertical:'center', wrapText:true },
+      border: { bottom:{ style:'thin', color:{ rgb:'CCCBC9' } } },
+    };
+  }
+}
+
+// ── 時間軸匯出 ──
+function exportTimelineXLSX() {
+  if (!allEntries.length) { alert('目前沒有時間軸記錄可匯出'); return; }
+  const STATUS_TW = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常／已開單' };
+  const sorted = allEntries.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const ws_data = [
+    ['施工日期','天氣','狀態','一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛','四、其他重要事項','出工人數','異常備註','改善通知單'],
+    ...sorted.map(e => {
+      const fs = parseTitle(e.title||'');
+      return [ s(e.date), s(e.weather), STATUS_TW[e.status]||s(e.status), s(fs[0]), s(fs[1]), s(fs[2]), s(fs[3]), s(e.sub), s(e.alert), s(e.defectNo) ];
+    }),
+  ];
+  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [14,8,10,40,30,30,20,14,20,14].map(w=>({wch:w}));
+  ws['!rows'] = [{hpx:22}];
+  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:9} });
+  const wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '時間軸施工記錄');
+  downloadXLSX(wb, '施工日誌_'+todayStr()+'.xlsx');
+}
+
+// ── 改善事項匯出 ──
+function exportDefectsXLSX() {
+  if (!allDefects.length) { alert('目前沒有改善事項記錄可匯出'); return; }
+  const STATUS_TW = { open:'未結案（待承商改善）', replied:'承商已回覆改善', recheck:'複驗中', closed:'已結案（複驗合格）' };
+  const RESULT_TW = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
+  const sorted = allDefects.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const ws_data = [
+    ['通知單標號','開立日期','改善期限','改善事項說明','開立時機','狀態','承商回覆改善經過','改善結果判定','監造備註'],
+    ...sorted.map(d => [
+      s(d.no), s(d.date), s(d.deadline), s(d.title),
+      d.occasion==='checkpoint'?'檢驗停留點':'隨機抽查',
+      STATUS_TW[d.status]||s(d.status), s(d.progress), RESULT_TW[d.result]||s(d.result), s(d.notes),
+    ]),
+  ];
+  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [14,12,12,40,12,16,36,14,30].map(w=>({wch:w}));
+  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:8} });
+  const wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '改善事項通知單');
+  downloadXLSX(wb, '改善事項通知單_'+todayStr()+'.xlsx');
+}
+
+// ── 監造查驗匯出 ──
+function exportQiXLSX() {
+  if (!allQi.length) { alert('目前沒有查驗紀錄可匯出'); return; }
+  const PRG_TW = { 'Completed':'Completed（完成）' };
+  const OS_TW  = { '完成':'✅ 完成', '文件待補':'⚠️ 文件待補', '製作中':'🔄 製作中', '未開始':'○ 未開始' };
+  const chk = v => v=='1'?'✅':'☐';
+  const ws_data = [
+    ['分類','項目名稱','自檢','自檢日期','申請','申請日期','抽查','查驗日期','辦理進度','整體狀態','查驗人','改善通知單','改善期限','自檢表','申請單','抽查紀錄表','抽查報告','改善單','催件備註','備註'],
+    ...allQi.map(q => [
+      s(q.type), s(q.item), chk(q.selfCheck), s(q.selfDate), chk(q.reqCheck), s(q.reqDate),
+      chk(q.inspCheck), s(q.inspDate||q.date), PRG_TW[q.progress]||s(q.progress),
+      OS_TW[q.overallStatus]||s(q.overallStatus), s(q.inspector), s(q.noticeNo), s(q.deadline),
+      s(q.docSelfCheck), s(q.docReqForm), s(q.docRecord), s(q.docReport), s(q.docImprove),
+      s(q.chaseNote), s(q.notes),
+    ]),
+  ];
+  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [10,30,6,12,6,12,6,12,14,12,10,14,12,8,8,10,8,8,20,20].map(w=>({wch:w}));
+  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:19} });
+  const wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '監造查驗紀錄');
+  downloadXLSX(wb, '監造查驗紀錄_'+todayStr()+'.xlsx');
+}
+
+// ── 出勤月報匯出 ──
+function exportAttXLSX() {
+  const selMonth = document.getElementById('att-export-month').value;
+  if (!selMonth) { alert('請選擇要匯出的月份'); return; }
+  const [y, mo] = selMonth.split('-').map(Number);
+  const hols  = loadHolidays().holidays || TW_HOLIDAYS_DEFAULT;
+  const works = loadHolidays().workdays  || {};
+  const wdays = calcWorkdays(y, mo, hols, works);
+  const activeMembers = allMembers.filter(m => m.active !== false);
+  const STATUS_TW = { present:'出勤', late:'遲到', absent:'缺勤', leave:'請假', holiday:'公假' };
+
+  // Summary sheet
+  const summaryData = [
+    ['姓名','職稱','應出勤天數','實出勤天數','遲到天數','缺勤天數','請假天數','出勤率（%）','總工時'],
+    ...activeMembers.map(m => {
+      const recs    = allAtt.filter(r => r.memberId===m.id && r.date.startsWith(selMonth));
+      const present = recs.filter(r=>r.status==='present').length;
+      const late    = recs.filter(r=>r.status==='late').length;
+      const absent  = recs.filter(r=>r.status==='absent').length;
+      const leave   = recs.filter(r=>r.status==='leave'||r.status==='holiday').length;
+      const actual  = present + late;
+      const rate    = wdays ? Math.round(actual/wdays*100) : 0;
+      const totalMin= recs.reduce((sum,r)=>sum+calcWorkMinutes(r.timeIn,r.timeOut),0);
+      return [s(m.name),s(m.role||'監造工程師'),wdays,actual,late,absent,leave,rate,fmtMinutes(totalMin)];
+    }),
+  ];
+
+  // Detail sheet
+  const daysInMonth = new Date(y, mo, 0).getDate();
+  const detailData  = [
+    ['日期','星期','假日','姓名','狀態','到班時間','離班時間','工時','備註'],
+  ];
+  for (let d=1; d<=daysInMonth; d++) {
+    const dateStr = y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dow     = ['日','一','二','三','四','五','六'][new Date(y,mo-1,d).getDay()];
+    const holName = (hols[dateStr]||'');
+    const dayRecs = allAtt.filter(r=>r.date===dateStr);
+    if (!dayRecs.length && holName) {
+      detailData.push([dateStr,dow,holName,'','','','','','']);
+    } else {
+      dayRecs.forEach(r => {
+        const m   = allMembers.find(x=>x.id===r.memberId);
+        const mn  = calcWorkMinutes(r.timeIn,r.timeOut);
+        detailData.push([dateStr,dow,holName,s(m?m.name:'—'),STATUS_TW[r.status]||s(r.status),s(r.timeIn),s(r.timeOut),fmtMinutes(mn),s(r.note)]);
+      });
+    }
+  }
+
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+  ws1['!cols'] = [10,14,10,10,8,8,8,10,10].map(w=>({wch:w}));
+  applyHeaderStyle(ws1, { s:{r:0,c:0}, e:{r:0,c:8} });
+
+  const ws2 = XLSX.utils.aoa_to_sheet(detailData);
+  ws2['!cols'] = [12,6,10,10,8,8,8,8,20].map(w=>({wch:w}));
+  applyHeaderStyle(ws2, { s:{r:0,c:0}, e:{r:0,c:8} });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, '出勤月報');
+  XLSX.utils.book_append_sheet(wb, ws2, '逐日明細');
+  downloadXLSX(wb, '出勤月報_'+selMonth+'.xlsx');
+}
+
+// ── 資料診斷 ──
+function diagStorage() {
+  const diag = [
+    { key:'時間軸記錄', count: allEntries.length, ok: allEntries.length >= 0 },
+    { key:'改善事項通知單', count: allDefects.length, ok: allDefects.length >= 0 },
+    { key:'監造查驗紀錄', count: allQi.length, ok: allQi.length >= 0 },
+    { key:'出勤記錄', count: allAtt.length, ok: allAtt.length >= 0 },
+    { key:'人員清單', count: allMembers.length, ok: allMembers.length > 0 },
+  ];
+
+  let storageUsed = 0;
+  try {
+    [LOCAL_KEY, DEFECT_KEY, DOCS_KEY, QI_KEY, ATT_KEY, MEMBER_KEY].forEach(k => {
+      const v = localStorage.getItem(k); if (v) storageUsed += v.length;
+    });
+  } catch(e) {}
+
+  const sections = diag.map(d =>
+    `<div class="diag-row"><span class="diag-key">${d.key}</span>
+     <span class="diag-value ${d.ok?'diag-ok':'diag-warn'}">${d.count} 筆 ${d.ok?'✓':'⚠'}</span></div>`).join('');
+  const storage = `<div class="diag-row"><span class="diag-key">localStorage 已用量</span>
+    <span class="diag-value ${storageUsed>4500000?'diag-err':storageUsed>3000000?'diag-warn':'diag-ok'}">
+      ≈ ${(storageUsed/1024).toFixed(1)} KB</span></div>`;
+
+  document.getElementById('diag-rows').innerHTML = sections + storage;
+  document.getElementById('diag-output').style.display = 'block';
+
+  const log = document.getElementById('diag-log');
+  log.style.display = 'block';
+  log.textContent = '診斷完成 ' + new Date().toLocaleString() + '\n'
+    + diag.map(d=>`[${d.ok?'OK':'--'}] ${d.key}: ${d.count} 筆`).join('\n')
+    + '\nlocalStorage 用量: ~' + (storageUsed/1024).toFixed(1) + ' KB';
+}
+
+async function forceReload() {
+  if (!await toastConfirm('將從雲端強制拉取所有資料，覆蓋本機紀錄。確定繼續？','確定')) return;
+  setSync('強制拉取中…','sync-busy');
+  try {
+    const data = await loadAllData();
+    allEntries = data.entries;
+    allDefects = data.defects;
+    allQi      = data.qualityItems;
+    allAtt     = data.attRecords;
+    allMembers = data.members;
+    setSync('已同步 ✓','sync-ok');
+    alert('✅ 已成功從雲端重新載入所有資料');
+    diagStorage();
+  } catch(e) {
+    setSync('同步失敗','sync-err');
+    alert('❌ 同步失敗：' + e.message);
+  }
+}
+
+function rescueDownload() {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    entries:    allEntries,
+    defects:    allDefects,
+    docs:       storageLoad('construction_docs_v1',[]),
+    qi:         allQi,
+    att:        allAtt,
+    members:    allMembers,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '監造回報備份_' + todayStr() + '.json';
+  a.click();
+}
+
+function rescueUpload() {
+  document.getElementById('rescue-file').click();
+}
+
+function rescueRestore(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.exportedAt) { alert('不認識的備份格式'); return; }
+      if (!await toastConfirm(`還原此備份（匯出於 ${data.exportedAt.slice(0,10)}）？這將覆蓋現有本機資料。`,'還原')) return;
+      if (data.entries)  { localSave(data.entries); allEntries = data.entries; }
+      if (data.defects)  { storageSave('construction_defects_v1', data.defects); allDefects = data.defects; }
+      if (data.docs)     { storageSave('construction_docs_v1', data.docs); }
+      if (data.qi)       { storageSave('construction_qi_v2', data.qi); allQi = data.qi; }
+      if (data.att)      { storageSave('construction_att_v1', data.att); allAtt = data.att; }
+      if (data.members)  { storageSave('construction_members_v1', data.members); allMembers = data.members; }
+      alert('✅ 本機資料已還原，可至各頁面確認。');
+      diagStorage();
+    } catch(err) {
+      alert('❌ 還原失敗：' + err.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+init();
+</script>
+</body>
+</html>

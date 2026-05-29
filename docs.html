@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文件送審 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── 文件送審 ── */
+#doc-dashboard { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px; }
+.doc-cat-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden;cursor:pointer;transition:box-shadow var(--transition); }
+.doc-cat-card:hover { box-shadow:var(--shadow-md); }
+.doc-cat-card::before { content:'';position:absolute;top:0;left:0;right:0;height:3px; }
+.doc-cat-card.plan::before    { background:var(--c-blue); }
+.doc-cat-card.drawing::before { background:#7c3aed; }
+.doc-cat-card.subplan::before { background:var(--c-teal); }
+.doc-cat-card.other::before   { background:var(--c-amber); }
+.doc-cat-title { font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:10px; }
+.doc-cat-progress { height:8px;background:var(--border-light);border-radius:4px;overflow:hidden;margin-bottom:8px; }
+.doc-cat-fill { height:100%;border-radius:4px;transition:width .8s cubic-bezier(0.4,0,0.2,1); }
+.doc-cat-stats { display:flex;justify-content:space-between;align-items:center; }
+.doc-cat-pct   { font-family:'DM Mono',monospace;font-size:20px;font-weight:500; }
+.doc-cat-detail{ font-size:11px;color:var(--text-muted);text-align:right;line-height:1.6; }
+/* 文件卡片 */
+.doc-list { display:flex;flex-direction:column;gap:12px; }
+.doc-card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden; }
+.doc-card-header { padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;transition:background .12s; }
+.doc-card-header:hover { background:var(--bg); }
+.doc-type-badge { font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;border:1px solid;flex-shrink:0; }
+.dtype-plan    { background:#EFF6FF;color:#1d4ed8;border-color:#bfdbfe; }
+.dtype-drawing { background:#F5F3FF;color:#6d28d9;border-color:#ddd6fe; }
+.dtype-subplan { background:var(--c-teal-bg);color:var(--c-teal);border-color:var(--c-teal-border); }
+.dtype-other   { background:#F1F5F9;color:#475569;border-color:#cbd5e1; }
+.doc-name { font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.doc-meta-inline { font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0; }
+.doc-overdue { font-size:10px;font-weight:700;color:var(--c-red);background:var(--c-red-bg);border:1px solid var(--c-red-border);padding:2px 7px;border-radius:8px;flex-shrink:0; }
+.doc-expand-icon { color:var(--text-muted);font-size:11px;transition:transform .2s;flex-shrink:0; }
+.doc-card.open .doc-expand-icon { transform:rotate(180deg); }
+.doc-card-body { display:none;border-top:1px solid var(--border-light); }
+.doc-card.open .doc-card-body { display:block; }
+.doc-card-body-inner { padding:14px 16px; }
+/* 版次列表 */
+.ver-list { display:flex;flex-direction:column;position:relative;padding-left:28px; }
+.ver-list::before { content:'';position:absolute;left:6px;top:10px;bottom:10px;width:2px;background:var(--border-light); }
+.ver-row { position:relative;padding:8px 0; }
+.ver-dot { position:absolute;left:-28px;top:13px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 2px var(--border);background:var(--text-muted);z-index:1; }
+.ver-dot.approved       { background:var(--c-green);box-shadow:0 0 0 2px var(--c-green-border); }
+.ver-dot.approved_mod   { background:#0d7a5a;box-shadow:0 0 0 2px #6ee7b7; }
+.ver-dot.approved_after { background:#166534;box-shadow:0 0 0 2px #bbf7d0; }
+.ver-dot.rejected       { background:var(--c-red);box-shadow:0 0 0 2px var(--c-red-border); }
+.ver-dot.reviewing      { background:var(--c-amber);box-shadow:0 0 0 2px var(--c-amber-border); }
+.ver-dot.pending        { background:#94a3b8;box-shadow:0 0 0 2px #cbd5e1; }
+.ver-dot.sent           { background:var(--c-blue);box-shadow:0 0 0 2px var(--c-blue-border); }
+.ver-top     { display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap; }
+.ver-no      { font-family:monospace;font-size:11px;font-weight:600;color:var(--text-muted); }
+.ver-date    { font-size:11px;color:var(--text-secondary); }
+.ver-deadline.overdue { color:var(--c-red);font-weight:600;font-size:11px; }
+.ver-deadline.ok      { color:var(--text-muted);font-size:11px; }
+.ver-result  { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;border:1px solid; }
+.ver-result.approved       { background:var(--c-green-bg);color:var(--c-green);border-color:var(--c-green-border); }
+.ver-result.approved_mod   { background:#ecfdf5;color:#0d7a5a;border-color:#6ee7b7; }
+.ver-result.approved_after { background:#f0fdf4;color:#166534;border-color:#bbf7d0; }
+.ver-result.rejected       { background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border); }
+.ver-result.reviewing      { background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border); }
+.ver-result.pending        { background:#F1F5F9;color:#475569;border-color:#cbd5e1; }
+.ver-result.sent           { background:var(--c-blue-bg);color:var(--c-blue);border-color:var(--c-blue-border); }
+.ver-comment { font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:3px; }
+.ver-link    { font-size:11px;color:var(--c-blue);text-decoration:none;margin-top:3px;display:inline-block; }
+.ver-actions { display:flex;gap:4px;margin-top:6px; }
+.doc-add-ver-btn { margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+/* overall status badge */
+.os-done  { background:#DCFCE7;color:#166534;border:1px solid #BBF7D0; }
+.os-pend  { background:#FEF3C7;color:#92400E;border:1px solid #FDE68A; }
+.os-none  { background:#F1F5F9;color:#475569;border:1px solid #E2E8F0; }
+.os-wip   { background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE; }
+.overall-badge { display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap; }
+@media(max-width:767px) { .doc-card-header { padding:10px 12px;gap:6px; } .doc-name { font-size:12px; } .doc-meta-inline { display:none; } #doc-dashboard { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+<div class="layout">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="dashboard.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 儀表板</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="tab-panel">
+      <div class="page-header">
+        <h2>文件送審管理</h2>
+        <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDocModal()">＋ 新增文件</button>
+      </div>
+      <div id="doc-dashboard"></div>
+      <!-- 篩選 -->
+      <div class="filter-bar" style="margin-bottom:16px;">
+        <select class="filter-select" id="doc-filter-type" onchange="renderDocs()">
+          <option value="">全部類型</option><option value="plan">計畫書</option>
+          <option value="drawing">細部設計圖說</option><option value="subplan">分項計畫書</option><option value="other">其他</option>
+        </select>
+        <select class="filter-select" id="doc-filter-status" onchange="renderDocs()">
+          <option value="">全部狀態</option><option value="pending">未送</option>
+          <option value="sent">已送</option><option value="reviewing">廠商修正中</option>
+          <option value="approved">核定</option><option value="approved_mod">核定有修正</option>
+          <option value="approved_after">修正後核定</option><option value="rejected">退回修正</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);cursor:pointer;">
+          <input type="checkbox" id="doc-filter-overdue" onchange="renderDocs()" style="accent-color:var(--c-red);"> 僅逾期
+        </label>
+        <span class="filter-count" id="doc-count"></span>
+      </div>
+      <div class="doc-list" id="doc-list"></div>
+    </div>
+  </div>
+</div>
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+
+<!-- 文件 Modal -->
+<div class="modal-overlay" id="doc-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header"><h3 id="doc-modal-title">新增文件</h3><button class="modal-close" onclick="closeDocModal()">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>文件名稱</label><input type="text" id="doc-name" placeholder="例：假設工程分項施工計畫書"></div>
+      <div class="field-row">
+        <div class="field"><label>文件類型</label><select id="doc-type"><option value="plan">計畫書</option><option value="drawing">細部設計圖說</option><option value="subplan">分項計畫書</option><option value="other">其他</option></select></div>
+        <div class="field"><label>審查天數（合約）</label><input type="number" id="doc-review-days" value="14" min="1"></div>
+      </div>
+      <div class="field"><label>備註（選填）</label><textarea id="doc-note" style="min-height:48px;" placeholder="合約條款、特殊規定等"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-modal" onclick="closeDocModal()">取消</button><button class="btn-modal primary" onclick="saveDoc()">儲存</button></div>
+  </div>
+</div>
+<!-- 版次 Modal -->
+<div class="modal-overlay" id="ver-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header"><h3 id="ver-modal-title">新增送審版次</h3><button class="modal-close" onclick="closeVerModal()">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ver-doc-id"><input type="hidden" id="ver-edit-idx" value="-1">
+      <div class="field-row">
+        <div class="field"><label>版次</label>
+          <select id="ver-revision"><option value="">—</option><option>A版</option><option>B版</option><option>C版</option><option>D版</option><option>E版</option><option>F版</option><option>0版</option><option>0A版</option><option>1版</option><option>2版</option></select>
+        </div>
+        <div class="field"><label>送審日期</label><input type="date" id="ver-date"></div>
+      </div>
+      <div class="field"><label>審查結果</label>
+        <select id="ver-result">
+          <option value="pending">未送</option><option value="sent">已送</option><option value="reviewing">審查中</option>
+          <option value="approved">核定</option><option value="approved_mod">審查認可但有修正處</option>
+          <option value="approved_after">修正後核定</option><option value="rejected">退回修正</option>
+        </select>
+      </div>
+      <div class="field"><label>實際回覆日期（選填）</label><input type="date" id="ver-reply-date"></div>
+      <div class="field"><label>審查意見／備註</label><textarea id="ver-comment" placeholder="退件原因、核定條件…"></textarea></div>
+      <div class="field"><label>附件連結（選填）</label><input type="text" id="ver-link" placeholder="https://drive.google.com/…"></div>
+    </div>
+    <div class="modal-footer"><button class="btn-modal" onclick="closeVerModal()">取消</button><button class="btn-modal primary" onclick="saveVersion()">儲存版次</button></div>
+  </div>
+</div>
+<div class="toast-confirm" id="toast-confirm">
+  <span id="toast-msg">確定要刪除？</span>
+  <div style="display:flex;gap:8px;">
+    <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+let docs = [];
+let editingDocId = null;
+
+const DOC_TYPE_LABEL = { plan:'計畫書', drawing:'細部設計圖說', subplan:'分項計畫書', other:'其他' };
+const DOC_TYPE_CLS   = { plan:'dtype-plan', drawing:'dtype-drawing', subplan:'dtype-subplan', other:'dtype-other' };
+const VER_RESULT_LABEL = { approved:'核定', approved_mod:'審查認可但有修正處', approved_after:'修正後核定', rejected:'退回修正', reviewing:'審查中／修正中', pending:'未送', sent:'已送（審查中）' };
+
+// 完整 preload 資料（計畫書、細部設計圖說、分項計畫書）
+const DOCS_PRELOAD_FULL = [
+  {"id":"doc_plan_001","name":"工作開工報告表","type":"plan","reviewDays":14,"note":"預定送審：2023-12-27","versions":[{"revision":"A版","date":"2023-12-27","replyDate":"2024-01-02","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"2024-01-18","replyDate":"2024-03-06","result":"approved_after","comment":"准予備查","link":""}]},
+  {"id":"doc_plan_002","name":"設計階段計畫","type":"plan","reviewDays":14,"note":"預定送審：2024-01-17","versions":[{"revision":"A版","date":"2024-01-16","replyDate":"2024-01-30","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"2024-02-19","replyDate":"2024-03-06","result":"rejected","comment":"退回修正","link":""},{"revision":"C版","date":"2024-03-21","replyDate":"2024-03-28","result":"approved_after","comment":"准予備查","link":""}]},
+  {"id":"doc_plan_006","name":"整體施工計畫","type":"plan","reviewDays":14,"note":"預定送審：2024-03-17","versions":[{"revision":"A版","date":"2024-03-04","replyDate":"2024-03-12","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"2024-04-01","replyDate":"2024-04-11","result":"rejected","comment":"退回修正","link":""},{"revision":"C版","date":"2024-04-30","replyDate":"2024-05-17","result":"approved","comment":"准予核定","link":""}]},
+  {"id":"doc_plan_007","name":"整體品質計畫","type":"plan","reviewDays":14,"note":"預定送審：2024-03-17","versions":[{"revision":"A版","date":"2024-03-15","replyDate":"2024-03-29","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"2024-04-18","replyDate":"2024-05-16","result":"rejected","comment":"退回修正","link":""},{"revision":"C版","date":"2024-05-30","replyDate":"2024-06-14","result":"approved","comment":"准予核定","link":""}]},
+  {"id":"doc_plan_008","name":"環境保護計畫","type":"plan","reviewDays":14,"note":"","versions":[{"revision":"C版","date":"2024-04-25","replyDate":"2024-05-30","result":"approved","comment":"准予核定","link":""},{"revision":"1版","date":"2026-04-01","replyDate":"2026-04-21","result":"approved","comment":"准予核定","link":""}]},
+  {"id":"doc_plan_009","name":"職業安全衛生管理計畫","type":"plan","reviewDays":14,"note":"","versions":[{"revision":"C版","date":"2024-05-10","replyDate":"2024-05-30","result":"approved","comment":"准予核定","link":""}]},
+  {"id":"doc_plan_014","name":"結構計算書","type":"plan","reviewDays":14,"note":"預定送審：2024-08-31","versions":[{"revision":"F版","date":"2025-08-22","replyDate":"2025-09-19","result":"approved_mod","comment":"審查認可，有修正處","link":""},{"revision":"0A版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_plan_017","name":"風險評估報告書 (製程設計)","type":"plan","reviewDays":14,"note":"預定送審：2025-02-28","versions":[{"revision":"C版","date":"2026-04-23","replyDate":"","result":"reviewing","comment":"審查中","link":""}]},
+  {"id":"doc_plan_018","name":"風險評估報告書 (施工建造)","type":"plan","reviewDays":14,"note":"","versions":[{"revision":"C版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_plan_021","name":"詳細價目表","type":"plan","reviewDays":14,"note":"預定送審：2025-07-30","versions":[{"revision":"A版","date":"2025-11-21","replyDate":"2025-11-28","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_plan_025","name":"工廠檢驗及試驗計畫 (國外設備)","type":"plan","reviewDays":14,"note":"預定送審：2025-12-30","versions":[{"revision":"A版","date":"2026-03-12","replyDate":"2026-03-20","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_plan_028","name":"模擬平台建立計畫","type":"plan","reviewDays":14,"note":"預定送審：2025-12-28","versions":[{"revision":"A版","date":"2026-03-24","replyDate":"2026-04-10","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_plan_029","name":"溶劑測試計畫","type":"plan","reviewDays":14,"note":"預定送審：2025-12-30","versions":[{"revision":"A版","date":"2026-02-26","replyDate":"2026-03-25","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_plan_030","name":"人員訓練計畫","type":"plan","reviewDays":14,"note":"預定送審：2026-05-01","versions":[]},
+  {"id":"doc_plan_031","name":"試運轉及性能測試計畫","type":"plan","reviewDays":14,"note":"預定送審：2026-10-29","versions":[]},
+  {"id":"doc_draw_001","name":"建築相關設計圖 建築設計圖","type":"drawing","reviewDays":14,"note":"","versions":[{"revision":"2版","date":"2025-08-22","replyDate":"2025-09-08","result":"approved_after","comment":"准予備查","link":""}]},
+  {"id":"doc_draw_007","name":"結構細部設計圖","type":"drawing","reviewDays":14,"note":"","versions":[{"revision":"E版","date":"2025-08-25","replyDate":"2025-09-22","result":"approved_after","comment":"准予備查(有修正處)","link":""},{"revision":"0版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_draw_008","name":"碳捕集廠細部設計圖 機械類(一)","type":"drawing","reviewDays":14,"note":"","versions":[{"revision":"0A版","date":"2026-03-30","replyDate":"2026-04-13","result":"approved_after","comment":"准予備查(有修正處)","link":""},{"revision":"1版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_draw_009","name":"碳捕集廠細部設計圖 機械類(二)","type":"drawing","reviewDays":14,"note":"","versions":[{"revision":"1版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_draw_010","name":"碳捕集廠細部設計圖 管線類(ISBL)","type":"drawing","reviewDays":14,"note":"","versions":[{"revision":"D版","date":"2025-09-15","replyDate":"2025-09-26","result":"approved_after","comment":"准予備查(有修正處)","link":""},{"revision":"F版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_draw_013","name":"碳捕集廠細部設計圖 電氣類(三)","type":"drawing","reviewDays":14,"note":"","versions":[{"revision":"0A版","date":"2026-04-21","replyDate":"","result":"reviewing","comment":"審查中","link":""}]},
+  {"id":"doc_draw_014","name":"碳捕集廠細部設計圖 儀控類","type":"drawing","reviewDays":14,"note":"","versions":[{"revision":"D版","date":"2025-09-26","replyDate":"2025-10-20","result":"approved_after","comment":"准予備查(有修正處)","link":""},{"revision":"F版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_sub_001","name":"假設工程施工","type":"subplan","reviewDays":14,"note":"預定送審：2025-04-30","versions":[{"revision":"0版","date":"2026-03-30","replyDate":"2026-04-08","result":"approved","comment":"准予核定","link":""}]},
+  {"id":"doc_sub_002","name":"擋土支撐、土方開挖及回填施工","type":"subplan","reviewDays":14,"note":"預定送審：2025-04-30","versions":[{"revision":"B版","date":"2026-01-06","replyDate":"2026-01-19","result":"rejected","comment":"退回修正","link":""},{"revision":"C版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_sub_003","name":"剩餘土石方處理及土方運輸施工計畫","type":"subplan","reviewDays":14,"note":"","versions":[{"revision":"B版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_sub_005","name":"鋼筋、模板、混凝土施工","type":"subplan","reviewDays":14,"note":"預定送審：2025-11-28","versions":[{"revision":"B版","date":"2026-03-30","replyDate":"2026-04-13","result":"rejected","comment":"退回修正","link":""},{"revision":"C版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_sub_006","name":"基礎施工計畫","type":"subplan","reviewDays":14,"note":"預定送審：2025-11-28","versions":[{"revision":"B版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_sub_007","name":"基樁施工計畫及基樁載重試驗計畫","type":"subplan","reviewDays":14,"note":"預定送審：2025-11-28","versions":[{"revision":"B版","date":"2026-03-25","replyDate":"2026-04-07","result":"rejected","comment":"退回修正","link":""},{"revision":"C版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_sub_008","name":"避雷及接地施工計畫","type":"subplan","reviewDays":14,"note":"預定送審：2026-02-28","versions":[{"revision":"A版","date":"2026-04-01","replyDate":"2026-04-16","result":"rejected","comment":"退回修正","link":""},{"revision":"B版","date":"","replyDate":"","result":"reviewing","comment":"廠商修正中","link":""}]},
+  {"id":"doc_sub_009","name":"施工架組立施工","type":"subplan","reviewDays":14,"note":"預定送審：2026-03-30","versions":[]},
+  {"id":"doc_sub_010","name":"製程設施主要設備施工","type":"subplan","reviewDays":14,"note":"預定送審：2026-05-30","versions":[]},
+  {"id":"doc_sub_012","name":"鋼構工程施工","type":"subplan","reviewDays":14,"note":"預定送審：2026-03-30","versions":[]},
+];
+
+function docSave() {
+  try { localStorage.setItem('construction_docs_v1', JSON.stringify(docs)); } catch(e) {}
+  setTimeout(()=>cloudSaveAll('docs',docs).catch(()=>{}), 500);
+}
+
+function docOverallStatus(doc) {
+  if (!doc.versions||!doc.versions.length) return 'pending';
+  const APPROVED = { approved:1, approved_mod:1, approved_after:1 };
+  const last = doc.versions[doc.versions.length-1];
+  if (APPROVED[last.result]) return last.result;
+  if (last.result==='reviewing') return 'reviewing';
+  if (last.result==='sent') return 'sent';
+  if (last.result==='rejected') return 'rejected';
+  return last.result||'pending';
+}
+function isDocOverdue(doc) {
+  if (!doc.versions||!doc.versions.length) return false;
+  const APPROVED = { approved:1, approved_mod:1, approved_after:1 };
+  const last = doc.versions[doc.versions.length-1];
+  if (APPROVED[last.result]||!last.date) return false;
+  if (last.result==='pending'||last.result==='rejected'||last.result==='reviewing') return false;
+  if (last.result==='sent'&&!last.replyDate) return todayStr()>addDays(last.date, doc.reviewDays||14);
+  return false;
+}
+
+async function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('文件送審');
+  initSidebarState();
+  renderNav('docs');
+  const data = await loadAllData();
+  docs = Array.isArray(data.docs) && data.docs.length ? data.docs : DOCS_PRELOAD_FULL.slice();
+  renderDocDashboard();
+  renderDocs();
+}
+
+function renderDocDashboard() {
+  const el = document.getElementById('doc-dashboard'); if (!el) return;
+  const cats = [
+    { key:'plan',    label:'計畫書',       cls:'plan',    fill:'linear-gradient(90deg,#2563eb,#60a5fa)', pct:'var(--c-blue)' },
+    { key:'drawing', label:'細部設計圖說', cls:'drawing', fill:'linear-gradient(90deg,#7c3aed,#a78bfa)', pct:'#7c3aed' },
+    { key:'subplan', label:'分項計畫書',   cls:'subplan', fill:'linear-gradient(90deg,#0d9488,#2dd4bf)', pct:'var(--c-teal)' },
+  ];
+  el.innerHTML = cats.map(cat => {
+    const catDocs = docs.filter(d=>d.type===cat.key);
+    const total   = catDocs.length;
+    const APPROVED= { approved:1, approved_mod:1, approved_after:1 };
+    const approved = catDocs.filter(d=>APPROVED[docOverallStatus(d)]).length;
+    const pending  = catDocs.filter(d=>docOverallStatus(d)==='pending').length;
+    const reviewing= catDocs.filter(d=>docOverallStatus(d)==='reviewing'||docOverallStatus(d)==='sent').length;
+    const overdueN = catDocs.filter(isDocOverdue).length;
+    const pct = total ? Math.round(approved/total*100) : 0;
+    return `<div class="doc-cat-card ${cat.cls}" onclick="filterDocsByType('${cat.key}')">
+      <div class="doc-cat-title">${cat.label} <span style="font-size:10px;color:var(--text-muted);font-weight:400;">(${total} 份)</span></div>
+      ${total?`<div class="doc-cat-progress"><div class="doc-cat-fill" style="width:${pct}%;background:${cat.fill}"></div></div>
+      <div class="doc-cat-stats">
+        <div class="doc-cat-pct" style="color:${cat.pct}">${pct}%</div>
+        <div class="doc-cat-detail">核定 ${approved} ／ 審查中 ${reviewing}<br>未送 ${pending}${overdueN?`<br><span style="color:var(--c-red);font-weight:600;">⚠ 逾期 ${overdueN}</span>`:''}
+        </div></div>`: '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">尚無文件</div>'}
+    </div>`;
+  }).join('');
+}
+
+function filterDocsByType(type) {
+  const sel = document.getElementById('doc-filter-type');
+  if (sel) { sel.value = type; renderDocs(); }
+}
+
+function renderDocs() {
+  const typeF   = document.getElementById('doc-filter-type').value;
+  const statusF = document.getElementById('doc-filter-status').value;
+  const overdueF= document.getElementById('doc-filter-overdue').checked;
+  const filtered = docs.filter(d =>
+    (!typeF   || d.type===typeF) &&
+    (!statusF || docOverallStatus(d)===statusF) &&
+    (!overdueF|| isDocOverdue(d))
+  );
+  document.getElementById('doc-count').textContent = '共 '+filtered.length+' 份文件';
+  const list = document.getElementById('doc-list'); if (!list) return;
+  if (!filtered.length) { list.innerHTML='<div class="empty">目前沒有符合條件的文件記錄</div>'; return; }
+
+  list.innerHTML = filtered.map(doc => {
+    const status  = docOverallStatus(doc);
+    const overdue = isDocOverdue(doc);
+    const versionsHtml = (doc.versions||[]).map((v, vi) => {
+      const deadline = v.date ? addDays(v.date, doc.reviewDays||14) : '';
+      const isOver   = deadline && !v.replyDate && v.result!=='approved' && todayStr()>deadline;
+      const dlLabel  = deadline ? (isOver?`⚠️ 應審完 ${deadline}（逾期 ${daysDiff(deadline,todayStr())} 天）`:`應審完 ${deadline}${v.replyDate?' 　實際回覆 '+v.replyDate:''}`) : '';
+      return `<div class="ver-row">
+        <div class="ver-dot ${v.result}"></div>
+        <div class="ver-top">
+          <span class="ver-no">第 ${vi+1} 次</span>
+          ${v.revision?`<span class="badge" style="background:var(--c-blue-bg);color:var(--c-blue);border:1px solid var(--c-blue-border);font-size:10px;padding:1px 7px;border-radius:8px;">${esc(v.revision)}</span>`:''}
+          <span class="ver-date">送審 ${v.date||'—'}</span>
+          ${dlLabel?`<span class="ver-deadline ${isOver?'overdue':'ok'}">${dlLabel}</span>`:''}
+          <span class="ver-result ${v.result}">${VER_RESULT_LABEL[v.result]||v.result}</span>
+        </div>
+        ${v.comment?`<div class="ver-comment">💬 ${esc(v.comment).replace(/\n/g,'<br>')}</div>`:''}
+        ${v.link?`<a class="ver-link" href="${esc(v.link)}" target="_blank" rel="noopener">📎 附件連結</a>`:''}
+        <div class="ver-actions">
+          <button class="btn-sm edit" onclick="editVersion('${doc.id}',${vi})">編輯</button>
+          <button class="btn-sm del"  onclick="deleteVersion('${doc.id}',${vi})">刪除版次</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="doc-card" id="doccard-${doc.id}">
+      <div class="doc-card-header" onclick="toggleDocCard('${doc.id}')">
+        <span class="doc-type-badge ${DOC_TYPE_CLS[doc.type]||'dtype-other'}">${DOC_TYPE_LABEL[doc.type]||doc.type}</span>
+        <span class="doc-name">${esc(doc.name)}</span>
+        <span class="doc-meta-inline">${(doc.versions||[]).length} 次　${doc.reviewDays||14} 天審查</span>
+        ${overdue?'<span class="doc-overdue">⚠️ 逾期</span>':''}
+        <span class="overall-badge ${status==='approved'||status==='approved_mod'||status==='approved_after'?'os-done':status==='reviewing'||status==='sent'?'os-wip':status==='pending'?'os-none':'os-pend'}">${VER_RESULT_LABEL[status]||status}</span>
+        <span class="doc-expand-icon">▼</span>
+      </div>
+      <div class="doc-card-body"><div class="doc-card-body-inner">
+        ${doc.note?`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;padding:8px 10px;background:var(--bg);border-radius:6px;">📝 ${esc(doc.note)}</div>`:''}
+        <div class="ver-list">${versionsHtml||'<div style="font-size:13px;color:var(--text-muted);padding:4px 0 8px;">尚未有送審記錄</div>'}</div>
+        <div class="doc-add-ver-btn">
+          <button class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;" onclick="openAddVerModal('${doc.id}')">＋ 新增送審版次</button>
+          <button class="btn-sm edit" onclick="editDoc('${doc.id}')">編輯文件</button>
+          <button class="btn-sm del"  onclick="deleteDoc('${doc.id}')">刪除文件</button>
+        </div>
+      </div></div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDocCard(id) { const el=document.getElementById('doccard-'+id); if(el) el.classList.toggle('open'); }
+
+// 文件 CRUD
+function openAddDocModal() {
+  editingDocId = null;
+  document.getElementById('doc-modal-title').textContent = '新增文件';
+  ['doc-name','doc-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('doc-type').value = 'plan';
+  document.getElementById('doc-review-days').value = '14';
+  document.getElementById('doc-modal').style.display = 'flex';
+}
+function editDoc(id) {
+  const d=docs.find(x=>x.id===id); if (!d) return;
+  editingDocId=id;
+  document.getElementById('doc-modal-title').textContent='編輯文件';
+  document.getElementById('doc-name').value=d.name;
+  document.getElementById('doc-type').value=d.type;
+  document.getElementById('doc-review-days').value=d.reviewDays||14;
+  document.getElementById('doc-note').value=d.note||'';
+  document.getElementById('doc-modal').style.display='flex';
+}
+function closeDocModal() { document.getElementById('doc-modal').style.display='none'; }
+function saveDoc() {
+  const name=document.getElementById('doc-name').value.trim(); if(!name){alert('請填寫文件名稱');return;}
+  const payload={name,type:document.getElementById('doc-type').value,reviewDays:parseInt(document.getElementById('doc-review-days').value)||14,note:document.getElementById('doc-note').value.trim()};
+  if(editingDocId){const idx=docs.findIndex(d=>d.id===editingDocId);if(idx!==-1)docs[idx]={...docs[idx],...payload};}
+  else docs.push({id:uid(),versions:[],...payload});
+  docSave();closeDocModal();renderDocDashboard();renderDocs();
+}
+async function deleteDoc(id) {
+  if(!await toastConfirm('確定要刪除此文件及所有送審記錄？'))return;
+  docs=docs.filter(d=>d.id!==id);docSave();renderDocDashboard();renderDocs();
+}
+// 版次 CRUD
+function openAddVerModal(docId) {
+  document.getElementById('ver-modal-title').textContent='新增送審版次';
+  document.getElementById('ver-doc-id').value=docId;
+  document.getElementById('ver-edit-idx').value='-1';
+  document.getElementById('ver-date').value=todayStr();
+  document.getElementById('ver-reply-date').value='';
+  document.getElementById('ver-revision').value='';
+  document.getElementById('ver-result').value='pending';
+  document.getElementById('ver-comment').value='';
+  document.getElementById('ver-link').value='';
+  document.getElementById('ver-modal').style.display='flex';
+}
+function editVersion(docId,idx) {
+  const doc=docs.find(d=>d.id===docId); if(!doc) return;
+  const v=doc.versions[idx];
+  document.getElementById('ver-modal-title').textContent='編輯送審版次';
+  document.getElementById('ver-doc-id').value=docId;
+  document.getElementById('ver-edit-idx').value=idx;
+  document.getElementById('ver-revision').value=v.revision||'';
+  document.getElementById('ver-date').value=v.date||'';
+  document.getElementById('ver-reply-date').value=v.replyDate||'';
+  document.getElementById('ver-result').value=v.result||'pending';
+  document.getElementById('ver-comment').value=v.comment||'';
+  document.getElementById('ver-link').value=v.link||'';
+  document.getElementById('ver-modal').style.display='flex';
+}
+function closeVerModal() { document.getElementById('ver-modal').style.display='none'; }
+function saveVersion() {
+  const docId=document.getElementById('ver-doc-id').value;
+  const editIdx=parseInt(document.getElementById('ver-edit-idx').value);
+  const date=document.getElementById('ver-date').value; if(!date){alert('請填寫送審日期');return;}
+  const doc=docs.find(d=>d.id===docId); if(!doc) return;
+  const ver={revision:document.getElementById('ver-revision').value,date,replyDate:document.getElementById('ver-reply-date').value||'',result:document.getElementById('ver-result').value,comment:document.getElementById('ver-comment').value.trim(),link:document.getElementById('ver-link').value.trim()};
+  if(editIdx>=0) doc.versions[editIdx]=ver;
+  else doc.versions.push(ver);
+  docSave();closeVerModal();renderDocDashboard();renderDocs();
+  const card=document.getElementById('doccard-'+docId);if(card&&!card.classList.contains('open'))card.classList.add('open');
+}
+async function deleteVersion(docId,idx) {
+  if(!await toastConfirm('確定要刪除此送審版次？'))return;
+  const doc=docs.find(d=>d.id===docId);if(!doc)return;
+  doc.versions.splice(idx,1);docSave();renderDocDashboard();renderDocs();
+}
+
+init();
+</script>
+</body>
+</html>
