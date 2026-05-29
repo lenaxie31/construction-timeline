@@ -833,11 +833,26 @@ function renderQi() {
       isExpanded ? 'row-expanded' : ''
     ].filter(Boolean).join(' ');
 
-    /* 齊件 pills */
-    const docCells = [
-      docPill(q.docSelfCheck) + ' ' + docPill(q.docReqForm),
-      docPill(q.docRecord)    + ' ' + docPill(q.docReport),
-    ].join('<br>');
+    /* 齊件 pills — 帶縮寫標籤 */
+    const DOC_ITEMS = [
+      { label:'自檢', val: q.docSelfCheck },
+      { label:'申請', val: q.docReqForm   },
+      { label:'紀錄', val: q.docRecord    },
+      { label:'報告', val: q.docReport    },
+      { label:'改善', val: q.docImprove   },
+    ];
+    // 只顯示非「不需要」的欄位；若全部都是不需要就顯示「—」
+    const docVisible = DOC_ITEMS.filter(d => d.val !== '不需要');
+    const docCells = docVisible.length
+      ? docVisible.map(d => {
+          const icon  = d.val==='已收'?'✓':d.val==='待補'?'！':d.val==='改善中'?'✗':'·';
+          const color = d.val==='已收'?'#166534':d.val==='待補'?'#92400E':d.val==='改善中'?'#991B1B':'#64748B';
+          const bg    = d.val==='已收'?'#DCFCE7':d.val==='待補'?'#FEF3C7':d.val==='改善中'?'#FEE2E2':'#F1F5F9';
+          return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:${bg};color:${color};white-space:nowrap;margin:1px 1px;">
+            <span style="opacity:.65;font-weight:400;">${d.label}</span>${icon}
+          </span>`;
+        }).join('')
+      : '<span style="color:var(--text-muted);font-size:11px;">—</span>';
 
     /* 辦理進度 badge */
     const prog = q.progress === 'Completed'
@@ -865,7 +880,7 @@ function renderQi() {
         ${esc(q.item||'—')}
         ${q.chaseNote?`<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;">${esc(q.chaseNote)}</div>`:''}
       </td>
-      <td style="line-height:1.9;">${docCells}</td>
+      <td style="line-height:1;"><div style="display:flex;flex-wrap:wrap;gap:2px;max-width:130px;">${docCells}</div></td>
       <td>${overallBadge(q.overallStatus)}</td>
       <td class="qi-check-cell">${stepCell(q.selfCheck,  q.selfDate)}</td>
       <td class="qi-check-cell">${stepCell(q.reqCheck,   q.reqDate)}</td>
