@@ -248,7 +248,7 @@
           <thead>
             <tr>
               <th style="width:32px;">#</th>
-              <th style="width:72px;">分類</th>
+              <th style="width:90px;">分類</th>
               <th style="min-width:150px;">抽驗項目</th>
               <th style="min-width:110px;">齊件狀態</th>
               <th style="width:88px;">整體狀態</th>
@@ -700,7 +700,7 @@ function renderQi() {
     /* 資料列 */
     rows += `<tr class="${rowCls}" data-id="${q.id}" onclick="toggleDetail('${q.id}')">
       <td style="color:var(--text-muted);font-size:11px;">${rowNum}</td>
-      <td><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:${TYPE_BG[q.type]||'#F1F5F9'};color:${TYPE_FG[q.type]||'#475569'};">${esc(q.type||'—')}</span></td>
+      <td style="white-space:nowrap;"><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;display:inline-block;background:${TYPE_BG[q.type]||'#F1F5F9'};color:${TYPE_FG[q.type]||'#475569'};">${esc(q.type||'—')}</span></td>
       <td style="max-width:180px;font-weight:600;font-size:12px;white-space:normal;line-height:1.45;">
         ${esc(q.item||'—')}
         ${q.chaseNote?`<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;">${esc(q.chaseNote)}</div>`:''}
