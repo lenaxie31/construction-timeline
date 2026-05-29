@@ -316,7 +316,7 @@
       <div class="field-row">
         <div class="field">
           <label>分類</label>
-          <select id="qi-type">
+          <select id="qi-type" onchange="updateDocFieldVisibility()">
             <option value="材料抽驗">材料抽驗</option>
             <option value="施工抽查">施工抽查</option>
             <option value="不定期抽查">不定期抽查</option>
@@ -329,7 +329,7 @@
       </div>
 
       <!-- 自主檢查 -->
-      <div class="modal-section">
+      <div class="modal-section" id="modal-section-self">
         <div class="modal-section-title">① 自主檢查</div>
         <div class="field-row">
           <div class="field">
@@ -351,7 +351,7 @@
       </div>
 
       <!-- 申請抽驗 -->
-      <div class="modal-section">
+      <div class="modal-section" id="modal-section-req">
         <div class="modal-section-title">② 申請抽驗</div>
         <div class="field-row">
           <div class="field">
@@ -429,14 +429,14 @@
       <div class="modal-section">
         <div class="modal-section-title">📂 齊件收件狀態</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div class="field">
+          <div class="field" id="doc-field-self-check">
             <label>自檢表</label>
             <select id="qi-doc-self-check" onchange="autoCalcOverall()">
               <option value="待補">🟡 待補</option><option value="已收">✅ 已收</option>
               <option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option>
             </select>
           </div>
-          <div class="field">
+          <div class="field" id="doc-field-req-form">
             <label>申請單</label>
             <select id="qi-doc-req-form" onchange="autoCalcOverall()">
               <option value="待補">🟡 待補</option><option value="已收">✅ 已收</option>
@@ -597,7 +597,29 @@ function autoCalcOverall() {
   setTimeout(() => sel.classList.remove('auto-filled'), 800);
 }
 
-/* 勾選完成時自動填今天日期 */
+/* 切換分類時，隱藏/顯示不適用的欄位 */
+function updateDocFieldVisibility() {
+  const type = document.getElementById('qi-type').value;
+  const isRandom = type === '不定期抽查';
+  // Modal 中的整個區塊
+  const secSelf = document.getElementById('modal-section-self');
+  const secReq  = document.getElementById('modal-section-req');
+  if (secSelf) secSelf.style.display = isRandom ? 'none' : '';
+  if (secReq)  secReq.style.display  = isRandom ? 'none' : '';
+  // 齊件欄位
+  const fSelf = document.getElementById('doc-field-self-check');
+  const fReq  = document.getElementById('doc-field-req-form');
+  if (fSelf) fSelf.style.display = isRandom ? 'none' : '';
+  if (fReq)  fReq.style.display  = isRandom ? 'none' : '';
+  // 不定期抽查時把這兩個值強制設為「不需要」
+  if (isRandom) {
+    const sc = document.getElementById('qi-doc-self-check');
+    const rc = document.getElementById('qi-doc-req-form');
+    if (sc) sc.value = '不需要';
+    if (rc) rc.value = '不需要';
+  }
+  autoCalcOverall();
+}
 function autoFillDate(fieldId, val) {
   if (val !== '1') return;
   const el = document.getElementById(fieldId);
@@ -833,16 +855,16 @@ function renderQi() {
       isExpanded ? 'row-expanded' : ''
     ].filter(Boolean).join(' ');
 
-    /* 齊件 pills — 帶縮寫標籤 */
-    const DOC_ITEMS = [
-      { label:'自檢', val: q.docSelfCheck },
-      { label:'申請', val: q.docReqForm   },
-      { label:'紀錄', val: q.docRecord    },
-      { label:'報告', val: q.docReport    },
-      { label:'改善', val: q.docImprove   },
+    /* 齊件 pills — 依分類決定顯示哪些欄位 */
+    // 不定期抽查：沒有自主檢查和申請單流程，只看紀錄表/報告/改善單
+    const DOC_ALL = [
+      { label:'自檢', val: q.docSelfCheck, skip: q.type==='不定期抽查' },
+      { label:'申請', val: q.docReqForm,   skip: q.type==='不定期抽查' },
+      { label:'紀錄', val: q.docRecord,    skip: false },
+      { label:'報告', val: q.docReport,    skip: false },
+      { label:'改善', val: q.docImprove,   skip: false },
     ];
-    // 只顯示非「不需要」的欄位；若全部都是不需要就顯示「—」
-    const docVisible = DOC_ITEMS.filter(d => d.val !== '不需要');
+    const docVisible = DOC_ALL.filter(d => !d.skip && d.val !== '不需要');
     const docCells = docVisible.length
       ? docVisible.map(d => {
           const icon  = d.val==='已收'?'✓':d.val==='待補'?'！':d.val==='改善中'?'✗':'·';
@@ -964,13 +986,18 @@ function renderQi() {
                 ${esc(q.reportNo||'—')}
               </div>
             </div>
-            <div class="qi-detail-box">
+              <div class="qi-detail-box">
               <div class="qi-detail-box-label">齊件狀態（全覽）</div>
               <div class="qi-detail-box-val" style="display:flex;flex-wrap:wrap;gap:3px;">
-                ${['自檢表:'+q.docSelfCheck,'申請單:'+q.docReqForm,'紀錄表:'+q.docRecord,'報告:'+q.docReport,'改善單:'+q.docImprove].map(p=>{
-                  const [label,val]=p.split(':');
-                  return `<span style="font-size:10px;white-space:nowrap;">${label} ${docPill(val)}</span>`;
-                }).join('')}
+                ${[
+                  { label:'自檢表', val:q.docSelfCheck, skip: q.type==='不定期抽查' },
+                  { label:'申請單', val:q.docReqForm,   skip: q.type==='不定期抽查' },
+                  { label:'紀錄表', val:q.docRecord,    skip: false },
+                  { label:'報告',   val:q.docReport,    skip: false },
+                  { label:'改善單', val:q.docImprove,   skip: false },
+                ].filter(d => !d.skip).map(d =>
+                  `<span style="font-size:10px;white-space:nowrap;">${d.label} ${docPill(d.val)}</span>`
+                ).join('')}
               </div>
             </div>
             ${q.notes ? `<div class="qi-detail-box">
@@ -1263,9 +1290,8 @@ function openAddQiModal() {
   document.getElementById('qi-doc-improve').value    = '不需要';
   document.getElementById('qi-overall-status').value = '未開始';
   document.getElementById('qi-modal').style.display  = 'flex';
+  updateDocFieldVisibility();
 }
-
-function editQi(id) {
   const q = qualityItems.find(x => x.id === id); if (!q) return;
   editingQiId = id;
   document.getElementById('qi-modal-title').textContent = '編輯查驗紀錄';
@@ -1295,6 +1321,7 @@ function editQi(id) {
   document.getElementById('qi-overall-status').value= q.overallStatus|| '未開始';
   document.getElementById('qi-chase-note').value    = q.chaseNote    || '';
   document.getElementById('qi-modal').style.display = 'flex';
+  updateDocFieldVisibility();
 }
 
 function closeQiModal() { document.getElementById('qi-modal').style.display = 'none'; }
