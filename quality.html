@@ -1292,6 +1292,8 @@ function openAddQiModal() {
   document.getElementById('qi-modal').style.display  = 'flex';
   updateDocFieldVisibility();
 }
+
+function editQi(id) {
   const q = qualityItems.find(x => x.id === id); if (!q) return;
   editingQiId = id;
   document.getElementById('qi-modal-title').textContent = '編輯查驗紀錄';
