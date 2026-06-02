@@ -588,10 +588,8 @@ function importPunchXLS(input) {
 
 // ── 模式一：考勤明細表（含實際打卡時間）──
 function importFromDetailSheets(wb, sheetNames) {
-  const importHols  = (loadHolidays().holidays) || TW_HOLIDAYS_DEFAULT;
-  const importWorks = (loadHolidays().workdays) || {};
+  const importHols = (loadHolidays().holidays) || TW_HOLIDAYS_DEFAULT;
 
-  // 解析時間字串 → HH:MM（'09:06' → '09:06'，'缺'/'' → ''）
   function parseTimeStr(val) {
     if (!val || val === '缺' || val === '') return '';
     const s = String(val).trim();
@@ -599,7 +597,6 @@ function importFromDetailSheets(wb, sheetNames) {
     return m ? m[1].padStart(2,'0') + ':' + m[2] : '';
   }
 
-  // 解析日期欄標題 '27/三' → 27
   function parseDay(val) {
     const s = String(val||'').trim();
     const m = s.match(/^(\d{1,2})\//);
@@ -609,91 +606,80 @@ function importFromDetailSheets(wb, sheetNames) {
   let added = 0, updated = 0, skippedHol = 0;
 
   sheetNames.forEach(sheetName => {
-    const ws   = wb.Sheets[sheetName];
-    const raw  = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+    const ws  = wb.Sheets[sheetName];
+    const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
     if (raw.length < 12) return;
 
-    // 每個工作表最多放3人，每人佔15欄
-    // 人員資訊在列3（index 2）：欄8=姓名，欄9=姓名值
-    // 日期行在列10（index 9），上班/下班行在列11（index 10）
-    // 資料從列12（index 11）開始
+    // 月份從列2欄2取得（index: raw[1][2]）
+    const rangeCell  = String(raw[1][2] || raw[1][1] || '');
+    const rangeMatch = rangeCell.match(/(\d{4})-(\d{2})/);
+    if (!rangeMatch) { console.warn('找不到月份：', sheetName); return; }
+    const baseYear  = parseInt(rangeMatch[1]);
+    const baseMonth = parseInt(rangeMatch[2]);
 
-    const PERSON_BLOCK = 15; // 每人佔15欄
+    // 每人佔 15 欄；姓名在 baseCol+9，上班在 baseCol+1，下班在 baseCol+3
+    const PERSON_BLOCK = 15;
     const MAX_PERSONS  = 3;
 
     for (let pi = 0; pi < MAX_PERSONS; pi++) {
       const baseCol = pi * PERSON_BLOCK;
-      if (baseCol >= raw[2].length) break;
+      if (baseCol >= (raw[2] || []).length) break;
 
-      // 取姓名（列3的欄8+baseCol，或欄9+baseCol）
-      const nameCell = raw[2][baseCol + 8] || raw[2][baseCol + 9] || '';
-      const name = String(nameCell).trim();
+      // 姓名在 baseCol+9（列3，0-based index 2）
+      const nameVal = raw[2][baseCol + 9] || '';
+      const name    = String(nameVal).trim();
       if (!name || name === '姓名') break;
 
-      // 取月份範圍
-      const rangeCell = raw[1][baseCol + 2] || raw[1][2] || '';
-      const rangeMatch = String(rangeCell).match(/(\d{4})-(\d{2})/);
-      if (!rangeMatch) continue;
-      const baseYear  = parseInt(rangeMatch[1]);
-      const baseMonth = parseInt(rangeMatch[2]);
-
-      // 建立或查找人員
       let m = members.find(x => x.name === name);
       if (!m) {
-        const dept = String(raw[2][baseCol + 1] || raw[2][baseCol + 16] || '').trim();
+        const dept = String(raw[2][baseCol + 1] || '').trim();
         m = { id:'m'+uid(), name, role: dept || '監造人員', active:true };
         members.push(m);
       }
 
-      // 逐日讀取（從列12開始，index 11）
+      // 資料從列12開始（0-based index 11）
+      // 日期欄：baseCol+0，上班：baseCol+1，下班：baseCol+3
       for (let ri = 11; ri < raw.length; ri++) {
-        const row = raw[ri];
-        const dateLabel = row[baseCol]; // e.g. '27/三'
-        const day = parseDay(dateLabel);
+        const row       = raw[ri];
+        const dateLabel = String(row[baseCol] || '').trim();   // e.g. '27/三'
+        const day       = parseDay(dateLabel);
         if (!day || day < 1 || day > 31) continue;
 
         const dateStr = baseYear + '-' +
           String(baseMonth).padStart(2,'0') + '-' +
           String(day).padStart(2,'0');
 
-        // 驗證日期合法
         const dateObj = new Date(dateStr);
         if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
 
-        // 打卡時間：欄1=時段一上班，欄3=時段一下班（相對 baseCol）
-        const timeIn  = parseTimeStr(row[baseCol + 1]);
-        const timeOut = parseTimeStr(row[baseCol + 3]);
+        const timeIn  = parseTimeStr(row[baseCol + 1]); // 時段一上班
+        const timeOut = parseTimeStr(row[baseCol + 3]); // 時段一下班
 
-        // 沒有任何打卡記錄 → 跳過
-        if (!timeIn && !timeOut) continue;
+        if (!timeIn && !timeOut) continue; // 無打卡記錄跳過
 
-        // 只跳過國定假日；六日有打卡（加班）就正常匯入
+        // 只跳過國定假日；六日加班正常匯入
         if (importHols[dateStr]) { skippedHol++; continue; }
 
-        // 到班時間超過 08:30 → 自動修正為 08:30（請款用，不標遲到）
+        // 到班超過 08:30 → 修正為 08:30（請款用）
         let adjustedTimeIn = timeIn;
         if (timeIn) {
           const [h, mi2] = timeIn.split(':').map(Number);
           if (h > 8 || (h === 8 && mi2 > 30)) adjustedTimeIn = '08:30';
         }
-        const status = 'present';
 
         const existIdx = attRecords.findIndex(
           r => r.memberId === m.id && r.date === dateStr
         );
         if (existIdx >= 0) {
-          // 已有記錄：更新時間（到班用修正後時間）
           attRecords[existIdx].timeIn  = adjustedTimeIn || attRecords[existIdx].timeIn;
           attRecords[existIdx].timeOut = timeOut || attRecords[existIdx].timeOut;
+          attRecords[existIdx].status  = 'present';
           attRecords[existIdx].note    = 'XLS匯入';
-          if (attRecords[existIdx].note === 'XLS匯入') {
-            attRecords[existIdx].status = status;
-          }
           updated++;
         } else {
           attRecords.push({
             id: uid(), date: dateStr, memberId: m.id,
-            status, timeIn: adjustedTimeIn, timeOut, note:'XLS匯入',
+            status: 'present', timeIn: adjustedTimeIn, timeOut, note:'XLS匯入',
           });
           added++;
         }
@@ -706,7 +692,7 @@ function importFromDetailSheets(wb, sheetNames) {
     '✅ 打卡時間匯入完成！',
     `新增：${added} 筆`,
     `更新：${updated} 筆`,
-    skippedHol ? `跳過假日：${skippedHol} 筆` : '',
+    skippedHol ? `跳過國定假日：${skippedHol} 筆` : '',
     '',
     '僅匯入有實際打卡記錄的日期',
   ].filter(Boolean).join('\n'));
