@@ -296,15 +296,28 @@ async function loadAllData() {
     const modules = ['defects','docs','qi','att','members'];
     const keys    = [DEFECT_KEY, DOCS_KEY, QI_KEY, ATT_KEY, MEMBER_KEY];
     const props   = ['defects','docs','qualityItems','attRecords','members'];
+    // att 和 members 本機有資料就用本機（避免雲端舊資料覆蓋剛匯入的內容）
+    const localFirst = new Set(['att','members']);
 
     for (let i = 0; i < modules.length; i++) {
       try {
         const cloud = await cloudLoadAll(modules[i]);
-        if (cloud && cloud.length > 0) {
-          result[props[i]] = cloud;
-          storageSave(keys[i], cloud);
-        } else if (result[props[i]].length > 0) {
-          await cloudSaveAll(modules[i], result[props[i]]);
+        if (localFirst.has(modules[i])) {
+          // 本機有資料 → 用本機，順便推雲端確保一致
+          if (result[props[i]].length > 0) {
+            await cloudSaveAll(modules[i], result[props[i]]);
+          } else if (cloud && cloud.length > 0) {
+            // 本機空 → 從雲端拉
+            result[props[i]] = cloud;
+            storageSave(keys[i], cloud);
+          }
+        } else {
+          if (cloud && cloud.length > 0) {
+            result[props[i]] = cloud;
+            storageSave(keys[i], cloud);
+          } else if (result[props[i]].length > 0) {
+            await cloudSaveAll(modules[i], result[props[i]]);
+          }
         }
       } catch(e) { console.warn('同步失敗', modules[i], e.message); }
     }
