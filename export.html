@@ -333,13 +333,20 @@ async function exportAttXLSX() {
   const today   = new Date();
   const makeDate= `${y}-${String(mo).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
+  // 全月日期（含六日，跳過國定假日）
   const daysInMonth = new Date(y, mo, 0).getDate();
-  const workDays = [];
+  const allDays = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const ds = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    if (!isHolidayDate(ds, hols, works)) workDays.push(ds);
+    // 只跳過國定假日，六日保留
+    if (!hols[ds]) allDays.push(ds);
   }
-  const WD = workDays.length;
+  // 應出勤工作日（週一～五，非國定假日）
+  const workDays = allDays.filter(ds => {
+    const dow = new Date(ds).getDay();
+    return dow >= 1 && dow <= 5;
+  });
+  const WD = workDays.length; // 應出勤天數（週一～五）
 
   function validRec(r) {
     if (r.status==='present' && r.note==='XLS匯入' && isHolidayDate(r.date,hols,works)) return false;
@@ -349,316 +356,268 @@ async function exportAttXLSX() {
     return allAtt.find(r => r.memberId===memberId && r.date===dateStr && validRec(r)) || null;
   }
 
-  // ── ExcelJS ──
   const ExcelJS = window.ExcelJS;
   if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
   const wb = new ExcelJS.Workbook();
   wb.creator = 'DNV監造系統';
 
-  // ── 顏色常數 ──
-  const C = {
-    DNV:    '0F204B', WHITE:  'FFFFFFFF',
-    HDRDAY: 'E8EDF8', HDRDAYTX:'1A3A6B',
-    NAME:   'EEF2FF', NAMETX: '0F204B',
-    ROLE:   'EEF2FF', ROLETX: '555566',
-    IN:     'D6EAF8', INTX:   '1A5276',
-    OUT:    'FDEBD0', OUTTX:  '784212',
-    HRS:    'E8F5E9', HRSTX:  '1B5E20',
-    HRSEM:  'FFF3E0', HRSEMTX:'E65100',
-    EMPTY:  'F8F8F8', EMPTYTX:'BBBBBB',
-    TOTAL:  'D9E4F5', TOTALTX:'0F204B',
-    ATT1:   'C8F0D8', ATT1TX: '166534',
-    ATT0:   'F8F8F8', ATT0TX: 'CCCCCC',
-    SUMHDR: '0F204B', SUMHDRTX:'FFFFFFFF',
-    SUMHI:  'C8F0D8', SUHITX: '166534',
-    SUMMD:  'FFF9C4', SUMMDTX:'856404',
-    SUMLO:  'FFE0CC', SUMLOTX:'C0392B',
-    SUB:    'F5F5F5', SUBTX:  '555555',
-  };
+  // ── 純黑白樣式 ──
+  const thinBorder = { style:'thin', color:{ argb:'FF000000' } };
+  const medBorder  = { style:'medium', color:{ argb:'FF000000' } };
+  const bdrThin = { top:thinBorder, bottom:thinBorder, left:thinBorder, right:thinBorder };
+  const bdrMed  = { top:medBorder,  bottom:medBorder,  left:medBorder,  right:medBorder  };
+  const bdrHdr  = { top:medBorder, bottom:medBorder, left:thinBorder, right:thinBorder };
 
-  function fill(hex) { return { type:'pattern', pattern:'solid', fgColor:{argb:'FF'+hex} }; }
-  function font(hex, sz, bold) { return { color:{argb:'FF'+hex}, size:sz||10, bold:!!bold, name:'Arial' }; }
-  function border(style) {
-    const s = {style: style||'thin', color:{argb:'FFAAAAAA'}};
-    return {top:s, bottom:s, left:s, right:s};
-  }
-  function borderMed() {
-    const s = {style:'medium', color:{argb:'FF0F204B'}};
-    return {top:s, bottom:s, left:s, right:s};
-  }
-  function align(h,v,wrap) { return {horizontal:h||'center', vertical:v||'middle', wrapText:!!wrap}; }
+  const fillWhite = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFFFF' } };
+  const fillLight = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF2F2F2' } };  // 淺灰
+  const fillMid   = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFD9D9D9' } };  // 中灰（欄頭）
+  const fillDark  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF595959' } };  // 深灰（主標題）
 
-  function applyCell(cell, opts) {
-    if (opts.fill)      cell.fill      = opts.fill;
-    if (opts.font)      cell.font      = opts.font;
-    if (opts.border)    cell.border    = opts.border;
-    if (opts.alignment) cell.alignment = opts.alignment;
-    if (opts.value !== undefined) cell.value = opts.value;
+  const fontBlk  = (sz,bold) => ({ name:'Arial', size:sz||10, bold:!!bold, color:{ argb:'FF000000' } });
+  const fontWht  = (sz,bold) => ({ name:'Arial', size:sz||10, bold:!!bold, color:{ argb:'FFFFFFFF' } });
+  const alignC   = (wrap) => ({ horizontal:'center', vertical:'middle', wrapText:!!wrap });
+  const alignL   = () => ({ horizontal:'left', vertical:'middle' });
+
+  function setCell(cell, val, font, fill, border, align) {
+    cell.value     = val;
+    cell.font      = font;
+    cell.fill      = fill;
+    cell.border    = border;
+    cell.alignment = align;
   }
 
-  function hdrDNV(cell, val) {
-    applyCell(cell, {
-      value: val, fill:fill(C.DNV),
-      font:font(C.WHITE,10,true), border:borderMed(),
-      alignment:align('center','middle',true)
-    });
-  }
-  function hdrDay(cell, val) {
-    applyCell(cell, {
-      value: val, fill:fill(C.HDRDAY),
-      font:font(C.HDRDAYTX,9,true), border:border(),
-      alignment:align('center','middle',true)
-    });
-  }
-  function nameCell(cell, val) {
-    applyCell(cell, {
-      value: val, fill:fill(C.NAME),
-      font:font(C.NAMETX,10,true), border:border(),
-      alignment:align('center','middle',true)
-    });
-  }
-  function roleCell(cell, val) {
-    applyCell(cell, {
-      value: val, fill:fill(C.ROLE),
-      font:font(C.ROLETX,9,false), border:border(),
-      alignment:align('center','middle',true)
-    });
-  }
-  function dataCell(cell, val, bgHex, fgHex, bold) {
-    applyCell(cell, {
-      value: val, fill:fill(bgHex),
-      font:font(fgHex,10,bold), border:border(),
-      alignment:align('center','middle')
-    });
-  }
-  function totalCell(cell, val) {
-    applyCell(cell, {
-      value: val, fill:fill(C.TOTAL),
-      font:font(C.TOTALTX,11,true), border:borderMed(),
-      alignment:align('center','middle')
-    });
-  }
-  function sumHdrCell(cell, val) {
-    applyCell(cell, {
-      value: val, fill:fill(C.SUMHDR),
-      font:font(C.WHITE,10,true), border:borderMed(),
-      alignment:align('center','middle')
-    });
-  }
-  function sumValCell(cell, n, total) {
-    const pct = total ? n/total : 0;
-    const bg  = pct>=0.9?C.SUMHI:pct>=0.5?C.SUMMD:C.SUMLO;
-    const fg  = pct>=0.9?C.SUHITX:pct>=0.5?C.SUMMDTX:C.SUMLOTX;
-    applyCell(cell, {
-      value: n, fill:fill(bg),
-      font:font(fg,12,true), border:borderMed(),
-      alignment:align('center','middle')
-    });
-  }
+  // 欄頭（深灰底白字）
+  function hdrMain(cell, val) { setCell(cell, val, fontWht(10,true), fillDark, bdrMed, alignC(true)); }
+  // 次欄頭（中灰底黑字）
+  function hdrSub(cell, val)  { setCell(cell, val, fontBlk(9,true),  fillMid,  bdrHdr, alignC(true)); }
+  // 一般資料（白底）
+  function dataW(cell, val, bold) { setCell(cell, val, fontBlk(10,bold), fillWhite, bdrThin, alignC()); }
+  // 淺灰資料（姓名/職稱/序號欄）
+  function dataG(cell, val, bold) { setCell(cell, val, fontBlk(10,bold), fillLight, bdrThin, alignC()); }
+  // 標題列（深灰底白字，整列）
+  function titleCell(cell, val) { setCell(cell, val, fontWht(13,true), fillDark, bdrMed, alignC()); }
+  // 副標列（淺灰底）
+  function subCell(cell, val) { setCell(cell, val, fontBlk(9,false), fillLight, bdrThin, alignL()); }
+  // 合計列（中灰）
+  function sumHdr(cell, val) { setCell(cell, val, fontBlk(10,true), fillMid, bdrMed, alignC()); }
+  function sumVal(cell, val) { setCell(cell, val, fontBlk(12,true), fillLight, bdrMed, alignC()); }
 
   // ════════════════════════════════════════════
-  // Sheet 1：打卡時間表
+  // Sheet 1：打卡時間表（含六日加班）
   // ════════════════════════════════════════════
   const ws1 = wb.addWorksheet(`打卡時間_${mo}月`);
+  const D = allDays.length;
 
-  // 欄寬
   ws1.columns = [
-    {width:9}, {width:11},
-    ...workDays.map(()=>({width:7})),
-    {width:9}
+    { width:9 }, { width:11 },
+    ...allDays.map(ds => {
+      const dow = new Date(ds).getDay();
+      return { width: (dow===0||dow===6) ? 6 : 7 }; // 六日欄稍窄
+    }),
+    { width:9 }
   ];
 
-  // 列1：主標題
-  const t1r1 = ws1.getRow(1);
-  t1r1.height = 30;
-  const t1c1 = t1r1.getCell(1);
-  applyCell(t1c1, {
-    value:`監造人員出勤打卡時間表　民國 ${rocYear} 年 ${mo} 月`,
-    fill:fill(C.DNV), font:font(C.WHITE,13,true),
-    alignment:align('center','middle')
-  });
-  ws1.mergeCells(1,1,1,2+WD);
+  // 列1 主標題
+  ws1.getRow(1).height = 28;
+  titleCell(ws1.getRow(1).getCell(1), `監造人員出勤打卡時間表　民國 ${rocYear} 年 ${mo} 月`);
+  ws1.mergeCells(1, 1, 1, 2+D);
 
-  // 列2：工程資訊
-  const t1r2 = ws1.getRow(2);
-  t1r2.height = 16;
-  const t1c2 = t1r2.getCell(1);
-  applyCell(t1c2, {
-    value:`工程名稱：${PROJECT}　　製表：${makeDate}`,
-    fill:fill(C.SUB), font:font(C.SUBTX,9,false),
-    alignment:align('left','middle')
-  });
-  ws1.mergeCells(2,1,2,2+WD);
+  // 列2 工程資訊
+  ws1.getRow(2).height = 16;
+  subCell(ws1.getRow(2).getCell(1), `工程名稱：${PROJECT}　　製表：${makeDate}`);
+  ws1.mergeCells(2, 1, 2, 2+D);
 
-  // 列3：空白
   ws1.getRow(3).height = 6;
 
-  // 列4：欄頭
-  const t1r4 = ws1.getRow(4);
-  t1r4.height = 34;
-  hdrDNV(t1r4.getCell(1), '姓名');
-  hdrDNV(t1r4.getCell(2), '職稱');
-  workDays.forEach((ds,di) => {
-    const d = parseInt(ds.slice(8));
-    const dow = DOW_TW[new Date(ds).getDay()];
-    hdrDay(t1r4.getCell(3+di), `${d}\n(${dow})`);
+  // 列4 欄頭
+  ws1.getRow(4).height = 32;
+  hdrMain(ws1.getRow(4).getCell(1), '姓名');
+  hdrMain(ws1.getRow(4).getCell(2), '職稱');
+  allDays.forEach((ds, di) => {
+    const d   = parseInt(ds.slice(8));
+    const dow = new Date(ds).getDay();
+    const isWeekend = dow===0 || dow===6;
+    const label = `${d}\n(${DOW_TW[dow]})`;
+    const cell  = ws1.getRow(4).getCell(3+di);
+    // 六日用中灰，工作日用深灰
+    if (isWeekend) hdrSub(cell, label);
+    else           hdrMain(cell, label);
   });
-  hdrDNV(t1r4.getCell(3+WD), '月累計\n工時');
+  hdrMain(ws1.getRow(4).getCell(3+D), '月累計\n工時');
 
-  // 資料列：每人3列（到班/退班/工時）
-  const ROWS_PP = 3;
-  const ROW_LABELS = ['到班','退班','工時'];
+  // 每人 3 列（到班 / 退班 / 工時）
+  pickedMembers.forEach((mem, mi) => {
+    const br = 5 + mi * 3;
+    [0,1,2].forEach(k => ws1.getRow(br+k).height = 19);
 
-  pickedMembers.forEach((mem,mi) => {
-    const baseRow = 5 + mi * ROWS_PP;
+    ws1.mergeCells(br, 1, br+2, 1);
+    ws1.mergeCells(br, 2, br+2, 2);
+    ws1.mergeCells(br, 3+D, br+2, 3+D);
 
-    // 姓名/職稱跨3列合併
-    ws1.mergeCells(baseRow,1,baseRow+2,1);
-    ws1.mergeCells(baseRow,2,baseRow+2,2);
-    ws1.mergeCells(baseRow,3+WD,baseRow+2,3+WD);
-
-    nameCell(ws1.getRow(baseRow).getCell(1), mem.name);
-    roleCell(ws1.getRow(baseRow).getCell(2), mem.role||'監造人員');
-
-    // 空白填充合併格
+    dataG(ws1.getRow(br).getCell(1), mem.name, true);
+    dataG(ws1.getRow(br).getCell(2), mem.role||'監造人員', false);
     [1,2].forEach(k => {
-      nameCell(ws1.getRow(baseRow+k).getCell(1), '');
-      roleCell(ws1.getRow(baseRow+k).getCell(2), '');
+      dataG(ws1.getRow(br+k).getCell(1), '', false);
+      dataG(ws1.getRow(br+k).getCell(2), '', false);
     });
 
-    [0,1,2].forEach(k => {
-      ws1.getRow(baseRow+k).height = 20;
+    // 列標（到班/退班/工時）
+    ['到班','退班','工時'].forEach((lbl, k) => {
+      const lc = ws1.getRow(br+k).getCell(2);
+      lc.value = mem.role||'監造人員';
     });
+    // 覆寫：欄2第1列是職稱，其餘兩列放列標
+    dataG(ws1.getRow(br+1).getCell(2), '退班時間', false);
+    dataG(ws1.getRow(br+2).getCell(2), '當日工時', false);
 
     let totalMin = 0;
-    workDays.forEach((ds,di) => {
+    allDays.forEach((ds, di) => {
       const col = 3 + di;
-      const rec = getMemberRec(mem.id, ds);
+      const dow = new Date(ds).getDay();
+      const isWeekend = dow===0 || dow===6;
+      const rec  = getMemberRec(mem.id, ds);
       const tin  = rec ? (rec.timeIn  || '') : '';
       const tout = rec ? (rec.timeOut || '') : '';
       const mins = rec ? calcWorkMinutes(rec.timeIn, rec.timeOut) : 0;
-      totalMin += mins;
+      totalMin  += mins;
+
+      // 六日且無記錄 → 標示灰色斜線感
+      const emptyBg = isWeekend ? fillMid : fillWhite;
 
       // 到班
-      dataCell(ws1.getRow(baseRow).getCell(col),
-        tin||'—', tin?C.IN:C.EMPTY, tin?C.INTX:C.EMPTYTX, false);
+      const c1 = ws1.getRow(br).getCell(col);
+      setCell(c1, tin||'—', fontBlk(9,false), tin?fillWhite:emptyBg, bdrThin, alignC());
       // 退班
-      dataCell(ws1.getRow(baseRow+1).getCell(col),
-        tout||'—', tout?C.OUT:C.EMPTY, tout?C.OUTTX:C.EMPTYTX, false);
+      const c2 = ws1.getRow(br+1).getCell(col);
+      setCell(c2, tout||'—', fontBlk(9,false), tout?fillWhite:emptyBg, bdrThin, alignC());
       // 工時
-      const hrsStr = mins ? fmtMinutes(mins) : '—';
-      const bgH = mins>480?C.HRSEM:mins>0?C.HRS:C.EMPTY;
-      const fgH = mins>480?C.HRSEMTX:mins>0?C.HRSTX:C.EMPTYTX;
-      dataCell(ws1.getRow(baseRow+2).getCell(col), hrsStr, bgH, fgH, mins>0);
+      const c3 = ws1.getRow(br+2).getCell(col);
+      setCell(c3, mins?fmtMinutes(mins):'—', fontBlk(9,mins>0), mins?fillWhite:emptyBg, bdrThin, alignC());
     });
 
-    totalCell(ws1.getRow(baseRow).getCell(3+WD), fmtMinutes(totalMin));
-    totalCell(ws1.getRow(baseRow+1).getCell(3+WD), '');
-    totalCell(ws1.getRow(baseRow+2).getCell(3+WD), '');
+    // 月累計
+    const hrsStr = fmtMinutes(totalMin);
+    setCell(ws1.getRow(br).getCell(3+D),   hrsStr, fontBlk(11,true), fillLight, bdrMed, alignC());
+    setCell(ws1.getRow(br+1).getCell(3+D), '',     fontBlk(10,false), fillLight, bdrMed, alignC());
+    setCell(ws1.getRow(br+2).getCell(3+D), '',     fontBlk(10,false), fillLight, bdrMed, alignC());
   });
 
   // ════════════════════════════════════════════
-  // Sheet 2：出勤人次表
+  // Sheet 2：出勤人次表（含六日、出勤率=實際/預定）
   // ════════════════════════════════════════════
   const ws2 = wb.addWorksheet(`出勤人次_${mo}月`);
 
   ws2.columns = [
-    {width:4}, {width:9}, {width:11},
-    ...workDays.map(()=>({width:5.5})),
-    {width:7}, {width:7}
+    { width:4 }, { width:9 }, { width:11 },
+    ...allDays.map(ds => {
+      const dow = new Date(ds).getDay();
+      return { width: (dow===0||dow===6) ? 5 : 5.5 };
+    }),
+    { width:10 }, { width:9 }
   ];
 
-  // 標題
-  const s2r1 = ws2.getRow(1);
-  s2r1.height = 30;
-  applyCell(s2r1.getCell(1), {
-    value:`監造人員預計出勤人次表　民國 ${rocYear} 年 ${mo} 月`,
-    fill:fill(C.DNV), font:font(C.WHITE,13,true),
-    alignment:align('center','middle')
-  });
-  ws2.mergeCells(1,1,1,3+WD+1);
+  // 列1 主標題
+  ws2.getRow(1).height = 28;
+  titleCell(ws2.getRow(1).getCell(1), `監造人員預計出勤人次表　民國 ${rocYear} 年 ${mo} 月`);
+  ws2.mergeCells(1, 1, 1, 3+D+1);
 
-  const s2r2 = ws2.getRow(2);
-  s2r2.height = 16;
-  applyCell(s2r2.getCell(1), {
-    value:`工程名稱：${PROJECT}　（工作日共 ${WD} 天）`,
-    fill:fill(C.SUB), font:font(C.SUBTX,9,false),
-    alignment:align('left','middle')
-  });
-  ws2.mergeCells(2,1,2,3+WD+1);
+  // 列2 工程資訊
+  ws2.getRow(2).height = 16;
+  subCell(ws2.getRow(2).getCell(1), `工程名稱：${PROJECT}　（應出勤工作日共 ${WD} 天）`);
+  ws2.mergeCells(2, 1, 2, 3+D+1);
 
   ws2.getRow(3).height = 6;
 
-  // 欄頭
-  const s2r4 = ws2.getRow(4);
-  s2r4.height = 34;
-  hdrDNV(s2r4.getCell(1), '序');
-  hdrDNV(s2r4.getCell(2), '姓名');
-  hdrDNV(s2r4.getCell(3), '職稱');
-  workDays.forEach((ds,di) => {
+  // 列4 欄頭
+  ws2.getRow(4).height = 32;
+  hdrMain(ws2.getRow(4).getCell(1), '序');
+  hdrMain(ws2.getRow(4).getCell(2), '姓名');
+  hdrMain(ws2.getRow(4).getCell(3), '職稱');
+  allDays.forEach((ds, di) => {
     const d = parseInt(ds.slice(8));
-    const dow = DOW_TW[new Date(ds).getDay()];
-    hdrDay(s2r4.getCell(4+di), `${d}\n(${dow})`);
+    const dow = new Date(ds).getDay();
+    const isWeekend = dow===0 || dow===6;
+    const cell = ws2.getRow(4).getCell(4+di);
+    if (isWeekend) hdrSub(cell, `${d}\n(${DOW_TW[dow]})`);
+    else           hdrMain(cell, `${d}\n(${DOW_TW[dow]})`);
   });
-  hdrDNV(s2r4.getCell(4+WD),   '出勤\n天數');
-  hdrDNV(s2r4.getCell(4+WD+1), '出勤率');
+  hdrMain(ws2.getRow(4).getCell(4+D),   '實際/預定\n出勤天數');
+  hdrMain(ws2.getRow(4).getCell(4+D+1), '出勤率');
 
-  // 預計出勤（第5列）
-  const s2r5 = ws2.getRow(5);
-  s2r5.height = 22;
-  sumHdrCell(s2r5.getCell(1), '合計');
-  sumHdrCell(s2r5.getCell(2), '預計出勤人次');
-  ws2.mergeCells(5,2,5,3);
-  sumHdrCell(s2r5.getCell(3), '');
-  workDays.forEach((ds,di) => {
-    dataCell(s2r5.getCell(4+di), pickedMembers.length,
-      C.HDRDAY, C.HDRDAYTX, true);
+  // 列5 預計出勤人次
+  ws2.getRow(5).height = 20;
+  sumHdr(ws2.getRow(5).getCell(1), '合計');
+  sumHdr(ws2.getRow(5).getCell(2), '預計出勤人次');
+  ws2.mergeCells(5, 2, 5, 3);
+  sumHdr(ws2.getRow(5).getCell(3), '');
+  allDays.forEach((ds, di) => {
+    const dow = new Date(ds).getDay();
+    const isWeekend = dow===0 || dow===6;
+    // 六日預計人次留空（彈性加班）
+    const cell = ws2.getRow(5).getCell(4+di);
+    if (isWeekend) setCell(cell, '—', fontBlk(10,false), fillMid, bdrThin, alignC());
+    else           sumVal(cell, pickedMembers.length);
   });
-  sumHdrCell(s2r5.getCell(4+WD), '');
-  sumHdrCell(s2r5.getCell(4+WD+1), '');
+  sumHdr(ws2.getRow(5).getCell(4+D), '');
+  sumHdr(ws2.getRow(5).getCell(4+D+1), '');
 
-  // 人員資料
-  pickedMembers.forEach((mem,mi) => {
+  // 人員列
+  pickedMembers.forEach((mem, mi) => {
     const row = ws2.getRow(6+mi);
-    row.height = 22;
-    nameCell(row.getCell(1), mi+1);
-    nameCell(row.getCell(2), mem.name);
-    roleCell(row.getCell(3), mem.role||'監造人員');
+    row.height = 21;
+    dataG(row.getCell(1), mi+1, true);
+    dataG(row.getCell(2), mem.name, true);
+    dataG(row.getCell(3), mem.role||'監造人員', false);
 
-    let attCnt = 0;
-    workDays.forEach((ds,di) => {
+    let attCnt = 0; // 週一～五出勤天數（對應應出勤）
+    allDays.forEach((ds, di) => {
       const rec = getMemberRec(mem.id, ds);
       const ok  = rec && (rec.status==='present'||rec.status==='late');
-      if (ok) attCnt++;
-      dataCell(row.getCell(4+di), ok?1:0,
-        ok?C.ATT1:C.ATT0, ok?C.ATT1TX:C.ATT0TX, ok);
+      const dow = new Date(ds).getDay();
+      const isWeekend = dow===0 || dow===6;
+      if (ok && !isWeekend) attCnt++;
+
+      const cell = row.getCell(4+di);
+      if (ok) {
+        dataW(cell, 1, true);
+      } else if (isWeekend) {
+        setCell(cell, '—', fontBlk(9,false), fillMid, bdrThin, alignC());
+      } else {
+        dataW(cell, 0, false);
+      }
     });
 
-    totalCell(row.getCell(4+WD), attCnt);
-    const rate = WD ? Math.min(100,Math.round(attCnt/WD*100)) : 0;
-    const ratePct = rate>=90?C.SUMHI:rate>=70?C.SUMMD:C.SUMLO;
-    const rateTx  = rate>=90?C.SUHITX:rate>=70?C.SUMMDTX:C.SUMLOTX;
-    dataCell(row.getCell(4+WD+1), `${rate}%`, ratePct, rateTx, true);
+    // 實際/預定 格式：attCnt/WD
+    setCell(row.getCell(4+D), `${attCnt}/${WD}`, fontBlk(11,true), fillLight, bdrMed, alignC());
+    // 出勤率：百分比
+    const rate = WD ? Math.min(100, Math.round(attCnt/WD*100)) : 0;
+    setCell(row.getCell(4+D+1), `${rate}%`, fontBlk(11,true), fillLight, bdrMed, alignC());
   });
 
-  // 當日合計列
-  const sumRowIdx = 6 + pickedMembers.length;
-  const sumRow2 = ws2.getRow(sumRowIdx);
-  sumRow2.height = 24;
-  sumHdrCell(sumRow2.getCell(1), '合計');
-  sumHdrCell(sumRow2.getCell(2), '當日出勤人次');
-  ws2.mergeCells(sumRowIdx,2,sumRowIdx,3);
-  sumHdrCell(sumRow2.getCell(3), '');
+  // 當日出勤合計列
+  const sumIdx = 6 + pickedMembers.length;
+  ws2.getRow(sumIdx).height = 23;
+  sumHdr(ws2.getRow(sumIdx).getCell(1), '合計');
+  sumHdr(ws2.getRow(sumIdx).getCell(2), '當日出勤人次');
+  ws2.mergeCells(sumIdx, 2, sumIdx, 3);
+  sumHdr(ws2.getRow(sumIdx).getCell(3), '');
 
-  workDays.forEach((ds,di) => {
+  allDays.forEach((ds, di) => {
     const cnt = pickedMembers.filter(mem => {
       const r = getMemberRec(mem.id, ds);
       return r && (r.status==='present'||r.status==='late');
     }).length;
-    sumValCell(sumRow2.getCell(4+di), cnt, pickedMembers.length);
+    const dow = new Date(ds).getDay();
+    const isWeekend = dow===0 || dow===6;
+    const cell = ws2.getRow(sumIdx).getCell(4+di);
+    if (isWeekend && cnt===0) {
+      setCell(cell, '—', fontBlk(10,false), fillMid, bdrThin, alignC());
+    } else {
+      sumVal(cell, cnt);
+    }
   });
-  sumHdrCell(sumRow2.getCell(4+WD), '');
-  sumHdrCell(sumRow2.getCell(4+WD+1), '');
+  sumHdr(ws2.getRow(sumIdx).getCell(4+D), '');
+  sumHdr(ws2.getRow(sumIdx).getCell(4+D+1), '');
 
   // ── 輸出 ──
   const buf  = await wb.xlsx.writeBuffer();
