@@ -519,34 +519,127 @@ function importPunchXLS(input) {
     try {
       const XLSX = window.XLSX;
       if (!XLSX) { alert('XLSX 程式庫未載入，請重新整理頁面'); return; }
-      const wb   = XLSX.read(e.target.result, { type:'binary' });
+
+      // cellDates:false → 日期保持序列數，自己處理
+      const wb   = XLSX.read(e.target.result, { type:'binary', cellDates:false });
       const ws   = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
-      let imported = 0, skipped = 0;
-      rows.forEach(row => {
-        // 嘗試常見欄位名稱
-        const name    = String(row['姓名']||row['Name']||row['name']||'').trim();
-        const dateRaw = String(row['日期']||row['Date']||row['date']||'').trim();
-        const timeIn  = String(row['打卡IN']||row['IN']||row['上班']||row['簽到']||'').trim().slice(0,5);
-        const timeOut = String(row['打卡OUT']||row['OUT']||row['下班']||row['簽退']||'').trim().slice(0,5);
-        if (!name||!dateRaw) { skipped++; return; }
-        const dateStr = normalizeDate(dateRaw);
-        if (!dateStr||!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) { skipped++; return; }
-        let m = members.find(x => x.name===name);
+
+      if (!rows.length) { alert('讀不到任何資料列，請確認 Excel 格式'); return; }
+
+      // ── 偵測實際欄位名稱（幫助 debug）──
+      const actualCols = Object.keys(rows[0]);
+      console.log('[打卡匯入] 偵測到欄位：', actualCols);
+
+      // ── Excel 日期序列 → YYYY-MM-DD ──
+      function excelDateToStr(val) {
+        if (!val && val !== 0) return '';
+        // 純數字：Excel 序列日期
+        if (typeof val === 'number') {
+          const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+          const y = d.getUTCFullYear();
+          const mo= String(d.getUTCMonth()+1).padStart(2,'0');
+          const dd= String(d.getUTCDate()).padStart(2,'0');
+          return `${y}-${mo}-${dd}`;
+        }
+        return normalizeDate(String(val));
+      }
+
+      // ── 時間欄位解析 → HH:MM ──
+      // 打卡鐘常見格式：'08:30'、'08:30:00'、數字 0.354... (Excel 時間小數)
+      function parseTime(val) {
+        if (!val && val !== 0) return '';
+        if (typeof val === 'number') {
+          // Excel 時間是 0~1 的小數
+          const totalMin = Math.round(val * 1440);
+          return String(Math.floor(totalMin/60)).padStart(2,'0') + ':' + String(totalMin%60).padStart(2,'0');
+        }
+        const s = String(val).trim();
+        // HH:MM 或 HH:MM:SS
+        const m = s.match(/^(\d{1,2}):(\d{2})/);
+        return m ? m[1].padStart(2,'0') + ':' + m[2] : '';
+      }
+
+      // ── 彈性欄位取值（不分大小寫、支援全半形）──
+      function getCol(row, ...candidates) {
+        for (const c of candidates) {
+          // 完全匹配
+          if (row[c] !== undefined && row[c] !== '') return row[c];
+          // 不分大小寫匹配
+          const found = Object.keys(row).find(k => k.toLowerCase() === c.toLowerCase());
+          if (found && row[found] !== '') return row[found];
+        }
+        return '';
+      }
+
+      let imported = 0, updated = 0, skipped = 0, unknownCols = new Set();
+
+      rows.forEach((row, idx) => {
+        const name    = String(getCol(row, '姓名','Name','name','人員','員工')||'').trim();
+        const dateRaw = getCol(row, '日期','Date','date','刷卡日','出勤日','打卡日期');
+        const timeInRaw  = getCol(row, '打卡IN','IN','上班','簽到','上班時間','刷入','打卡進','入');
+        const timeOutRaw = getCol(row, '打卡OUT','OUT','下班','簽退','下班時間','刷出','打卡出','出');
+
+        if (!name) { skipped++; return; }
+
+        const dateStr = excelDateToStr(dateRaw);
+        if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          console.warn(`[匯入] 第${idx+2}列 日期解析失敗：`, dateRaw, '→', dateStr);
+          skipped++;
+          return;
+        }
+
+        const timeIn  = parseTime(timeInRaw);
+        const timeOut = parseTime(timeOutRaw);
+
+        // 自動建立或查找人員
+        let m = members.find(x => x.name === name);
         if (!m) {
           m = { id:'m'+uid(), name, role:'監造工程師', active:true };
           members.push(m);
         }
-        const existing = attRecords.findIndex(r => r.memberId===m.id && r.date===dateStr);
-        const rec = { id: existing>=0 ? attRecords[existing].id : uid(), date:dateStr, memberId:m.id, status:'present', timeIn, timeOut, note:'XLS匯入' };
-        if (existing>=0) attRecords[existing]=rec; else attRecords.push(rec);
-        imported++;
+
+        // 判斷出勤狀態
+        // 若有打卡IN時間且時間晚於 08:30 視為遲到
+        let status = 'present';
+        if (timeIn) {
+          const [h, mi] = timeIn.split(':').map(Number);
+          if (h > 8 || (h === 8 && mi > 30)) status = 'late';
+        }
+
+        const rec = {
+          id: uid(), date: dateStr, memberId: m.id,
+          status, timeIn, timeOut, note:'XLS匯入',
+        };
+
+        const existingIdx = attRecords.findIndex(r => r.memberId === m.id && r.date === dateStr);
+        if (existingIdx >= 0) {
+          // 保留人工修改的狀態，只更新時間
+          attRecords[existingIdx].timeIn  = timeIn  || attRecords[existingIdx].timeIn;
+          attRecords[existingIdx].timeOut = timeOut || attRecords[existingIdx].timeOut;
+          attRecords[existingIdx].note    = 'XLS匯入';
+          updated++;
+        } else {
+          attRecords.push(rec);
+          imported++;
+        }
       });
+
       attSave(); membersSave();
-      alert(`✅ 匯入完成！\n成功：${imported} 筆，略過：${skipped} 筆`);
+
+      const msg = [
+        `✅ 匯入完成！`,
+        `新增：${imported} 筆`,
+        `更新時間：${updated} 筆`,
+        skipped ? `略過（格式問題）：${skipped} 筆` : '',
+        ``,
+        `偵測到欄位：${actualCols.join('、')}`,
+      ].filter(Boolean).join('\n');
+      alert(msg);
       renderAll();
     } catch(err) {
-      alert('匯入失敗：' + err.message + '\n請確認檔案格式是否正確');
+      alert('匯入失敗：' + err.message + '\n請確認檔案格式是否正確\n（支援 .xlsx / .xls）');
+      console.error('[打卡匯入] 錯誤：', err);
     }
     input.value = '';
   };
