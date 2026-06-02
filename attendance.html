@@ -88,9 +88,12 @@
       </label>
       <div class="xls-hint">支援人員排班表格式<br>自動跳過週六日與國定假日</div>
       <div class="sidebar-section-title" style="margin-top:12px;">資料修復</div>
+      <button class="btn-secondary" onclick="purgeMonthRecords()"
+        style="font-size:11px;color:var(--c-red);border-color:var(--c-red-border);">🗑 清除本月全部出勤記錄</button>
+      <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0 6px;">清除後可重新匯入 Excel</div>
       <button class="btn-secondary" onclick="purgeHolidayRecords()"
-        style="font-size:11px;color:var(--c-red);border-color:var(--c-red-border);">🗑 清除假日錯誤記錄</button>
-      <div class="xls-hint">移除週六日/假日的<br>XLS 匯入出勤記錄</div>
+        style="font-size:11px;color:var(--c-amber);border-color:var(--c-amber-border);">🗑 清除假日錯誤記錄</button>
+      <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0;">移除週六日/假日的 XLS 匯入出勤記錄</div>
     </div>
   </div>
   <div class="main">
@@ -531,6 +534,23 @@ function removeWorkdayEntry(d) { if(holidayData.workdays) delete holidayData.wor
 function saveHolidaysAndClose() {
   try { localStorage.setItem('construction_tw_holidays_v1', JSON.stringify(holidayData)); } catch(e) {}
   document.getElementById('holiday-modal').style.display = 'none';
+  renderAll();
+}
+
+// ── 清除本月全部出勤記錄 ──
+function purgeMonthRecords() {
+  const monthPrefix = curYear + '-' + String(curMonth).padStart(2,'0');
+  const before = attRecords.length;
+  if (!confirm(`確定要清除 ${curYear}年${curMonth}月 的全部出勤記錄（共 ${attRecords.filter(r=>r.date.startsWith(monthPrefix)).length} 筆）？\n\n清除後可重新匯入 Excel 考勤報表。`)) return;
+  attRecords = attRecords.filter(r => !r.date.startsWith(monthPrefix));
+  const removed = before - attRecords.length;
+  attSave();
+  // 同步雲端
+  setSync('同步中…','sync-busy');
+  cloudSaveAll('att', attRecords)
+    .then(() => setSync('已同步 ✓','sync-ok'))
+    .catch(() => setSync('本機已清除','sync-local'));
+  alert(`✅ 已清除 ${curYear}年${curMonth}月 共 ${removed} 筆出勤記錄\n\n現在可以重新匯入 Excel。`);
   renderAll();
 }
 
