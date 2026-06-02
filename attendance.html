@@ -630,7 +630,11 @@ function importFromDetailSheets(wb, sheetNames) {
       const name    = String(nameVal).trim();
       if (!name || name === '姓名') break;
 
-      let m = members.find(x => x.name === name);
+      let m = members.find(x => x.name.trim() === name);
+      if (!m) {
+        // 找不到精確比對，再試去除空白後比對
+        m = members.find(x => x.name.replace(/\s/g,'') === name.replace(/\s/g,''));
+      }
       if (!m) {
         const dept = String(raw[2][baseCol + 1] || '').trim();
         m = { id:'m'+uid(), name, role: dept || '監造人員', active:true };
@@ -687,10 +691,26 @@ function importFromDetailSheets(wb, sheetNames) {
     }
   });
 
+  // 合併重複人員（同名但不同 id 的情況）
+  const nameMap = {};
+  members.forEach(m => {
+    const key = m.name.trim();
+    if (!nameMap[key]) {
+      nameMap[key] = m;
+    } else {
+      // 保留先建立的，把後來的 id 的記錄都改成先建立的 id
+      const keepId   = nameMap[key].id;
+      const removeId = m.id;
+      attRecords.forEach(r => { if (r.memberId === removeId) r.memberId = keepId; });
+    }
+  });
+  // 去除重複人員（保留 nameMap 中第一個）
+  const keepIds = new Set(Object.values(nameMap).map(m => m.id));
+  members = members.filter(m => keepIds.has(m.id));
+
   attSave(); membersSave();
   alert([
     '✅ 打卡時間匯入完成！',
-    `新增：${added} 筆`,
     `更新：${updated} 筆`,
     skippedHol ? `跳過國定假日：${skippedHol} 筆` : '',
     '',
@@ -730,7 +750,8 @@ function importFromRankingSheet(wb) {
     const name = String(row[1] || '').trim();
     if (!name) { skipped++; continue; }
 
-    let m = members.find(x => x.name === name);
+    let m = members.find(x => x.name.trim() === name);
+    if (!m) m = members.find(x => x.name.replace(/\s/g,'') === name.replace(/\s/g,''));
     if (!m) {
       const dept = String(row[2] || '').trim();
       m = { id:'m'+uid(), name, role: dept || '監造工程師', active:true };
