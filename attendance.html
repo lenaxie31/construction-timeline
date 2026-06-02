@@ -341,13 +341,19 @@ function renderSummary() {
   if (!activeMembers.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-muted);">尚無人員</td></tr>'; return; }
 
   tbody.innerHTML = activeMembers.map(m => {
-    const recs    = attRecords.filter(r => r.memberId === m.id && r.date.startsWith(monthPrefix));
+    // 過濾假日裡的 XLS present 記錄，避免週六日計入出勤
+    const recs = attRecords.filter(r => {
+      if (r.memberId !== m.id || !r.date.startsWith(monthPrefix)) return false;
+      if (r.status === 'present' && r.note === 'XLS匯入' && isHolidayDate(r.date, hols, works)) return false;
+      return true;
+    });
     const present = recs.filter(r => r.status === 'present').length;
     const late    = recs.filter(r => r.status === 'late').length;
     const absent  = recs.filter(r => r.status === 'absent').length;
     const leave   = recs.filter(r => r.status === 'leave' || r.status === 'holiday').length;
     const actual  = present + late;
-    const rate    = wdays ? Math.round(actual / wdays * 100) : 0;
+    // 出勤率上限 100%
+    const rate    = wdays ? Math.min(100, Math.round(actual / wdays * 100)) : 0;
     const rateCls = rate >= 90 ? 'att-rate-good' : rate >= 70 ? 'att-rate-warn' : 'att-rate-bad';
     const totalMin= recs.reduce((sum, r) => sum + calcWorkMinutes(r.timeIn, r.timeOut), 0);
     return `<tr>
