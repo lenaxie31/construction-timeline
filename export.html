@@ -349,7 +349,8 @@ async function exportAttXLSX() {
   const WD = workDays.length; // 應出勤天數（週一～五）
 
   function validRec(r) {
-    if (r.status==='present' && r.note==='XLS匯入' && isHolidayDate(r.date,hols,works)) return false;
+    // 只過濾國定假日的 XLS present 記錄；六日加班正常顯示
+    if (r.status==='present' && r.note==='XLS匯入' && hols[r.date]) return false;
     return true;
   }
   function getMemberRec(memberId, dateStr) {
