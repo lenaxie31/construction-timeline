@@ -559,124 +559,243 @@ function importPunchXLS(input) {
       const XLSX = window.XLSX;
       if (!XLSX) { alert('XLSX 程式庫未載入，請重新整理頁面'); return; }
 
-      const wb   = XLSX.read(e.target.result, { type:'binary', cellDates:false });
-      const ws   = wb.Sheets[wb.SheetNames[0]];
-      // 不自動解析 header，取得原始二維陣列
-      const raw  = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+      const wb = XLSX.read(e.target.result, { type:'binary', cellDates:false });
 
-      if (raw.length < 4) { alert('格式不符，列數不足'); return; }
+      // ── 偵測工作表模式 ──
+      // 有「考勤明細」相關工作表 → 打卡時間模式
+      // 只有「人員排班表」→ 舊排班模式
+      const detailSheets = wb.SheetNames.filter(n =>
+        /^\d/.test(n) || n.includes('明細') || n.includes('記錄')
+      ).filter(n => !['考勤記錄','異常統計表','考勤匯總表'].includes(n));
+      const hasRanking = wb.SheetNames.includes('人員排班表');
 
-      // ── 解析月份範圍（列2，例："2026-05-01 ~ 2026-05-31"）──
-      const rangeStr = String(raw[1][1] || '');
-      const rangeMatch = rangeStr.match(/(\d{4})-(\d{2})-(\d{2})/);
-      if (!rangeMatch) { alert('讀不到日期範圍，請確認列2格式：YYYY-MM-DD ~ YYYY-MM-DD'); return; }
-      const baseYear  = parseInt(rangeMatch[1]);
-      const baseMonth = parseInt(rangeMatch[2]); // 1-based
-
-      // ── 列3：欄位標題（工號、姓名、部門、1、2、3…31）──
-      // 日期欄從 index 3 開始，值是 1.0~31.0
-      const headerRow = raw[2]; // 0-based: 列3 = index 2
-
-      // ── 列4：星期（驗用，可忽略）──
-
-      // ── 班次值對應出勤狀態 ──
-      // 1、2（一般班次）→ present
-      // 25 → leave（請假）
-      // 26 → leave（出差）
-      // 0 / '' / 空 → 假日/休息，略過不建立記錄
-      function codeToStatus(val) {
-        const v = parseFloat(val);
-        if (isNaN(v) || v === 0) return null;      // 假日/休息，不記錄
-        if (v === 25 || v === 26) return 'leave';  // 請假/出差
-        if (v >= 1 && v <= 24)   return 'present'; // 一般班次
-        return null;
+      if (detailSheets.length > 0) {
+        importFromDetailSheets(wb, detailSheets);
+      } else if (hasRanking) {
+        importFromRankingSheet(wb);
+      } else {
+        alert('無法辨識 Excel 格式\n請確認包含「人員排班表」或考勤明細工作表');
       }
-
-      // 匯入時用的假日資料
-      const importHols  = (loadHolidays().holidays)  || TW_HOLIDAYS_DEFAULT;
-      const importWorks = (loadHolidays().workdays)   || {};
-
-      let added = 0, updated = 0, skipped = 0;
-
-      // 從列5（index 4）開始是每個人的資料
-      for (let r = 4; r < raw.length; r++) {
-        const row  = raw[r];
-        const name = String(row[1] || '').trim();
-        if (!name) { skipped++; continue; }
-
-        // 自動建立或查找人員
-        let m = members.find(x => x.name === name);
-        if (!m) {
-          const dept = String(row[2] || '').trim();
-          m = { id:'m'+uid(), name, role: dept || '監造工程師', active:true };
-          members.push(m);
-        }
-
-        // 欄 index 3 開始對應日期第1天，headerRow[3]=1.0, [4]=2.0 ...
-        for (let c = 3; c < row.length; c++) {
-          const dayVal = headerRow[c];
-          const day    = Math.round(parseFloat(dayVal));
-          if (!day || day < 1 || day > 31) continue;
-
-          // 組出日期字串
-          const dateStr = baseYear + '-' +
-            String(baseMonth).padStart(2,'0') + '-' +
-            String(day).padStart(2,'0');
-
-          // 驗證這個日期存在（例如 2 月沒有 30 日）
-          const dateObj = new Date(dateStr);
-          if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
-
-          const status = codeToStatus(row[c]);
-          if (!status) continue; // 0 或空，不建立記錄
-
-          // 所有狀態（含請假/出差）一律跳過週六日與國定假日
-          // 因為此排班表全月填 1.0，無法區分實際有無打卡
-          if (isHolidayDate(dateStr, importHols, importWorks)) continue;
-
-          const existIdx = attRecords.findIndex(
-            rec => rec.memberId === m.id && rec.date === dateStr
-          );
-
-          if (existIdx >= 0) {
-            // 已有記錄：只在狀態是 XLS 匯入時才覆蓋，手動填的保留
-            if (attRecords[existIdx].note === 'XLS匯入') {
-              attRecords[existIdx].status = status;
-              updated++;
-            }
-          } else {
-            attRecords.push({
-              id: uid(), date: dateStr, memberId: m.id,
-              status, timeIn:'', timeOut:'', note:'XLS匯入',
-            });
-            added++;
-          }
-        }
-      }
-
-      attSave(); membersSave();
-
-      const peopleCount = raw.length - 4;
-      alert([
-        '✅ 匯入完成！',
-        `人員：${peopleCount} 人`,
-        `新增記錄：${added} 筆`,
-        `更新記錄：${updated} 筆`,
-        skipped ? `略過：${skipped} 列` : '',
-        '',
-        `月份：${baseYear}年${baseMonth}月`,
-      ].filter(Boolean).join('\n'));
-
-      renderAll();
     } catch(err) {
-      alert('匯入失敗：' + err.message + '\n' + err.stack);
-      console.error('[排班匯入]', err);
+      alert('匯入失敗：' + err.message);
+      console.error('[匯入]', err);
     }
     input.value = '';
   };
   reader.readAsBinaryString(file);
 }
 
+// ── 模式一：考勤明細表（含實際打卡時間）──
+function importFromDetailSheets(wb, sheetNames) {
+  const importHols  = (loadHolidays().holidays) || TW_HOLIDAYS_DEFAULT;
+  const importWorks = (loadHolidays().workdays) || {};
+
+  // 解析時間字串 → HH:MM（'09:06' → '09:06'，'缺'/'' → ''）
+  function parseTimeStr(val) {
+    if (!val || val === '缺' || val === '') return '';
+    const s = String(val).trim();
+    const m = s.match(/^(\d{1,2}):(\d{2})/);
+    return m ? m[1].padStart(2,'0') + ':' + m[2] : '';
+  }
+
+  // 解析日期欄標題 '27/三' → 27
+  function parseDay(val) {
+    const s = String(val||'').trim();
+    const m = s.match(/^(\d{1,2})\//);
+    return m ? parseInt(m[1]) : null;
+  }
+
+  let added = 0, updated = 0, skippedHol = 0;
+
+  sheetNames.forEach(sheetName => {
+    const ws   = wb.Sheets[sheetName];
+    const raw  = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+    if (raw.length < 12) return;
+
+    // 每個工作表最多放3人，每人佔15欄
+    // 人員資訊在列3（index 2）：欄8=姓名，欄9=姓名值
+    // 日期行在列10（index 9），上班/下班行在列11（index 10）
+    // 資料從列12（index 11）開始
+
+    const PERSON_BLOCK = 15; // 每人佔15欄
+    const MAX_PERSONS  = 3;
+
+    for (let pi = 0; pi < MAX_PERSONS; pi++) {
+      const baseCol = pi * PERSON_BLOCK;
+      if (baseCol >= raw[2].length) break;
+
+      // 取姓名（列3的欄8+baseCol，或欄9+baseCol）
+      const nameCell = raw[2][baseCol + 8] || raw[2][baseCol + 9] || '';
+      const name = String(nameCell).trim();
+      if (!name || name === '姓名') break;
+
+      // 取月份範圍
+      const rangeCell = raw[1][baseCol + 2] || raw[1][2] || '';
+      const rangeMatch = String(rangeCell).match(/(\d{4})-(\d{2})/);
+      if (!rangeMatch) continue;
+      const baseYear  = parseInt(rangeMatch[1]);
+      const baseMonth = parseInt(rangeMatch[2]);
+
+      // 建立或查找人員
+      let m = members.find(x => x.name === name);
+      if (!m) {
+        const dept = String(raw[2][baseCol + 1] || raw[2][baseCol + 16] || '').trim();
+        m = { id:'m'+uid(), name, role: dept || '監造人員', active:true };
+        members.push(m);
+      }
+
+      // 逐日讀取（從列12開始，index 11）
+      for (let ri = 11; ri < raw.length; ri++) {
+        const row = raw[ri];
+        const dateLabel = row[baseCol]; // e.g. '27/三'
+        const day = parseDay(dateLabel);
+        if (!day || day < 1 || day > 31) continue;
+
+        const dateStr = baseYear + '-' +
+          String(baseMonth).padStart(2,'0') + '-' +
+          String(day).padStart(2,'0');
+
+        // 驗證日期合法
+        const dateObj = new Date(dateStr);
+        if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
+
+        // 打卡時間：欄1=時段一上班，欄3=時段一下班（相對 baseCol）
+        const timeIn  = parseTimeStr(row[baseCol + 1]);
+        const timeOut = parseTimeStr(row[baseCol + 3]);
+
+        // 沒有任何打卡記錄 → 跳過
+        if (!timeIn && !timeOut) continue;
+
+        // 假日跳過
+        if (isHolidayDate(dateStr, importHols, importWorks)) { skippedHol++; continue; }
+
+        // 到班時間超過 08:30 → 自動修正為 08:30（請款用，不標遲到）
+        let adjustedTimeIn = timeIn;
+        if (timeIn) {
+          const [h, mi2] = timeIn.split(':').map(Number);
+          if (h > 8 || (h === 8 && mi2 > 30)) adjustedTimeIn = '08:30';
+        }
+        const status = 'present';
+
+        const existIdx = attRecords.findIndex(
+          r => r.memberId === m.id && r.date === dateStr
+        );
+        if (existIdx >= 0) {
+          // 已有記錄：更新時間（到班用修正後時間）
+          attRecords[existIdx].timeIn  = adjustedTimeIn || attRecords[existIdx].timeIn;
+          attRecords[existIdx].timeOut = timeOut || attRecords[existIdx].timeOut;
+          attRecords[existIdx].note    = 'XLS匯入';
+          if (attRecords[existIdx].note === 'XLS匯入') {
+            attRecords[existIdx].status = status;
+          }
+          updated++;
+        } else {
+          attRecords.push({
+            id: uid(), date: dateStr, memberId: m.id,
+            status, timeIn: adjustedTimeIn, timeOut, note:'XLS匯入',
+          });
+          added++;
+        }
+      }
+    }
+  });
+
+  attSave(); membersSave();
+  alert([
+    '✅ 打卡時間匯入完成！',
+    `新增：${added} 筆`,
+    `更新：${updated} 筆`,
+    skippedHol ? `跳過假日：${skippedHol} 筆` : '',
+    '',
+    '僅匯入有實際打卡記錄的日期',
+  ].filter(Boolean).join('\n'));
+  renderAll();
+}
+
+// ── 模式二：人員排班表（舊格式，無打卡時間）──
+function importFromRankingSheet(wb) {
+  const ws  = wb.Sheets['人員排班表'];
+  const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+  if (raw.length < 4) { alert('排班表格式不符'); return; }
+
+  const rangeStr   = String(raw[1][1] || '');
+  const rangeMatch = rangeStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!rangeMatch) { alert('讀不到日期範圍'); return; }
+  const baseYear  = parseInt(rangeMatch[1]);
+  const baseMonth = parseInt(rangeMatch[2]);
+  const headerRow = raw[2];
+
+  const importHols  = (loadHolidays().holidays) || TW_HOLIDAYS_DEFAULT;
+  const importWorks = (loadHolidays().workdays) || {};
+
+  function codeToStatus(val) {
+    const v = parseFloat(val);
+    if (isNaN(v) || v === 0) return null;
+    if (v === 25 || v === 26) return 'leave';
+    if (v >= 1 && v <= 24)   return 'present';
+    return null;
+  }
+
+  let added = 0, updated = 0, skipped = 0;
+
+  for (let r = 4; r < raw.length; r++) {
+    const row  = raw[r];
+    const name = String(row[1] || '').trim();
+    if (!name) { skipped++; continue; }
+
+    let m = members.find(x => x.name === name);
+    if (!m) {
+      const dept = String(row[2] || '').trim();
+      m = { id:'m'+uid(), name, role: dept || '監造工程師', active:true };
+      members.push(m);
+    }
+
+    for (let c = 3; c < row.length; c++) {
+      const dayVal = headerRow[c];
+      const day    = Math.round(parseFloat(dayVal));
+      if (!day || day < 1 || day > 31) continue;
+
+      const dateStr = baseYear + '-' +
+        String(baseMonth).padStart(2,'0') + '-' +
+        String(day).padStart(2,'0');
+      const dateObj = new Date(dateStr);
+      if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
+
+      const status = codeToStatus(row[c]);
+      if (!status) continue;
+      if (isHolidayDate(dateStr, importHols, importWorks)) continue;
+
+      const existIdx = attRecords.findIndex(
+        rec => rec.memberId === m.id && rec.date === dateStr
+      );
+      if (existIdx >= 0) {
+        if (attRecords[existIdx].note === 'XLS匯入') {
+          attRecords[existIdx].status = status;
+          updated++;
+        }
+      } else {
+        attRecords.push({
+          id: uid(), date: dateStr, memberId: m.id,
+          status, timeIn:'', timeOut:'', note:'XLS匯入',
+        });
+        added++;
+      }
+    }
+  }
+
+  attSave(); membersSave();
+  const peopleCount = raw.length - 4;
+  alert([
+    '✅ 排班表匯入完成！',
+    `人員：${peopleCount} 人`,
+    `新增記錄：${added} 筆`,
+    `更新記錄：${updated} 筆`,
+    skipped ? `略過：${skipped} 列` : '',
+    '',
+    `月份：${baseYear}年${baseMonth}月（排班表模式，不含打卡時間）`,
+  ].filter(Boolean).join('\n'));
+  renderAll();
+}
 init();
 </script>
 <!-- 載入 SheetJS 供 XLS 匯入使用 -->
