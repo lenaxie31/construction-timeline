@@ -3,71 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>出勤管理 — 施工及監造回報</title>
+<title>匯出 — 施工及監造回報</title>
 <link rel="stylesheet" href="shared.css">
 <style>
-/* ── 月份導覽 ── */
-.month-nav { display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap; }
-.month-nav-title { font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--dnv-dark-blue);min-width:100px; }
-.month-nav-btn { width:32px;height:32px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:background .12s; }
-.month-nav-btn:hover { background:var(--border-light); }
-/* ── 月曆 ── */
-.att-cal-wrap { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px; }
-.att-cal-header { display:grid;grid-template-columns:repeat(7,1fr);background:var(--dnv-dark-blue); }
-.att-cal-dow { text-align:center;padding:8px 4px;font-size:11px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.3px; }
-.att-cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:0; }
-.att-cal-cell { min-height:90px;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:4px 5px;position:relative;cursor:pointer;transition:background .12s;overflow:hidden; }
-.att-cal-cell:hover { background:var(--bg); }
-.att-cal-cell.inactive { background:#F9F9F8;opacity:.5;cursor:default; }
-.att-cal-cell.holiday  { background:#FFF8F0; }
-.att-cal-cell.today    { background:#EAF3FB; }
-.att-cal-cell.today .att-day-num { background:var(--dnv-dark-blue);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center; }
-.att-day-num { font-size:12px;font-weight:700;color:var(--text-primary);line-height:1; }
-.att-cal-cell.holiday .att-day-num { color:var(--c-red); }
-.att-holiday-name { font-size:8px;color:var(--c-red);font-weight:600;margin-top:1px; }
-.att-pip-wrap { display:flex;flex-direction:column;gap:2px;margin-top:3px; }
-.att-pip { font-size:10px;font-weight:600;padding:2px 5px;border-radius:3px;white-space:nowrap;display:flex;align-items:center;gap:3px;line-height:1.3; }
-.att-pip-name { font-weight:700;flex-shrink:0; }
-.att-pip-role { font-weight:400;opacity:.7;font-size:9px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis; }
-.pip-present { background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border); }
-.pip-late    { background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border); }
-.pip-absent  { background:var(--c-red-bg);color:var(--c-red);border:1px solid var(--c-red-border); }
-.pip-leave   { background:#F5F3FF;color:#6d28d9;border:1px solid #ddd6fe; }
-.pip-holiday { background:#F0F9FF;color:var(--dnv-sea-blue);border:1px solid var(--c-blue-border); }
-/* ── 月報摘要 ── */
-.att-summary-wrap { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px;overflow-x:auto; }
-.att-summary-table { width:100%;border-collapse:collapse;font-size:12px;min-width:700px; }
-.att-summary-table th { background:var(--dnv-dark-blue);color:#fff;padding:9px 12px;text-align:left;font-size:11px;font-weight:700;white-space:nowrap; }
-.att-summary-table td { padding:9px 12px;border-bottom:1px solid var(--border-light);vertical-align:middle; }
-.att-summary-table tr:last-child td { border-bottom:none; }
-.att-summary-table tr:hover td { background:var(--bg); }
-.att-bar { height:8px;background:var(--border-light);border-radius:4px;overflow:hidden;width:80px; }
-.att-bar-fill { height:100%;border-radius:4px;background:linear-gradient(90deg,#16a34a,#4ade80); }
-.att-rate-badge { font-family:'DM Mono',monospace;font-size:12px;font-weight:600; }
-.att-rate-good { color:var(--c-green); }
-.att-rate-warn { color:var(--c-amber); }
-.att-rate-bad  { color:var(--c-red); }
-/* ── 出勤 Modal ── */
-.att-modal-date { font-family:'DM Mono',monospace;font-size:14px;font-weight:700;padding:8px 12px;background:var(--dnv-dark-blue);color:#fff;border-radius:6px;margin-bottom:4px;display:inline-block; }
-.att-member-row { display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-light); }
-.att-member-row:last-child { border-bottom:none; }
-.att-member-name { font-size:13px;font-weight:600;width:72px;flex-shrink:0; }
-.att-status-sel { font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;cursor:pointer;flex-shrink:0; }
-.att-time-input { font-family:'DM Mono',monospace;font-size:12px;width:72px;padding:5px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;text-align:center; }
-.att-time-label { font-size:10px;color:var(--text-muted);white-space:nowrap; }
-/* ── 人員管理 Modal ── */
-.member-chip { display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-sm);font-size:13px; }
-.member-chip-name { flex:1;font-weight:600; }
-.member-chip-role { font-size:11px;color:var(--text-muted); }
-/* XLS 匯入提示 */
-.xls-hint { font-size:11px;color:var(--text-muted);line-height:1.7;background:var(--bg);padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-light); }
-@media(max-width:767px) {
-  .att-cal-cell { min-height:44px;padding:2px; }
-  .att-pip { font-size:8px;padding:1px 3px; }
-  .att-pip-role { display:none; }
-  .att-cal-cell.today .att-day-num { width:18px;height:18px;font-size:10px; }
-  .att-day-num { font-size:10px; }
+.export-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:28px; }
+.export-card {
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:20px 20px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  transition:box-shadow var(--transition),transform var(--transition);
 }
+.export-card:hover { box-shadow:var(--shadow-md);transform:translateY(-1px); }
+.export-card::before { content:'';position:absolute;top:0;left:0;right:0;height:3px; }
+.export-card.tl::before     { background:linear-gradient(90deg,var(--c-blue),var(--c-teal)); }
+.export-card.def::before    { background:linear-gradient(90deg,var(--c-red),var(--c-amber)); }
+.export-card.qi::before     { background:linear-gradient(90deg,var(--c-teal),var(--c-green)); }
+.export-card.att::before    { background:linear-gradient(90deg,#7c3aed,#2563eb); }
+.export-card.diag::before   { background:linear-gradient(90deg,var(--dnv-warm-grey),var(--dnv-dark-blue)); }
+.export-icon { font-size:28px;margin-bottom:10px;display:block; }
+.export-card h3 { font-size:14px;font-weight:700;margin-bottom:4px; }
+.export-card p  { font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px; }
+.export-btn {
+  display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-family:inherit;
+  font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer;transition:opacity .15s,transform .12s;
+}
+.export-btn:hover { opacity:.85;transform:translateY(-1px); }
+.export-btn:disabled { opacity:.4;cursor:not-allowed;transform:none; }
+.export-btn.blue   { background:var(--c-blue);color:#fff; }
+.export-btn.green  { background:var(--c-green);color:#fff; }
+.export-btn.teal   { background:var(--c-teal);color:#fff; }
+.export-btn.purple { background:#7c3aed;color:#fff; }
+.export-btn.grey   { background:var(--dnv-dark-blue);color:#fff; }
+.export-btn.outline{ background:transparent;border:1px solid var(--border);color:var(--text-secondary); }
+.export-btn-row { display:flex;gap:8px;flex-wrap:wrap; }
+.month-select {
+  font-family:inherit;font-size:12px;padding:6px 10px;border:1px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--bg);color:var(--text-secondary);outline:none;margin-bottom:10px;cursor:pointer;
+}
+/* 診斷 */
+.diag-section { margin-top:24px; }
+.diag-section h3 { font-size:13px;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:6px; }
+.diag-row { display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border-light); }
+.diag-row:last-child { border-bottom:none; }
+.diag-key   { font-size:12px;color:var(--text-secondary);font-family:monospace; }
+.diag-value { font-size:12px;font-weight:600;font-family:monospace; }
+.diag-ok    { color:var(--c-green); }
+.diag-warn  { color:var(--c-amber); }
+.diag-err   { color:var(--c-red); }
+.diag-log {
+  font-size:11px;font-family:monospace;background:#0F204B;color:#99D9F0;
+  padding:12px 14px;border-radius:8px;max-height:200px;overflow-y:auto;line-height:1.8;
+  word-break:break-all;white-space:pre-wrap;
+}
+@media(max-width:767px) { .export-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -78,607 +65,404 @@
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div class="sidebar-inner">
-      <div class="sidebar-section-title">工具</div>
-      <button class="btn-secondary" onclick="openMemberModal()">👷 管理人員</button>
-      <button class="btn-secondary" onclick="openHolidayModal()">📅 行事曆設定</button>
-      <div class="sidebar-section-title" style="margin-top:12px;">XLS 匯入</div>
-      <label style="display:block;">
-        <input type="file" id="xls-file" accept=".xls,.xlsx" style="display:none;" onchange="importPunchXLS(this)">
-        <button class="btn-secondary" onclick="document.getElementById('xls-file').click()">⬆ 匯入排班表 XLS</button>
-      </label>
-      <div class="xls-hint">支援人員排班表格式<br>自動跳過週六日與國定假日</div>
-      <div class="sidebar-section-title" style="margin-top:12px;">資料修復</div>
-      <button class="btn-secondary" onclick="purgeHolidayRecords()"
-        style="font-size:11px;color:var(--c-red);border-color:var(--c-red-border);">🗑 清除假日錯誤記錄</button>
-      <div class="xls-hint">移除週六日/假日的<br>XLS 匯入出勤記錄</div>
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="dashboard.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 儀表板</a>
     </div>
   </div>
   <div class="main">
     <div class="tab-panel">
-      <!-- 月份導覽 -->
-      <div class="month-nav">
-        <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
-        <span class="month-nav-title" id="month-title"></span>
-        <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
-        <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;" onclick="goToday()">本月</button>
-        <div style="margin-left:auto;display:flex;gap:6px;">
-          <span class="sync-badge" style="background:var(--c-green-bg);color:var(--c-green);border:1px solid var(--c-green-border);">出勤 <span id="att-present-cnt">0</span></span>
-          <span class="sync-badge" style="background:var(--c-amber-bg);color:var(--c-amber);border:1px solid var(--c-amber-border);">遲到 <span id="att-late-cnt">0</span></span>
-          <span class="sync-badge" style="background:var(--c-red-bg);color:var(--c-red);border:1px solid var(--c-red-border);">缺勤 <span id="att-absent-cnt">0</span></span>
+      <div class="page-header"><h2>資料匯出 &amp; 診斷工具</h2></div>
+      <div class="export-grid">
+
+        <!-- 時間軸 -->
+        <div class="export-card tl">
+          <span class="export-icon">📅</span>
+          <h3>時間軸施工記錄</h3>
+          <p>匯出全部施工日誌，含日期、天氣、狀態、工程說明、出工人數、備註，格式化為可列印的 Excel 表格。</p>
+          <div class="export-btn-row">
+            <button class="export-btn blue" onclick="exportTimelineXLSX()">⬇ XLSX 匯出</button>
+            <button class="export-btn outline" onclick="window.print()">🖨 列印</button>
+          </div>
+        </div>
+
+        <!-- 改善事項 -->
+        <div class="export-card def">
+          <span class="export-icon">📋</span>
+          <h3>改善事項通知單</h3>
+          <p>匯出全部改善事項記錄，含通知單標號、開立日期、期限、狀態、改善經過及結果。</p>
+          <div class="export-btn-row">
+            <button class="export-btn blue" onclick="exportDefectsXLSX()">⬇ XLSX 匯出</button>
+          </div>
+        </div>
+
+        <!-- 監造查驗 -->
+        <div class="export-card qi">
+          <span class="export-icon">🔬</span>
+          <h3>監造查驗紀錄</h3>
+          <p>匯出全部查驗紀錄，含分類、項目、各步驟完成狀態、查驗日期、查驗人、改善通知單等。</p>
+          <div class="export-btn-row">
+            <button class="export-btn teal" onclick="exportQiXLSX()">⬇ XLSX 匯出</button>
+          </div>
+        </div>
+
+        <!-- 出勤月報 -->
+        <div class="export-card att">
+          <span class="export-icon">👷</span>
+          <h3>出勤月報</h3>
+          <p>選擇月份匯出出勤統計，含個人出勤、遲到、缺勤、請假天數及出勤率月報。</p>
+          <select class="month-select" id="att-export-month"></select>
+          <div class="export-btn-row">
+            <button class="export-btn purple" onclick="exportAttXLSX()">⬇ XLSX 月報匯出</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 資料診斷 -->
+      <div class="export-card diag" id="diag-card">
+        <span class="export-icon">🔧</span>
+        <h3>資料診斷工具</h3>
+        <p>檢查各模組資料數量、localStorage 用量，以及手動進行雲端同步操作。</p>
+        <div class="export-btn-row" style="margin-bottom:14px;">
+          <button class="export-btn grey" onclick="diagStorage()">📊 診斷資料</button>
+          <button class="export-btn grey" onclick="forceReload()">🔄 強制雲端拉取</button>
+          <button class="export-btn outline" onclick="rescueDownload()">💾 備份本機資料</button>
+          <button class="export-btn outline" onclick="rescueUpload()">⬆ 還原本機資料</button>
+          <input type="file" id="rescue-file" accept=".json" style="display:none;" onchange="rescueRestore(this)">
+        </div>
+        <div class="diag-section" id="diag-output" style="display:none;">
+          <h3>🔍 診斷結果</h3>
+          <div id="diag-rows"></div>
+          <div class="diag-log" id="diag-log" style="margin-top:12px;display:none;"></div>
         </div>
       </div>
 
-      <!-- 月曆 -->
-      <div class="att-cal-wrap">
-        <div class="att-cal-header">
-          <div class="att-cal-dow">日</div><div class="att-cal-dow">一</div><div class="att-cal-dow">二</div>
-          <div class="att-cal-dow">三</div><div class="att-cal-dow">四</div><div class="att-cal-dow">五</div>
-          <div class="att-cal-dow" style="color:rgba(255,180,180,.9);">六</div>
-        </div>
-        <div class="att-cal-grid" id="att-cal-grid"></div>
-      </div>
-
-      <!-- 月報摘要 -->
-      <div class="att-summary-wrap">
-        <table class="att-summary-table">
-          <thead><tr>
-            <th>人員</th><th>職稱</th><th>應出勤</th>
-            <th>實出勤</th><th>遲到</th><th>缺勤</th><th>請假</th>
-            <th>出勤率</th><th>出勤率圖</th><th>總工時</th>
-          </tr></thead>
-          <tbody id="att-summary-tbody"></tbody>
-        </table>
-      </div>
     </div>
   </div>
 </div>
 <div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
 
-<!-- 出勤記錄 Modal -->
-<div class="modal-overlay" id="att-modal" style="display:none">
-  <div class="modal" style="max-width:560px;">
-    <div class="modal-header">
-      <div>
-        <div class="att-modal-date" id="att-modal-date-label">—</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">點選人員狀態進行記錄，即時儲存</div>
-      </div>
-      <button class="modal-close" onclick="closeAttModal()">×</button>
-    </div>
-    <div class="modal-body" id="att-modal-body" style="max-height:70vh;overflow-y:auto;padding:12px 16px;"></div>
-    <div class="modal-footer">
-      <button class="btn-modal" onclick="closeAttModal()">關閉</button>
-      <button class="btn-modal primary" onclick="saveAttDay()">儲存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 人員管理 Modal -->
-<div class="modal-overlay" id="member-modal" style="display:none">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header"><h3>👷 人員管理</h3><button class="modal-close" onclick="document.getElementById('member-modal').style.display='none'">×</button></div>
-    <div class="modal-body">
-      <div id="member-list"></div>
-      <div style="border-top:1px solid var(--border-light);padding-top:12px;margin-top:4px;">
-        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">新增人員</div>
-        <div class="field-row">
-          <div class="field"><label>姓名</label><input type="text" id="new-member-name" placeholder="姓名"></div>
-          <div class="field"><label>職稱</label><input type="text" id="new-member-role" placeholder="例：監造工程師"></div>
-        </div>
-        <button class="btn-primary" style="margin-top:8px;" onclick="addMember()">新增人員</button>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn-modal primary" onclick="saveMembersAndClose()">儲存</button></div>
-  </div>
-</div>
-
-<!-- 行事曆設定 Modal -->
-<div class="modal-overlay" id="holiday-modal" style="display:none">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header"><h3>📅 行事曆設定</h3><button class="modal-close" onclick="document.getElementById('holiday-modal').style.display='none'">×</button></div>
-    <div class="modal-body">
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">設定特定日期為假日或補班日（優先於台灣國定假日）</div>
-      <div class="field">
-        <label>新增假日</label>
-        <div style="display:flex;gap:6px;">
-          <input type="date" id="holiday-add-date" style="flex:1;font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
-          <input type="text" id="holiday-add-name" placeholder="假日名稱" style="flex:1;font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
-          <button class="btn-secondary" style="width:auto;padding:7px 12px;" onclick="addHolidayEntry()">加入</button>
-        </div>
-      </div>
-      <div class="field" style="margin-top:4px;">
-        <label>新增補班日（週六補班）</label>
-        <div style="display:flex;gap:6px;">
-          <input type="date" id="workday-add-date" style="flex:1;font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);outline:none;">
-          <button class="btn-secondary" style="width:auto;padding:7px 12px;" onclick="addWorkdayEntry()">設為工作日</button>
-        </div>
-      </div>
-      <div style="margin-top:12px;font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">自訂假日清單</div>
-      <div id="custom-holiday-list" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-modal" onclick="document.getElementById('holiday-modal').style.display='none'">取消</button>
-      <button class="btn-modal primary" onclick="saveHolidaysAndClose()">儲存</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast-confirm" id="toast-confirm">
-  <span id="toast-msg">確定要刪除？</span>
+  <span id="toast-msg">確定？</span>
   <div style="display:flex;gap:8px;">
     <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
-    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">確定</button>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="shared.js"></script>
 <script>
 'use strict';
 if (!requireAuth()) throw new Error('not auth');
 
-// ── 狀態 ──
-let curYear, curMonth; // 1-based month
-let attRecords = []; // { id, date, memberId, status, timeIn, timeOut, note }
-let members    = [];
-let holidayData = { holidays:{}, workdays:{} };
-
-const ATT_STATUS = { present:'出勤', late:'遲到', absent:'缺勤', leave:'請假', holiday:'公假' };
-const ATT_STATUS_PIP = { present:'pip-present', late:'pip-late', absent:'pip-absent', leave:'pip-leave', holiday:'pip-holiday' };
-
-function attSave() {
-  try { localStorage.setItem('construction_att_v1', JSON.stringify(attRecords)); } catch(e) {}
-  setTimeout(()=>cloudSaveAll('att',attRecords).catch(()=>{}), 500);
-}
-function membersSave() {
-  try { localStorage.setItem('construction_members_v1', JSON.stringify(members)); } catch(e) {}
-  setTimeout(()=>cloudSaveAll('members',members).catch(()=>{}), 500);
-}
+let allEntries = [], allDefects = [], allQi = [], allAtt = [], allMembers = [];
 
 async function init() {
-  document.getElementById('header-mount').innerHTML = buildHeader('出勤管理');
+  document.getElementById('header-mount').innerHTML = buildHeader('匯出');
   initSidebarState();
-  renderNav('attendance');
-
-  const now = new Date();
-  curYear  = now.getFullYear();
-  curMonth = now.getMonth() + 1;
-
-  const data = await loadAllData();
-  attRecords = data.attRecords;
-  members    = data.members;
-  holidayData = loadHolidays();
-
-  renderAll();
+  renderNav('export');
+  setSync('載入中…','sync-busy');
+  try {
+    const data = await loadAllData();
+    allEntries = data.entries;
+    allDefects = data.defects;
+    allQi      = data.qualityItems;
+    allAtt     = data.attRecords;
+    allMembers = data.members;
+    setSync('已同步 ✓','sync-ok');
+  } catch(e) {
+    allEntries = localLoad() || [];
+    allDefects = storageLoad('construction_defects_v1',[]);
+    allQi      = storageLoad('construction_qi_v2',[]);
+    allAtt     = storageLoad('construction_att_v1',[]);
+    allMembers = storageLoad('construction_members_v1', getDefaultMembers());
+    setSync('本機模式','sync-local');
+  }
+  populateAttMonthSelect();
 }
 
-function renderAll() {
-  renderMonthTitle();
-  renderCalendar();
-  renderSummary();
-  updateHeaderBadges();
+// ── 月份選擇器 ──
+function populateAttMonthSelect() {
+  const sel = document.getElementById('att-export-month'); if (!sel) return;
+  const seen={}, months=[];
+  allAtt.forEach(r => { const m=r.date.slice(0,7); if(!seen[m]){seen[m]=1;months.push(m);} });
+  // add current & previous 6 months
+  for (let i=0;i<=5;i++) {
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const m=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if (!seen[m]){seen[m]=1;months.push(m);}
+  }
+  months.sort().reverse();
+  const today = todayStr().slice(0,7);
+  sel.innerHTML = months.map(m => `<option value="${m}"${m===today?' selected':''}>${m.replace('-','年')}月</option>`).join('');
 }
 
-function renderMonthTitle() {
-  document.getElementById('month-title').textContent = curYear + '年 ' + String(curMonth).padStart(2,'0') + '月';
+// ── XLSX 共用函式 ──
+function downloadXLSX(wb, filename) {
+  XLSX.writeFile(wb, filename);
+}
+function s(txt) { return String(txt||''); }
+
+function applyHeaderStyle(ws, range, bgColor) {
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({ r: range.s.r, c: C });
+    if (!ws[addr]) continue;
+    ws[addr].s = {
+      fill: { fgColor:{ rgb: bgColor||'0F204B' } },
+      font: { bold:true, color:{ rgb:'FFFFFF' }, sz:10 },
+      alignment: { horizontal:'center', vertical:'center', wrapText:true },
+      border: { bottom:{ style:'thin', color:{ rgb:'CCCBC9' } } },
+    };
+  }
 }
 
-function changeMonth(delta) {
-  curMonth += delta;
-  if (curMonth > 12) { curMonth = 1; curYear++; }
-  if (curMonth < 1)  { curMonth = 12; curYear--; }
-  renderAll();
+// ── 時間軸匯出 ──
+function exportTimelineXLSX() {
+  if (!allEntries.length) { alert('目前沒有時間軸記錄可匯出'); return; }
+  const STATUS_TW = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常／已開單' };
+  const sorted = allEntries.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const ws_data = [
+    ['施工日期','天氣','狀態','一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛','四、其他重要事項','出工人數','異常備註','改善通知單'],
+    ...sorted.map(e => {
+      const fs = parseTitle(e.title||'');
+      return [ s(e.date), s(e.weather), STATUS_TW[e.status]||s(e.status), s(fs[0]), s(fs[1]), s(fs[2]), s(fs[3]), s(e.sub), s(e.alert), s(e.defectNo) ];
+    }),
+  ];
+  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [14,8,10,40,30,30,20,14,20,14].map(w=>({wch:w}));
+  ws['!rows'] = [{hpx:22}];
+  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:9} });
+  const wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '時間軸施工記錄');
+  downloadXLSX(wb, '施工日誌_'+todayStr()+'.xlsx');
 }
-function goToday() {
-  const now = new Date();
-  curYear  = now.getFullYear();
-  curMonth = now.getMonth() + 1;
-  renderAll();
+
+// ── 改善事項匯出 ──
+function exportDefectsXLSX() {
+  if (!allDefects.length) { alert('目前沒有改善事項記錄可匯出'); return; }
+  const STATUS_TW = { open:'未結案（待承商改善）', replied:'承商已回覆改善', recheck:'複驗中', closed:'已結案（複驗合格）' };
+  const RESULT_TW = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
+  const sorted = allDefects.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const ws_data = [
+    ['通知單標號','開立日期','改善期限','改善事項說明','開立時機','狀態','承商回覆改善經過','改善結果判定','監造備註'],
+    ...sorted.map(d => [
+      s(d.no), s(d.date), s(d.deadline), s(d.title),
+      d.occasion==='checkpoint'?'檢驗停留點':'隨機抽查',
+      STATUS_TW[d.status]||s(d.status), s(d.progress), RESULT_TW[d.result]||s(d.result), s(d.notes),
+    ]),
+  ];
+  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [14,12,12,40,12,16,36,14,30].map(w=>({wch:w}));
+  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:8} });
+  const wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '改善事項通知單');
+  downloadXLSX(wb, '改善事項通知單_'+todayStr()+'.xlsx');
 }
 
-function renderCalendar() {
-  const grid   = document.getElementById('att-cal-grid'); if (!grid) return;
-  const today  = todayStr();
-  const y = curYear, mo = curMonth;
-  const firstDay = new Date(y, mo-1, 1).getDay();
-  const daysInMonth = new Date(y, mo, 0).getDate();
-  const hols   = holidayData.holidays || TW_HOLIDAYS_DEFAULT;
-  const works  = holidayData.workdays || {};
+// ── 監造查驗匯出 ──
+function exportQiXLSX() {
+  if (!allQi.length) { alert('目前沒有查驗紀錄可匯出'); return; }
+  const PRG_TW = { 'Completed':'Completed（完成）' };
+  const OS_TW  = { '完成':'✅ 完成', '文件待補':'⚠️ 文件待補', '製作中':'🔄 製作中', '未開始':'○ 未開始' };
+  const chk = v => v=='1'?'✅':'☐';
+  const ws_data = [
+    ['分類','項目名稱','自檢','自檢日期','申請','申請日期','抽查','查驗日期','辦理進度','整體狀態','查驗人','改善通知單','改善期限','自檢表','申請單','抽查紀錄表','抽查報告','改善單','催件備註','備註'],
+    ...allQi.map(q => [
+      s(q.type), s(q.item), chk(q.selfCheck), s(q.selfDate), chk(q.reqCheck), s(q.reqDate),
+      chk(q.inspCheck), s(q.inspDate||q.date), PRG_TW[q.progress]||s(q.progress),
+      OS_TW[q.overallStatus]||s(q.overallStatus), s(q.inspector), s(q.noticeNo), s(q.deadline),
+      s(q.docSelfCheck), s(q.docReqForm), s(q.docRecord), s(q.docReport), s(q.docImprove),
+      s(q.chaseNote), s(q.notes),
+    ]),
+  ];
+  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [10,30,6,12,6,12,6,12,14,12,10,14,12,8,8,10,8,8,20,20].map(w=>({wch:w}));
+  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:19} });
+  const wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '監造查驗紀錄');
+  downloadXLSX(wb, '監造查驗紀錄_'+todayStr()+'.xlsx');
+}
 
-  let html = '';
-  // blank cells before first day
-  for (let i = 0; i < firstDay; i++) html += '<div class="att-cal-cell inactive"></div>';
+// ── 出勤月報匯出 ──
+function exportAttXLSX() {
+  const selMonth = document.getElementById('att-export-month').value;
+  if (!selMonth) { alert('請選擇要匯出的月份'); return; }
+  const [y, mo] = selMonth.split('-').map(Number);
+  const hols  = loadHolidays().holidays || TW_HOLIDAYS_DEFAULT;
+  const works = loadHolidays().workdays  || {};
+  const wdays = calcWorkdays(y, mo, hols, works);
+  const activeMembers = allMembers.filter(m => m.active !== false);
+  const STATUS_TW = { present:'出勤', late:'遲到', absent:'缺勤', leave:'請假', holiday:'公假' };
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    const isToday  = dateStr === today;
-    const isHoliday= isHolidayDate(dateStr, hols, works);
-    const holName  = hols[dateStr] || '';
-    const dow      = new Date(y, mo-1, d).getDay();
-    const isSat    = dow === 6;
-
-    // get records for this day — 只顯示有出勤記錄的人
-    // 假日格子裡的 present 記錄（匯入錯誤殘留）一律隱藏
-    const dayRecs = attRecords.filter(r => {
-      if (r.date !== dateStr) return false;
-      if (isHoliday && r.status === 'present' && r.note === 'XLS匯入') return false;
-      return true;
-    });
-    const pips = dayRecs.map(r => {
-      const m   = members.find(x => x.id === r.memberId);
-      if (!m) return '';
-      const cls  = ATT_STATUS_PIP[r.status] || 'pip-present';
-      const role = m.role || '';
-      return `<span class="att-pip ${cls}">
-        <span class="att-pip-name">${esc(m.name)}</span>
-        ${role ? `<span class="att-pip-role">${esc(role)}</span>` : ''}
-      </span>`;
-    }).join('');
-
-    const cls = ['att-cal-cell', isToday?'today':'', isHoliday?'holiday':'', isSat&&!isHoliday?'sat':''].filter(Boolean).join(' ');
-    html += `<div class="${cls}" data-date="${dateStr}" onclick="openAttModal('${dateStr}')">
-      <div class="att-day-num">${d}</div>
-      ${holName ? `<div class="att-holiday-name">${esc(holName)}</div>` : ''}
-      <div class="att-pip-wrap">${pips}</div>
-    </div>`;
+  // 共用：過濾假日 XLS present 記錄（跟系統顯示邏輯一致）
+  function validRec(r) {
+    if (r.status === 'present' && r.note === 'XLS匯入' && isHolidayDate(r.date, hols, works)) return false;
+    return true;
   }
 
-  // trailing blanks
-  const totalCells = firstDay + daysInMonth;
-  const trailing   = totalCells % 7 ? 7 - (totalCells % 7) : 0;
-  for (let i = 0; i < trailing; i++) html += '<div class="att-cal-cell inactive"></div>';
-
-  grid.innerHTML = html;
-}
-
-function renderSummary() {
-  const tbody = document.getElementById('att-summary-tbody'); if (!tbody) return;
-  const y = curYear, mo = curMonth;
-  const hols  = holidayData.holidays || TW_HOLIDAYS_DEFAULT;
-  const works = holidayData.workdays  || {};
-  const wdays = calcWorkdays(y, mo, hols, works);
-  const monthPrefix = y + '-' + String(mo).padStart(2,'0');
-
-  const activeMembers = members.filter(m => m.active !== false);
-  if (!activeMembers.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-muted);">尚無人員</td></tr>'; return; }
-
-  tbody.innerHTML = activeMembers.map(m => {
-    // 過濾假日裡的 XLS present 記錄，避免週六日計入出勤
-    const recs = attRecords.filter(r => {
-      if (r.memberId !== m.id || !r.date.startsWith(monthPrefix)) return false;
-      if (r.status === 'present' && r.note === 'XLS匯入' && isHolidayDate(r.date, hols, works)) return false;
-      return true;
-    });
-    const present = recs.filter(r => r.status === 'present').length;
-    const late    = recs.filter(r => r.status === 'late').length;
-    const absent  = recs.filter(r => r.status === 'absent').length;
-    const leave   = recs.filter(r => r.status === 'leave' || r.status === 'holiday').length;
-    const actual  = present + late;
-    // 出勤率上限 100%
-    const rate    = wdays ? Math.min(100, Math.round(actual / wdays * 100)) : 0;
-    const rateCls = rate >= 90 ? 'att-rate-good' : rate >= 70 ? 'att-rate-warn' : 'att-rate-bad';
-    const totalMin= recs.reduce((sum, r) => sum + calcWorkMinutes(r.timeIn, r.timeOut), 0);
-    return `<tr>
-      <td style="font-weight:600;">${esc(m.name)}</td>
-      <td style="font-size:11px;color:var(--text-muted);">${esc(m.role||'')}</td>
-      <td style="font-family:monospace;">${wdays}</td>
-      <td style="font-family:monospace;">${actual}</td>
-      <td style="font-family:monospace;${late?'color:var(--c-amber);font-weight:700;':'color:var(--text-muted)'};">${late}</td>
-      <td style="font-family:monospace;${absent?'color:var(--c-red);font-weight:700;':'color:var(--text-muted)'};">${absent}</td>
-      <td style="font-family:monospace;color:var(--text-muted);">${leave}</td>
-      <td><span class="att-rate-badge ${rateCls}">${rate}%</span></td>
-      <td><div class="att-bar"><div class="att-bar-fill" style="width:${rate}%"></div></div></td>
-      <td style="font-family:monospace;font-size:11px;color:var(--text-muted);">${fmtMinutes(totalMin)}</td>
-    </tr>`;
-  }).join('');
-}
-
-function updateHeaderBadges() {
-  const monthPrefix = curYear + '-' + String(curMonth).padStart(2,'0');
-  const recs = attRecords.filter(r => r.date.startsWith(monthPrefix));
-  document.getElementById('att-present-cnt').textContent = recs.filter(r=>r.status==='present').length;
-  document.getElementById('att-late-cnt').textContent    = recs.filter(r=>r.status==='late').length;
-  document.getElementById('att-absent-cnt').textContent  = recs.filter(r=>r.status==='absent').length;
-}
-
-// ── 出勤 Modal ──
-let attModalDate = '';
-let attModalTmp  = {}; // memberId → { status, timeIn, timeOut, note }
-
-function openAttModal(dateStr) {
-  attModalDate = dateStr;
-  attModalTmp  = {};
-
-  // pre-fill from existing records
-  members.filter(m=>m.active!==false).forEach(m => {
-    const rec = attRecords.find(r => r.date === dateStr && r.memberId === m.id);
-    attModalTmp[m.id] = rec
-      ? { status: rec.status, timeIn: rec.timeIn||'', timeOut: rec.timeOut||'', note: rec.note||'' }
-      : { status: '', timeIn: '', timeOut: '', note: '' };
-  });
-
-  document.getElementById('att-modal-date-label').textContent = dateStr;
-  renderAttModalBody();
-  document.getElementById('att-modal').style.display = 'flex';
-}
-
-function renderAttModalBody() {
-  const body = document.getElementById('att-modal-body');
-  const activeMembers = members.filter(m => m.active !== false);
-  if (!activeMembers.length) { body.innerHTML = '<div class="empty">請先至「管理人員」設定監造人員</div>'; return; }
-
-  body.innerHTML = activeMembers.map(m => {
-    const tmp = attModalTmp[m.id] || { status:'', timeIn:'', timeOut:'', note:'' };
-    const statusOpts = [
-      { v:'',        l:'— 未記錄 —' },
-      { v:'present', l:'✅ 出勤' },
-      { v:'late',    l:'⏰ 遲到' },
-      { v:'absent',  l:'❌ 缺勤' },
-      { v:'leave',   l:'🏥 請假' },
-      { v:'holiday', l:'📌 公假' },
-    ];
-    return `<div class="att-member-row">
-      <div class="att-member-name">${esc(m.name)}</div>
-      <select class="att-status-sel" data-mid="${m.id}" onchange="onAttStatusChange('${m.id}',this.value)">
-        ${statusOpts.map(o=>`<option value="${o.v}"${tmp.status===o.v?' selected':''}>${o.l}</option>`).join('')}
-      </select>
-      <span class="att-time-label">到</span>
-      <input type="time" class="att-time-input" data-mid="${m.id}" data-field="timeIn" value="${esc(tmp.timeIn)}" oninput="onAttTimeChange('${m.id}','timeIn',this.value)" placeholder="08:00">
-      <span class="att-time-label">退</span>
-      <input type="time" class="att-time-input" data-mid="${m.id}" data-field="timeOut" value="${esc(tmp.timeOut)}" oninput="onAttTimeChange('${m.id}','timeOut',this.value)" placeholder="17:00">
-    </div>`;
-  }).join('');
-}
-
-function onAttStatusChange(mid, val) { if (attModalTmp[mid]) attModalTmp[mid].status = val; }
-function onAttTimeChange(mid, field, val) { if (attModalTmp[mid]) attModalTmp[mid][field] = val; }
-
-function saveAttDay() {
-  // remove existing records for this date
-  attRecords = attRecords.filter(r => r.date !== attModalDate);
-  // add new records
-  Object.keys(attModalTmp).forEach(mid => {
-    const tmp = attModalTmp[mid];
-    if (!tmp.status) return;
-    attRecords.push({ id: uid(), date: attModalDate, memberId: mid, status: tmp.status, timeIn: tmp.timeIn||'', timeOut: tmp.timeOut||'', note: tmp.note||'' });
-  });
-  attSave();
-  closeAttModal();
-  renderCalendar();
-  renderSummary();
-  updateHeaderBadges();
-}
-
-function closeAttModal() { document.getElementById('att-modal').style.display = 'none'; }
-
-// ── 人員管理 Modal ──
-function openMemberModal() {
-  renderMemberList();
-  document.getElementById('member-modal').style.display = 'flex';
-}
-function renderMemberList() {
-  const el = document.getElementById('member-list');
-  el.innerHTML = members.map((m,i) => `<div class="member-chip" style="margin-bottom:6px;">
-    <span class="member-chip-name">${esc(m.name)}</span>
-    <span class="member-chip-role">${esc(m.role||'')}</span>
-    <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-left:auto;">
-      <input type="checkbox" ${m.active!==false?'checked':''} onchange="toggleMemberActive(${i},this.checked)" style="accent-color:var(--c-green);"> 啟用
-    </label>
-    <button class="btn-sm del" onclick="removeMember(${i})">刪</button>
-  </div>`).join('');
-}
-function toggleMemberActive(idx, val) { members[idx].active = val; }
-function removeMember(idx) { members.splice(idx,1); renderMemberList(); }
-function addMember() {
-  const name = document.getElementById('new-member-name').value.trim();
-  const role = document.getElementById('new-member-role').value.trim();
-  if (!name) return;
-  members.push({ id:'m'+uid(), name, role, active:true });
-  document.getElementById('new-member-name').value = '';
-  document.getElementById('new-member-role').value = '';
-  renderMemberList();
-}
-function saveMembersAndClose() {
-  membersSave();
-  document.getElementById('member-modal').style.display = 'none';
-  renderAll();
-}
-
-// ── 行事曆設定 Modal ──
-function openHolidayModal() {
-  renderCustomHolidayList();
-  document.getElementById('holiday-modal').style.display = 'flex';
-}
-function renderCustomHolidayList() {
-  const hols  = holidayData.holidays  || {};
-  const works = holidayData.workdays   || {};
-  const el = document.getElementById('custom-holiday-list');
-  const custom = Object.keys(hols).filter(d => !TW_HOLIDAYS_DEFAULT[d]).sort();
-  const worklist= Object.keys(works).sort();
-  const items = [
-    ...custom.map(d => `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--c-red-bg);border-radius:4px;">
-      <span style="font-family:monospace;font-size:11px;">${d}</span>
-      <span style="font-size:11px;flex:1;">${esc(hols[d])}</span>
-      <button class="btn-sm del" onclick="removeHolidayEntry('${d}')">刪</button>
-    </div>`),
-    ...worklist.map(d => `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--c-green-bg);border-radius:4px;">
-      <span style="font-family:monospace;font-size:11px;">${d}</span>
-      <span style="font-size:11px;flex:1;color:var(--c-green);">補班日</span>
-      <button class="btn-sm del" onclick="removeWorkdayEntry('${d}')">刪</button>
-    </div>`),
+  // Summary sheet
+  const summaryData = [
+    ['姓名','職稱','應出勤天數','實出勤天數','遲到天數','缺勤天數','請假天數','出勤率（%）','總工時'],
+    ...activeMembers.map(m => {
+      const recs    = allAtt.filter(r => r.memberId===m.id && r.date.startsWith(selMonth) && validRec(r));
+      const present = recs.filter(r=>r.status==='present').length;
+      const late    = recs.filter(r=>r.status==='late').length;
+      const absent  = recs.filter(r=>r.status==='absent').length;
+      const leave   = recs.filter(r=>r.status==='leave'||r.status==='holiday').length;
+      const actual  = present + late;
+      const rate    = wdays ? Math.min(100, Math.round(actual/wdays*100)) : 0;
+      const totalMin= recs.reduce((sum,r)=>sum+calcWorkMinutes(r.timeIn,r.timeOut),0);
+      return [s(m.name),s(m.role||'監造工程師'),wdays,actual,late,absent,leave,rate,fmtMinutes(totalMin)];
+    }),
   ];
-  el.innerHTML = items.length ? items.join('') : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">目前沒有自訂假日/補班設定</div>';
-}
-function addHolidayEntry() {
-  const d = document.getElementById('holiday-add-date').value;
-  const n = document.getElementById('holiday-add-name').value.trim();
-  if (!d||!n) return;
-  if (!holidayData.holidays) holidayData.holidays = {};
-  holidayData.holidays[d] = n;
-  document.getElementById('holiday-add-date').value = '';
-  document.getElementById('holiday-add-name').value = '';
-  renderCustomHolidayList();
-}
-function addWorkdayEntry() {
-  const d = document.getElementById('workday-add-date').value;
-  if (!d) return;
-  if (!holidayData.workdays) holidayData.workdays = {};
-  holidayData.workdays[d] = true;
-  document.getElementById('workday-add-date').value = '';
-  renderCustomHolidayList();
-}
-function removeHolidayEntry(d) { if(holidayData.holidays) delete holidayData.holidays[d]; renderCustomHolidayList(); }
-function removeWorkdayEntry(d) { if(holidayData.workdays) delete holidayData.workdays[d]; renderCustomHolidayList(); }
-function saveHolidaysAndClose() {
-  try { localStorage.setItem('construction_tw_holidays_v1', JSON.stringify(holidayData)); } catch(e) {}
-  document.getElementById('holiday-modal').style.display = 'none';
-  renderAll();
+
+  // Detail sheet
+  const daysInMonth = new Date(y, mo, 0).getDate();
+  const detailData  = [
+    ['日期','星期','假日','姓名','狀態','到班時間','離班時間','工時','備註'],
+  ];
+  for (let d=1; d<=daysInMonth; d++) {
+    const dateStr = y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dow     = ['日','一','二','三','四','五','六'][new Date(y,mo-1,d).getDay()];
+    const holName = (hols[dateStr]||'');
+    // 只取有效記錄（過濾假日 XLS present）
+    const dayRecs = allAtt.filter(r => r.date===dateStr && validRec(r));
+    if (!dayRecs.length && holName) {
+      detailData.push([dateStr,dow,holName,'','','','','','']);
+    } else {
+      dayRecs.forEach(r => {
+        const m      = allMembers.find(x=>x.id===r.memberId);
+        const timeIn = r.timeIn  || '—';
+        const timeOut= r.timeOut || '—';
+        const mn     = calcWorkMinutes(r.timeIn, r.timeOut);
+        // 備註：XLS匯入字樣移除，只保留有意義的手動備註
+        const note   = (r.note === 'XLS匯入' || !r.note) ? '' : s(r.note);
+        detailData.push([
+          dateStr, dow, holName,
+          s(m ? m.name : '—'),
+          STATUS_TW[r.status] || s(r.status),
+          timeIn, timeOut,
+          mn ? fmtMinutes(mn) : '—',
+          note,
+        ]);
+      });
+    }
+  }
+
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+  ws1['!cols'] = [10,14,10,10,8,8,8,10,10].map(w=>({wch:w}));
+  applyHeaderStyle(ws1, { s:{r:0,c:0}, e:{r:0,c:8} });
+
+  const ws2 = XLSX.utils.aoa_to_sheet(detailData);
+  ws2['!cols'] = [12,6,10,10,8,8,8,8,20].map(w=>({wch:w}));
+  applyHeaderStyle(ws2, { s:{r:0,c:0}, e:{r:0,c:8} });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, '出勤月報');
+  XLSX.utils.book_append_sheet(wb, ws2, '逐日明細');
+  downloadXLSX(wb, '出勤月報_'+selMonth+'.xlsx');
 }
 
-// ── 清除假日錯誤記錄 ──
-function purgeHolidayRecords() {
-  const hols  = (loadHolidays().holidays)  || TW_HOLIDAYS_DEFAULT;
-  const works = (loadHolidays().workdays)   || {};
-  const before = attRecords.length;
-  attRecords = attRecords.filter(r => {
-    // 只清掉「XLS匯入」且是假日且狀態是 present 的記錄
-    if (r.note !== 'XLS匯入' || r.status !== 'present') return true;
-    return !isHolidayDate(r.date, hols, works);
-  });
-  const removed = before - attRecords.length;
-  if (removed === 0) { alert('沒有找到需要清除的假日記錄'); return; }
-  attSave();
-  alert(`✅ 已清除 ${removed} 筆假日出勤記錄`);
-  renderAll();
+// ── 資料診斷 ──
+function diagStorage() {
+  const diag = [
+    { key:'時間軸記錄', count: allEntries.length, ok: allEntries.length >= 0 },
+    { key:'改善事項通知單', count: allDefects.length, ok: allDefects.length >= 0 },
+    { key:'監造查驗紀錄', count: allQi.length, ok: allQi.length >= 0 },
+    { key:'出勤記錄', count: allAtt.length, ok: allAtt.length >= 0 },
+    { key:'人員清單', count: allMembers.length, ok: allMembers.length > 0 },
+  ];
+
+  let storageUsed = 0;
+  try {
+    [LOCAL_KEY, DEFECT_KEY, DOCS_KEY, QI_KEY, ATT_KEY, MEMBER_KEY].forEach(k => {
+      const v = localStorage.getItem(k); if (v) storageUsed += v.length;
+    });
+  } catch(e) {}
+
+  const sections = diag.map(d =>
+    `<div class="diag-row"><span class="diag-key">${d.key}</span>
+     <span class="diag-value ${d.ok?'diag-ok':'diag-warn'}">${d.count} 筆 ${d.ok?'✓':'⚠'}</span></div>`).join('');
+  const storage = `<div class="diag-row"><span class="diag-key">localStorage 已用量</span>
+    <span class="diag-value ${storageUsed>4500000?'diag-err':storageUsed>3000000?'diag-warn':'diag-ok'}">
+      ≈ ${(storageUsed/1024).toFixed(1)} KB</span></div>`;
+
+  document.getElementById('diag-rows').innerHTML = sections + storage;
+  document.getElementById('diag-output').style.display = 'block';
+
+  const log = document.getElementById('diag-log');
+  log.style.display = 'block';
+  log.textContent = '診斷完成 ' + new Date().toLocaleString() + '\n'
+    + diag.map(d=>`[${d.ok?'OK':'--'}] ${d.key}: ${d.count} 筆`).join('\n')
+    + '\nlocalStorage 用量: ~' + (storageUsed/1024).toFixed(1) + ' KB';
 }
 
-// ── XLS 打卡鐘匯入 ──
-function importPunchXLS(input) {
+async function forceReload() {
+  if (!await toastConfirm('將從雲端強制拉取所有資料，覆蓋本機紀錄。確定繼續？','確定')) return;
+  setSync('強制拉取中…','sync-busy');
+  try {
+    const data = await loadAllData();
+    allEntries = data.entries;
+    allDefects = data.defects;
+    allQi      = data.qualityItems;
+    allAtt     = data.attRecords;
+    allMembers = data.members;
+    setSync('已同步 ✓','sync-ok');
+    alert('✅ 已成功從雲端重新載入所有資料');
+    diagStorage();
+  } catch(e) {
+    setSync('同步失敗','sync-err');
+    alert('❌ 同步失敗：' + e.message);
+  }
+}
+
+function rescueDownload() {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    entries:    allEntries,
+    defects:    allDefects,
+    docs:       storageLoad('construction_docs_v1',[]),
+    qi:         allQi,
+    att:        allAtt,
+    members:    allMembers,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '監造回報備份_' + todayStr() + '.json';
+  a.click();
+}
+
+function rescueUpload() {
+  document.getElementById('rescue-file').click();
+}
+
+function rescueRestore(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
-      const XLSX = window.XLSX;
-      if (!XLSX) { alert('XLSX 程式庫未載入，請重新整理頁面'); return; }
-
-      const wb   = XLSX.read(e.target.result, { type:'binary', cellDates:false });
-      const ws   = wb.Sheets[wb.SheetNames[0]];
-      // 不自動解析 header，取得原始二維陣列
-      const raw  = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
-
-      if (raw.length < 4) { alert('格式不符，列數不足'); return; }
-
-      // ── 解析月份範圍（列2，例："2026-05-01 ~ 2026-05-31"）──
-      const rangeStr = String(raw[1][1] || '');
-      const rangeMatch = rangeStr.match(/(\d{4})-(\d{2})-(\d{2})/);
-      if (!rangeMatch) { alert('讀不到日期範圍，請確認列2格式：YYYY-MM-DD ~ YYYY-MM-DD'); return; }
-      const baseYear  = parseInt(rangeMatch[1]);
-      const baseMonth = parseInt(rangeMatch[2]); // 1-based
-
-      // ── 列3：欄位標題（工號、姓名、部門、1、2、3…31）──
-      // 日期欄從 index 3 開始，值是 1.0~31.0
-      const headerRow = raw[2]; // 0-based: 列3 = index 2
-
-      // ── 列4：星期（驗用，可忽略）──
-
-      // ── 班次值對應出勤狀態 ──
-      // 1、2（一般班次）→ present
-      // 25 → leave（請假）
-      // 26 → leave（出差）
-      // 0 / '' / 空 → 假日/休息，略過不建立記錄
-      function codeToStatus(val) {
-        const v = parseFloat(val);
-        if (isNaN(v) || v === 0) return null;      // 假日/休息，不記錄
-        if (v === 25 || v === 26) return 'leave';  // 請假/出差
-        if (v >= 1 && v <= 24)   return 'present'; // 一般班次
-        return null;
-      }
-
-      // 匯入時用的假日資料
-      const importHols  = (loadHolidays().holidays)  || TW_HOLIDAYS_DEFAULT;
-      const importWorks = (loadHolidays().workdays)   || {};
-
-      let added = 0, updated = 0, skipped = 0;
-
-      // 從列5（index 4）開始是每個人的資料
-      for (let r = 4; r < raw.length; r++) {
-        const row  = raw[r];
-        const name = String(row[1] || '').trim();
-        if (!name) { skipped++; continue; }
-
-        // 自動建立或查找人員
-        let m = members.find(x => x.name === name);
-        if (!m) {
-          const dept = String(row[2] || '').trim();
-          m = { id:'m'+uid(), name, role: dept || '監造工程師', active:true };
-          members.push(m);
-        }
-
-        // 欄 index 3 開始對應日期第1天，headerRow[3]=1.0, [4]=2.0 ...
-        for (let c = 3; c < row.length; c++) {
-          const dayVal = headerRow[c];
-          const day    = Math.round(parseFloat(dayVal));
-          if (!day || day < 1 || day > 31) continue;
-
-          // 組出日期字串
-          const dateStr = baseYear + '-' +
-            String(baseMonth).padStart(2,'0') + '-' +
-            String(day).padStart(2,'0');
-
-          // 驗證這個日期存在（例如 2 月沒有 30 日）
-          const dateObj = new Date(dateStr);
-          if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
-
-          const status = codeToStatus(row[c]);
-          if (!status) continue; // 0 或空 = 假日，不建立記錄
-
-          // 請假/出差不受假日限制；一般出勤若當天是假日則跳過
-          if (status === 'present' && isHolidayDate(dateStr, importHols, importWorks)) continue;
-
-          const existIdx = attRecords.findIndex(
-            rec => rec.memberId === m.id && rec.date === dateStr
-          );
-
-          if (existIdx >= 0) {
-            // 已有記錄：只在狀態是 XLS 匯入時才覆蓋，手動填的保留
-            if (attRecords[existIdx].note === 'XLS匯入') {
-              attRecords[existIdx].status = status;
-              updated++;
-            }
-          } else {
-            attRecords.push({
-              id: uid(), date: dateStr, memberId: m.id,
-              status, timeIn:'', timeOut:'', note:'XLS匯入',
-            });
-            added++;
-          }
-        }
-      }
-
-      attSave(); membersSave();
-
-      const peopleCount = raw.length - 4;
-      alert([
-        '✅ 匯入完成！',
-        `人員：${peopleCount} 人`,
-        `新增記錄：${added} 筆`,
-        `更新記錄：${updated} 筆`,
-        skipped ? `略過：${skipped} 列` : '',
-        '',
-        `月份：${baseYear}年${baseMonth}月`,
-      ].filter(Boolean).join('\n'));
-
-      renderAll();
+      const data = JSON.parse(e.target.result);
+      if (!data.exportedAt) { alert('不認識的備份格式'); return; }
+      if (!await toastConfirm(`還原此備份（匯出於 ${data.exportedAt.slice(0,10)}）？這將覆蓋現有本機資料。`,'還原')) return;
+      if (data.entries)  { localSave(data.entries); allEntries = data.entries; }
+      if (data.defects)  { storageSave('construction_defects_v1', data.defects); allDefects = data.defects; }
+      if (data.docs)     { storageSave('construction_docs_v1', data.docs); }
+      if (data.qi)       { storageSave('construction_qi_v2', data.qi); allQi = data.qi; }
+      if (data.att)      { storageSave('construction_att_v1', data.att); allAtt = data.att; }
+      if (data.members)  { storageSave('construction_members_v1', data.members); allMembers = data.members; }
+      alert('✅ 本機資料已還原，可至各頁面確認。');
+      diagStorage();
     } catch(err) {
-      alert('匯入失敗：' + err.message + '\n' + err.stack);
-      console.error('[排班匯入]', err);
+      alert('❌ 還原失敗：' + err.message);
     }
     input.value = '';
   };
-  reader.readAsBinaryString(file);
+  reader.readAsText(file);
 }
 
 init();
 </script>
-<!-- 載入 SheetJS 供 XLS 匯入使用 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
