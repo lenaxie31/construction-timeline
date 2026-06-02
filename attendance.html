@@ -84,9 +84,13 @@
       <div class="sidebar-section-title" style="margin-top:12px;">XLS 匯入</div>
       <label style="display:block;">
         <input type="file" id="xls-file" accept=".xls,.xlsx" style="display:none;" onchange="importPunchXLS(this)">
-        <button class="btn-secondary" onclick="document.getElementById('xls-file').click()">⬆ 匯入打卡鐘 XLS</button>
+        <button class="btn-secondary" onclick="document.getElementById('xls-file').click()">⬆ 匯入排班表 XLS</button>
       </label>
-      <div class="xls-hint">支援打卡鐘匯出格式<br>欄位：姓名、日期、打卡IN、打卡OUT</div>
+      <div class="xls-hint">支援人員排班表格式<br>自動跳過週六日與國定假日</div>
+      <div class="sidebar-section-title" style="margin-top:12px;">資料修復</div>
+      <button class="btn-secondary" onclick="purgeHolidayRecords()"
+        style="font-size:11px;color:var(--c-red);border-color:var(--c-red-border);">🗑 清除假日錯誤記錄</button>
+      <div class="xls-hint">移除週六日/假日的<br>XLS 匯入出勤記錄</div>
     </div>
   </div>
   <div class="main">
@@ -291,8 +295,13 @@ function renderCalendar() {
     const dow      = new Date(y, mo-1, d).getDay();
     const isSat    = dow === 6;
 
-    // get records for this day — 略過沒有出勤記錄的人
-    const dayRecs = attRecords.filter(r => r.date === dateStr);
+    // get records for this day — 只顯示有出勤記錄的人
+    // 假日格子裡的 present 記錄（匯入錯誤殘留）一律隱藏
+    const dayRecs = attRecords.filter(r => {
+      if (r.date !== dateStr) return false;
+      if (isHoliday && r.status === 'present' && r.note === 'XLS匯入') return false;
+      return true;
+    });
     const pips = dayRecs.map(r => {
       const m   = members.find(x => x.id === r.memberId);
       if (!m) return '';
@@ -518,6 +527,23 @@ function saveHolidaysAndClose() {
   renderAll();
 }
 
+// ── 清除假日錯誤記錄 ──
+function purgeHolidayRecords() {
+  const hols  = (loadHolidays().holidays)  || TW_HOLIDAYS_DEFAULT;
+  const works = (loadHolidays().workdays)   || {};
+  const before = attRecords.length;
+  attRecords = attRecords.filter(r => {
+    // 只清掉「XLS匯入」且是假日且狀態是 present 的記錄
+    if (r.note !== 'XLS匯入' || r.status !== 'present') return true;
+    return !isHolidayDate(r.date, hols, works);
+  });
+  const removed = before - attRecords.length;
+  if (removed === 0) { alert('沒有找到需要清除的假日記錄'); return; }
+  attSave();
+  alert(`✅ 已清除 ${removed} 筆假日出勤記錄`);
+  renderAll();
+}
+
 // ── XLS 打卡鐘匯入 ──
 function importPunchXLS(input) {
   const file = input.files[0]; if (!file) return;
@@ -560,6 +586,10 @@ function importPunchXLS(input) {
         return null;
       }
 
+      // 匯入時用的假日資料
+      const importHols  = (loadHolidays().holidays)  || TW_HOLIDAYS_DEFAULT;
+      const importWorks = (loadHolidays().workdays)   || {};
+
       let added = 0, updated = 0, skipped = 0;
 
       // 從列5（index 4）開始是每個人的資料
@@ -593,6 +623,9 @@ function importPunchXLS(input) {
 
           const status = codeToStatus(row[c]);
           if (!status) continue; // 0 或空 = 假日，不建立記錄
+
+          // 請假/出差不受假日限制；一般出勤若當天是假日則跳過
+          if (status === 'present' && isHolidayDate(dateStr, importHols, importWorks)) continue;
 
           const existIdx = attRecords.findIndex(
             rec => rec.memberId === m.id && rec.date === dateStr
