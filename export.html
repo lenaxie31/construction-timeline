@@ -317,7 +317,6 @@ function exportAttXLSX() {
   const selMonth = document.getElementById('att-export-month').value;
   if (!selMonth) { alert('請選擇要匯出的月份'); return; }
 
-  // 取得勾選的人員
   const checkedIds = Array.from(
     document.querySelectorAll('#att-member-picker input[type=checkbox]:checked')
   ).map(cb => cb.value);
@@ -330,15 +329,15 @@ function exportAttXLSX() {
   const rocYear = y - 1911;
   const DOW_TW  = ['日','一','二','三','四','五','六'];
 
-  // 只取工作日（過濾六日與假日）
+  // 只取工作日
   const daysInMonth = new Date(y, mo, 0).getDate();
   const workDays = [];
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    if (!isHolidayDate(dateStr, hols, works)) workDays.push(dateStr);
+    const ds = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (!isHolidayDate(ds, hols, works)) workDays.push(ds);
   }
+  const WD = workDays.length;
 
-  // 共用：過濾假日 XLS present
   function validRec(r) {
     if (r.status === 'present' && r.note === 'XLS匯入' && isHolidayDate(r.date, hols, works)) return false;
     return true;
@@ -347,210 +346,138 @@ function exportAttXLSX() {
     return allAtt.find(r => r.memberId === memberId && r.date === dateStr && validRec(r)) || null;
   }
 
-  // ── 樣式常數 ──
-  const B = { top:{style:'thin',color:{rgb:'BBBBBB'}}, bottom:{style:'thin',color:{rgb:'BBBBBB'}}, left:{style:'thin',color:{rgb:'BBBBBB'}}, right:{style:'thin',color:{rgb:'BBBBBB'}} };
-  const BM= { top:{style:'medium',color:{rgb:'0F204B'}}, bottom:{style:'medium',color:{rgb:'0F204B'}}, left:{style:'medium',color:{rgb:'0F204B'}}, right:{style:'medium',color:{rgb:'0F204B'}} };
+  // ── 樣式 ──
+  const B  = { top:{style:'thin',color:{rgb:'BBBBBB'}}, bottom:{style:'thin',color:{rgb:'BBBBBB'}}, left:{style:'thin',color:{rgb:'BBBBBB'}}, right:{style:'thin',color:{rgb:'BBBBBB'}} };
+  const BM = { top:{style:'medium',color:{rgb:'0F204B'}}, bottom:{style:'medium',color:{rgb:'0F204B'}}, left:{style:'medium',color:{rgb:'0F204B'}}, right:{style:'medium',color:{rgb:'0F204B'}} };
 
-  const sTitle  = { font:{bold:true,sz:13,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'} };
-  const sSub    = { font:{sz:9,color:{rgb:'555555'}}, alignment:{horizontal:'left',vertical:'center'} };
-  const sHdrDNV = { fill:{fgColor:{rgb:'0F204B'}}, font:{bold:true,color:{rgb:'FFFFFF'},sz:10}, alignment:{horizontal:'center',vertical:'center',wrapText:true}, border:BM };
-  const sHdrDay = (isHol) => ({ fill:{fgColor:{rgb:isHol?'FFE0CC':'E8EDF8'}}, font:{bold:true,sz:9,color:{rgb:isHol?'C0392B':'1A3A6B'}}, alignment:{horizontal:'center',vertical:'center'}, border:B });
-  const sName   = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{bold:true,sz:10,color:{rgb:'0F204B'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
-  const sRole   = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{sz:9,color:{rgb:'555566'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
-
-  // 時間格
-  const sTime = (val) => {
-    const bg = val?'FFFFFF':'F8F8F8';
-    return { fill:{fgColor:{rgb:bg}}, font:{sz:9,color:{rgb:val?'222222':'AAAAAA'},name:'DM Mono'}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-  };
-  // 工時格
-  const sHours = (mins) => {
-    const bg = mins>480?'FFF3E0':mins>0?'E8F5E9':'F8F8F8';
-    const fc = mins>480?'E65100':mins>0?'1B5E20':'AAAAAA';
-    return { fill:{fgColor:{rgb:bg}}, font:{bold:mins>0,sz:10,color:{rgb:fc}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-  };
-  // 小計格
-  const sTotalHdr = { fill:{fgColor:{rgb:'1A3A6B'}}, font:{bold:true,sz:10,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
-  const sTotalVal = { fill:{fgColor:{rgb:'D9E4F5'}}, font:{bold:true,sz:11,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
-
-  // 出勤格
-  const sAtt1 = { fill:{fgColor:{rgb:'C8F0D8'}}, font:{bold:true,sz:12,color:{rgb:'166534'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-  const sAtt0 = { fill:{fgColor:{rgb:'F8F8F8'}}, font:{sz:11,color:{rgb:'CCCCCC'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-  const sAttHol={ fill:{fgColor:{rgb:'FFF3EE'}}, font:{sz:9,color:{rgb:'DDAA99'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-  const sSumHdr = { fill:{fgColor:{rgb:'0F204B'}}, font:{bold:true,sz:10,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
-  const sSumVal = (n,total) => {
-    const pct = total ? n/total : 0;
-    const bg  = pct>=0.9?'C8F0D8':pct>=0.5?'FFF9C4':'FFE0CC';
-    const fc  = pct>=0.9?'166534':pct>=0.5?'856404':'C0392B';
-    return { fill:{fgColor:{rgb:bg}}, font:{bold:true,sz:12,color:{rgb:fc}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
-  };
+  const sTitle   = { font:{bold:true,sz:13,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'} };
+  const sSub     = { font:{sz:9,color:{rgb:'555555'}}, alignment:{horizontal:'left',vertical:'center'} };
+  const sHdrDNV  = { fill:{fgColor:{rgb:'0F204B'}}, font:{bold:true,color:{rgb:'FFFFFF'},sz:10}, alignment:{horizontal:'center',vertical:'center',wrapText:true}, border:BM };
+  const sHdrDay  = { fill:{fgColor:{rgb:'E8EDF8'}}, font:{bold:true,sz:9,color:{rgb:'1A3A6B'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  const sName    = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{bold:true,sz:10,color:{rgb:'0F204B'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
+  const sRole    = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{sz:9,color:{rgb:'555566'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
+  const sHours   = (mins) => ({ fill:{fgColor:{rgb:mins>480?'FFF3E0':mins>0?'E8F5E9':'F8F8F8'}}, font:{bold:mins>0,sz:10,color:{rgb:mins>480?'E65100':mins>0?'1B5E20':'AAAAAA'}}, alignment:{horizontal:'center',vertical:'center'}, border:B });
+  const sTotalHdr= { fill:{fgColor:{rgb:'1A3A6B'}}, font:{bold:true,sz:10,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
+  const sTotalVal= { fill:{fgColor:{rgb:'D9E4F5'}}, font:{bold:true,sz:11,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
+  const sAtt1    = { fill:{fgColor:{rgb:'C8F0D8'}}, font:{bold:true,sz:12,color:{rgb:'166534'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  const sAtt0    = { fill:{fgColor:{rgb:'F8F8F8'}}, font:{sz:11,color:{rgb:'CCCCCC'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  const sSumHdr  = { fill:{fgColor:{rgb:'0F204B'}}, font:{bold:true,sz:10,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
+  const sSumVal  = (n,tot) => ({ fill:{fgColor:{rgb:tot&&n/tot>=0.9?'C8F0D8':tot&&n/tot>=0.5?'FFF9C4':'FFE0CC'}}, font:{bold:true,sz:12,color:{rgb:tot&&n/tot>=0.9?'166534':tot&&n/tot>=0.5?'856404':'C0392B'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM });
+  const sCenter  = (bg,fc,bold) => ({ fill:{fgColor:{rgb:bg}}, font:{bold:!!bold,sz:10,color:{rgb:fc}}, alignment:{horizontal:'center',vertical:'center'}, border:B });
 
   function ec(r,c) { return XLSX.utils.encode_cell({r,c}); }
-  function setCell(ws, r, c, v, style, t) {
-    ws[ec(r,c)] = { v, t: t||(typeof v==='number'?'n':'s'), s: style };
-  }
+  function sc(ws,r,c,v,style,t) { ws[ec(r,c)] = { v, t:t||(typeof v==='number'?'n':'s'), s:style }; }
 
-  // ══════════════════════════════════════════
-  // Sheet 1：每日打卡時間 & 工時（橫式）
-  // 列：標題、副標、空、欄頭（日期）、人員 × [IN、OUT、工時]、月計
-  // ══════════════════════════════════════════
+  // ══ Sheet 1：打卡時間表 ══
   const ws1 = {};
-  const WD  = workDays.length;
-  // 欄配置：姓名(0)、職稱(1)、日期(2..WD+1)、月累計(WD+2)
-  const S1_DATE_START = 2;
-  const S1_TOTAL_COL  = S1_DATE_START + WD;
-  const S1_COLS       = S1_TOTAL_COL + 1;
+  const S1_DATE = 2, S1_TOTAL = 2 + WD, S1_COLS = S1_TOTAL + 1;
+  const HDR1 = 3, ROWS_PP = 3;
 
-  // 列0 標題
-  setCell(ws1, 0, 0, `監造人員出勤打卡時間表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
-  setCell(ws1, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　　製表：${y}-${String(mo).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`, sSub);
-
-  // 列3 欄頭
-  const HDR1 = 3;
-  setCell(ws1, HDR1, 0, '姓名', sHdrDNV);
-  setCell(ws1, HDR1, 1, '職稱', sHdrDNV);
-  workDays.forEach((dateStr, di) => {
-    const dow = new Date(dateStr).getDay();
-    setCell(ws1, HDR1, S1_DATE_START+di, `${parseInt(dateStr.slice(8))}\n(${DOW_TW[dow]})`, sHdrDay(false));
+  sc(ws1, 0, 0, `監造人員出勤打卡時間表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
+  sc(ws1, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　製表：${y}-${String(mo).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`, sSub);
+  sc(ws1, HDR1, 0, '姓名', sHdrDNV);
+  sc(ws1, HDR1, 1, '職稱', sHdrDNV);
+  workDays.forEach((ds,di) => {
+    sc(ws1, HDR1, S1_DATE+di, `${parseInt(ds.slice(8))}\n(${DOW_TW[new Date(ds).getDay()]})`, sHdrDay);
   });
-  setCell(ws1, HDR1, S1_TOTAL_COL, '月累計\n工時', sTotalHdr);
-
-  // 子標題列（IN/OUT/工時 橫標籤放在人員列內，用顏色區分）
-  // 每人佔 3 列：IN、OUT、工時
-  const ROWS_PER_PERSON = 3;
-  const ROW_LABELS = ['到班', '退班', '工時'];
-  const ROW_COLORS = ['E3F2FD','FFF3E0','E8F5E9'];
-  const ROW_FC     = ['1565C0','E65100','1B5E20'];
+  sc(ws1, HDR1, S1_TOTAL, '月累計\n工時', sTotalHdr);
 
   const merges1 = [
-    { s:{r:0,c:0}, e:{r:0,c:S1_COLS-1} },
-    { s:{r:1,c:0}, e:{r:1,c:S1_COLS-1} },
+    {s:{r:0,c:0},e:{r:0,c:S1_COLS-1}},
+    {s:{r:1,c:0},e:{r:1,c:S1_COLS-1}},
   ];
 
-  pickedMembers.forEach((m, mi) => {
-    const baseRow = HDR1 + 1 + mi * ROWS_PER_PERSON;
-    // 姓名跨3列合併
-    merges1.push({ s:{r:baseRow,c:0}, e:{r:baseRow+2,c:0} });
-    merges1.push({ s:{r:baseRow,c:1}, e:{r:baseRow+2,c:1} });
-    setCell(ws1, baseRow,   0, m.name,          sName);
-    setCell(ws1, baseRow,   1, m.role||'監造人員', sRole);
-    setCell(ws1, baseRow+1, 0, '', sName);
-    setCell(ws1, baseRow+1, 1, '', sRole);
-    setCell(ws1, baseRow+2, 0, '', sName);
-    setCell(ws1, baseRow+2, 1, '', sRole);
+  pickedMembers.forEach((m,mi) => {
+    const br = HDR1 + 1 + mi * ROWS_PP;
+    merges1.push({s:{r:br,c:0},e:{r:br+2,c:0}});
+    merges1.push({s:{r:br,c:1},e:{r:br+2,c:1}});
+    merges1.push({s:{r:br,c:S1_TOTAL},e:{r:br+2,c:S1_TOTAL}});
+    [0,1,2].forEach(k => { sc(ws1,br+k,0,'',sName); sc(ws1,br+k,1,'',sRole); });
+    sc(ws1,br,0,m.name,sName);
+    sc(ws1,br,1,m.role||'監造人員',sRole);
 
-    // 每個工作日
     let totalMin = 0;
-    workDays.forEach((dateStr, di) => {
-      const col = S1_DATE_START + di;
-      const rec = getMemberRec(m.id, dateStr);
-      const timeIn  = rec ? (rec.timeIn  || '') : '';
-      const timeOut = rec ? (rec.timeOut || '') : '';
-      const mins    = rec ? calcWorkMinutes(rec.timeIn, rec.timeOut) : 0;
+    workDays.forEach((ds,di) => {
+      const col = S1_DATE + di;
+      const rec = getMemberRec(m.id, ds);
+      const tin  = rec ? (rec.timeIn  || '') : '';
+      const tout = rec ? (rec.timeOut || '') : '';
+      const mins = rec ? calcWorkMinutes(rec.timeIn, rec.timeOut) : 0;
       totalMin += mins;
-
-      const bgIn  = { fill:{fgColor:{rgb:timeIn ?'D6EAF8':'F8F8F8'}}, font:{sz:9,color:{rgb:timeIn ?'1A5276':'BBBBBB'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-      const bgOut = { fill:{fgColor:{rgb:timeOut?'FDEBD0':'F8F8F8'}}, font:{sz:9,color:{rgb:timeOut?'784212':'BBBBBB'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-      setCell(ws1, baseRow,   col, timeIn  || '—', bgIn);
-      setCell(ws1, baseRow+1, col, timeOut || '—', bgOut);
-      setCell(ws1, baseRow+2, col, mins ? fmtMinutes(mins) : '—', sHours(mins));
+      sc(ws1, br,   col, tin  || '—', sCenter(tin ?'D6EAF8':'F8F8F8', tin ?'1A5276':'BBBBBB', false));
+      sc(ws1, br+1, col, tout || '—', sCenter(tout?'FDEBD0':'F8F8F8', tout?'784212':'BBBBBB', false));
+      sc(ws1, br+2, col, mins ? fmtMinutes(mins) : '—', sHours(mins));
     });
-
-    // 月累計
-    merges1.push({ s:{r:baseRow,c:S1_TOTAL_COL}, e:{r:baseRow+2,c:S1_TOTAL_COL} });
-    setCell(ws1, baseRow,   S1_TOTAL_COL, fmtMinutes(totalMin), sTotalVal);
-    setCell(ws1, baseRow+1, S1_TOTAL_COL, '', sTotalVal);
-    setCell(ws1, baseRow+2, S1_TOTAL_COL, '', sTotalVal);
+    sc(ws1, br, S1_TOTAL, fmtMinutes(totalMin), sTotalVal);
+    sc(ws1, br+1, S1_TOTAL, '', sTotalVal);
+    sc(ws1, br+2, S1_TOTAL, '', sTotalVal);
   });
 
   ws1['!merges'] = merges1;
   ws1['!cols']   = [{wch:9},{wch:11},...Array(WD).fill({wch:6.5}),{wch:8}];
-  const dataRows1 = pickedMembers.length * ROWS_PER_PERSON;
-  ws1['!rows']   = [{hpx:30},{hpx:14},{hpx:6},{hpx:32},...Array(dataRows1).fill({hpx:20})];
-  ws1['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:HDR1+dataRows1, c:S1_COLS-1}});
+  ws1['!rows']   = [{hpx:30},{hpx:14},{hpx:6},{hpx:32},...Array(pickedMembers.length*ROWS_PP).fill({hpx:20})];
+  ws1['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:HDR1+pickedMembers.length*ROWS_PP,c:S1_COLS-1}});
 
-  // ══════════════════════════════════════════
-  // Sheet 2：預計出勤人次（橫式）
-  // 列：標題、欄頭（日期）、每人一列（0/1）、合計列
-  // ══════════════════════════════════════════
+  // ══ Sheet 2：出勤人次表 ══
   const ws2 = {};
-  // 欄：序(0)、姓名(1)、職稱(2)、日期(3..WD+2)、出勤天數(WD+3)、出勤率(WD+4)
-  const S2_DATE_START  = 3;
-  const S2_TOTAL_COL   = S2_DATE_START + WD;
-  const S2_RATE_COL    = S2_TOTAL_COL + 1;
-  const S2_COLS        = S2_RATE_COL + 1;
-
-  setCell(ws2, 0, 0, `監造人員預計出勤人次表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
-  setCell(ws2, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　　（工作日共 ${WD} 天）`, sSub);
-
+  const S2_DATE = 3, S2_TOTAL = 3+WD, S2_RATE = 3+WD+1, S2_COLS = 3+WD+2;
   const HDR2 = 3;
-  setCell(ws2, HDR2, 0, '序',   sHdrDNV);
-  setCell(ws2, HDR2, 1, '姓名', sHdrDNV);
-  setCell(ws2, HDR2, 2, '職稱', sHdrDNV);
-  workDays.forEach((dateStr, di) => {
-    const dow = new Date(dateStr).getDay();
-    setCell(ws2, HDR2, S2_DATE_START+di, `${parseInt(dateStr.slice(8))}\n(${DOW_TW[dow]})`, sHdrDay(false));
-  });
-  setCell(ws2, HDR2, S2_TOTAL_COL, '出勤\n天數', sHdrDNV);
-  setCell(ws2, HDR2, S2_RATE_COL,  '出勤率', sHdrDNV);
 
-  // 每人列
+  sc(ws2, 0, 0, `監造人員預計出勤人次表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
+  sc(ws2, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　（工作日共 ${WD} 天）`, sSub);
+  sc(ws2, HDR2, 0, '序',   sHdrDNV);
+  sc(ws2, HDR2, 1, '姓名', sHdrDNV);
+  sc(ws2, HDR2, 2, '職稱', sHdrDNV);
+  workDays.forEach((ds,di) => {
+    sc(ws2, HDR2, S2_DATE+di, `${parseInt(ds.slice(8))}\n(${DOW_TW[new Date(ds).getDay()]})`, sHdrDay);
+  });
+  sc(ws2, HDR2, S2_TOTAL, '出勤\n天數', sHdrDNV);
+  sc(ws2, HDR2, S2_RATE,  '出勤率',    sHdrDNV);
+
   const merges2 = [
-    { s:{r:0,c:0}, e:{r:0,c:S2_COLS-1} },
-    { s:{r:1,c:0}, e:{r:1,c:S2_COLS-1} },
+    {s:{r:0,c:0},e:{r:0,c:S2_COLS-1}},
+    {s:{r:1,c:0},e:{r:1,c:S2_COLS-1}},
   ];
 
-  pickedMembers.forEach((m, mi) => {
+  pickedMembers.forEach((m,mi) => {
     const row = HDR2 + 1 + mi;
-    setCell(ws2, row, 0, mi+1,           { ...sName, alignment:{horizontal:'center',vertical:'center'}, border:B });
-    setCell(ws2, row, 1, m.name,         sName);
-    setCell(ws2, row, 2, m.role||'監造人員', sRole);
-
-    let attCount = 0;
-    workDays.forEach((dateStr, di) => {
-      const rec = getMemberRec(m.id, dateStr);
-      const isAtt = rec && (rec.status === 'present' || rec.status === 'late');
-      if (isAtt) attCount++;
-      setCell(ws2, row, S2_DATE_START+di, isAtt ? 1 : 0, isAtt ? sAtt1 : sAtt0, 'n');
+    sc(ws2, row, 0, mi+1, sCenter('EEF2FF','0F204B',true), 'n');
+    sc(ws2, row, 1, m.name, sName);
+    sc(ws2, row, 2, m.role||'監造人員', sRole);
+    let attCnt = 0;
+    workDays.forEach((ds,di) => {
+      const rec = getMemberRec(m.id, ds);
+      const ok  = rec && (rec.status==='present'||rec.status==='late');
+      if (ok) attCnt++;
+      sc(ws2, row, S2_DATE+di, ok?1:0, ok?sAtt1:sAtt0, 'n');
     });
-
-    const rate = WD ? Math.min(100, Math.round(attCount/WD*100)) : 0;
-    setCell(ws2, row, S2_TOTAL_COL, attCount, sTotalVal, 'n');
-    setCell(ws2, row, S2_RATE_COL,  `${rate}%`, {
-      fill:{fgColor:{rgb:rate>=90?'C8F0D8':rate>=70?'FFF9C4':'FFE0CC'}},
-      font:{bold:true,sz:11,color:{rgb:rate>=90?'166534':rate>=70?'856404':'C0392B'}},
-      alignment:{horizontal:'center',vertical:'center'}, border:BM,
-    });
+    const rate = WD ? Math.min(100,Math.round(attCnt/WD*100)) : 0;
+    sc(ws2, row, S2_TOTAL, attCnt, sTotalVal, 'n');
+    sc(ws2, row, S2_RATE, `${rate}%`, sCenter(rate>=90?'C8F0D8':rate>=70?'FFF9C4':'FFE0CC', rate>=90?'166534':rate>=70?'856404':'C0392B', true));
   });
 
-  // 合計列（當日出勤人次）
+  // 合計列
   const sumRow = HDR2 + 1 + pickedMembers.length;
-  setCell(ws2, sumRow, 0, '合計', sSumHdr);
-  setCell(ws2, sumRow, 1, '當日出勤人次', sSumHdr);
-  setCell(ws2, sumRow, 2, '', sSumHdr);
-  merges2.push({ s:{r:sumRow,c:0}, e:{r:sumRow,c:0} });
-  merges2.push({ s:{r:sumRow,c:1}, e:{r:sumRow,c:2} });
-
-  workDays.forEach((dateStr, di) => {
-    const cnt = pickedMembers.filter(m => {
-      const rec = getMemberRec(m.id, dateStr);
-      return rec && (rec.status === 'present' || rec.status === 'late');
-    }).length;
-    setCell(ws2, sumRow, S2_DATE_START+di, cnt, sSumVal(cnt, pickedMembers.length), 'n');
+  sc(ws2, sumRow, 0, '合計', sSumHdr);
+  sc(ws2, sumRow, 1, '當日出勤人次', sSumHdr);
+  sc(ws2, sumRow, 2, '', sSumHdr);
+  merges2.push({s:{r:sumRow,c:1},e:{r:sumRow,c:2}});
+  workDays.forEach((ds,di) => {
+    const cnt = pickedMembers.filter(m => { const r=getMemberRec(m.id,ds); return r&&(r.status==='present'||r.status==='late'); }).length;
+    sc(ws2, sumRow, S2_DATE+di, cnt, sSumVal(cnt,pickedMembers.length), 'n');
   });
-  setCell(ws2, sumRow, S2_TOTAL_COL, '', sSumHdr);
-  setCell(ws2, sumRow, S2_RATE_COL,  '', sSumHdr);
+  sc(ws2, sumRow, S2_TOTAL, '', sSumHdr);
+  sc(ws2, sumRow, S2_RATE,  '', sSumHdr);
 
   ws2['!merges'] = merges2;
   ws2['!cols']   = [{wch:4},{wch:9},{wch:11},...Array(WD).fill({wch:5}),{wch:7},{wch:7}];
   ws2['!rows']   = [{hpx:30},{hpx:14},{hpx:6},{hpx:32},...Array(pickedMembers.length).fill({hpx:22}),{hpx:24}];
-  ws2['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:sumRow, c:S2_COLS-1}});
+  ws2['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0},e:{r:sumRow,c:S2_COLS-1}});
 
-  // ══ 輸出 ══
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws1, `打卡時間_${mo}月`);
   XLSX.utils.book_append_sheet(wb, ws2, `出勤人次_${mo}月`);
-  XLSX.writeFile(wb, `監造出勤月報_${rocYear}年${mo}月.xlsx`, { bookType:'xlsx', cellStyles:true });
+  XLSX.writeFile(wb, `監造出勤月報_${rocYear}年${mo}月.xlsx`, {bookType:'xlsx',cellStyles:true});
 }
 
   // ── 共用：過濾假日 XLS present ──
