@@ -129,6 +129,7 @@
         <p>檢查各模組資料數量、localStorage 用量，以及手動進行雲端同步操作。</p>
         <div class="export-btn-row" style="margin-bottom:14px;">
           <button class="export-btn grey" onclick="diagStorage()">📊 診斷資料</button>
+          <button class="export-btn grey" onclick="diagAttRecords()">🔍 出勤記錄診斷</button>
           <button class="export-btn grey" onclick="forceReload()">🔄 強制雲端拉取</button>
           <button class="export-btn outline" onclick="rescueDownload()">💾 備份本機資料</button>
           <button class="export-btn outline" onclick="rescueUpload()">⬆ 還原本機資料</button>
@@ -583,6 +584,39 @@ async function exportAttXLSX() {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
+function diagAttRecords() {
+  // 找出所有人員與對應的出勤記錄，顯示有無時間資料
+  const lines = [];
+  lines.push(`=== 人員清單（共 ${allMembers.length} 人）===`);
+  allMembers.forEach(m => {
+    const recs = allAtt.filter(r => r.memberId === m.id);
+    const withTime = recs.filter(r => r.timeIn);
+    lines.push(`  ${m.name}（id:${m.id.slice(-4)}）: 共${recs.length}筆，有時間${withTime.length}筆`);
+    if (withTime.length > 0) {
+      lines.push(`    首筆: ${withTime[0].date} IN=${withTime[0].timeIn} OUT=${withTime[0].timeOut}`);
+    }
+  });
+
+  // 找沒有對應人員的孤兒記錄
+  const memberIds = new Set(allMembers.map(m => m.id));
+  const orphans   = allAtt.filter(r => !memberIds.has(r.memberId));
+  if (orphans.length) {
+    lines.push(`\n=== 孤兒記錄（${orphans.length}筆，memberId 無對應人員）===`);
+    const orphanIds = [...new Set(orphans.map(r => r.memberId))];
+    orphanIds.forEach(id => {
+      const recs = orphans.filter(r => r.memberId === id);
+      const withTime = recs.filter(r => r.timeIn);
+      lines.push(`  memberId:${id.slice(-4)}: ${recs.length}筆，有時間${withTime.length}筆`);
+      if (withTime.length) lines.push(`    首筆: ${withTime[0].date} IN=${withTime[0].timeIn}`);
+    });
+  }
+
+  const log = document.getElementById('diag-log');
+  if (log) { log.style.display='block'; log.textContent = lines.join('\n'); }
+  document.getElementById('diag-output').style.display = 'block';
+  alert(lines.join('\n'));
+}
+
 function diagStorage() {
   const diag = [
     { key:'時間軸記錄', count: allEntries.length, ok: allEntries.length >= 0 },
