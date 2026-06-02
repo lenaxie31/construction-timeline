@@ -109,8 +109,12 @@
         <div class="export-card att">
           <span class="export-icon">👷</span>
           <h3>出勤月報</h3>
-          <p>選擇月份匯出出勤統計，含個人出勤、遲到、缺勤、請假天數及出勤率月報。</p>
-          <select class="month-select" id="att-export-month"></select>
+          <p>選擇月份與人員，匯出打卡時間表與出勤人次表，橫式格式含顏色區分與累計工時。</p>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+            <select class="month-select" id="att-export-month" style="margin-bottom:0;"></select>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">選擇匯出人員（可複選）</div>
+          <div id="att-member-picker" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:120px;overflow-y:auto;padding:2px;"></div>
           <div class="export-btn-row">
             <button class="export-btn purple" onclick="exportAttXLSX()">⬇ XLSX 月報匯出</button>
           </div>
@@ -187,7 +191,6 @@ function populateAttMonthSelect() {
   const sel = document.getElementById('att-export-month'); if (!sel) return;
   const seen={}, months=[];
   allAtt.forEach(r => { const m=r.date.slice(0,7); if(!seen[m]){seen[m]=1;months.push(m);} });
-  // add current & previous 6 months
   for (let i=0;i<=5;i++) {
     const d=new Date(); d.setMonth(d.getMonth()-i);
     const m=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
@@ -196,6 +199,31 @@ function populateAttMonthSelect() {
   months.sort().reverse();
   const today = todayStr().slice(0,7);
   sel.innerHTML = months.map(m => `<option value="${m}"${m===today?' selected':''}>${m.replace('-','年')}月</option>`).join('');
+
+  // 人員選擇器
+  renderMemberPicker();
+}
+
+function renderMemberPicker() {
+  const el = document.getElementById('att-member-picker'); if (!el) return;
+  const active = allMembers.filter(m => m.active !== false);
+  el.innerHTML = active.map(m => `
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;
+      padding:5px 10px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;
+      background:var(--surface);transition:all .12s;user-select:none;"
+      onmouseover="this.style.borderColor='var(--dnv-sea-blue)'"
+      onmouseout="this.style.borderColor=this.querySelector('input').checked?'var(--dnv-dark-blue)':'var(--border)'"
+      onclick="this.style.background=this.querySelector('input').checked?'var(--dnv-dark-blue)':'var(--surface)';this.style.color=this.querySelector('input').checked?'#fff':'';this.style.borderColor=this.querySelector('input').checked?'var(--dnv-dark-blue)':'var(--border)'">
+      <input type="checkbox" value="${m.id}" checked style="accent-color:var(--dnv-dark-blue);display:none;">
+      ${esc(m.name)}
+    </label>`).join('');
+  // 初始化選中樣式
+  el.querySelectorAll('label').forEach(lb => {
+    const cb = lb.querySelector('input');
+    lb.style.background = cb.checked ? 'var(--dnv-dark-blue)' : 'var(--surface)';
+    lb.style.color       = cb.checked ? '#fff' : '';
+    lb.style.borderColor = cb.checked ? 'var(--dnv-dark-blue)' : 'var(--border)';
+  });
 }
 
 // ── XLSX 共用函式 ──
@@ -288,14 +316,242 @@ function exportQiXLSX() {
 function exportAttXLSX() {
   const selMonth = document.getElementById('att-export-month').value;
   if (!selMonth) { alert('請選擇要匯出的月份'); return; }
+
+  // 取得勾選的人員
+  const checkedIds = Array.from(
+    document.querySelectorAll('#att-member-picker input[type=checkbox]:checked')
+  ).map(cb => cb.value);
+  if (!checkedIds.length) { alert('請至少選擇一位人員'); return; }
+  const pickedMembers = allMembers.filter(m => checkedIds.includes(m.id));
+
   const [y, mo] = selMonth.split('-').map(Number);
   const hols  = loadHolidays().holidays || TW_HOLIDAYS_DEFAULT;
   const works = loadHolidays().workdays  || {};
-  const wdays = calcWorkdays(y, mo, hols, works);
-  const activeMembers = allMembers.filter(m => m.active !== false);
-  const daysInMonth   = new Date(y, mo, 0).getDate();
-  const DOW_TW = ['日','一','二','三','四','五','六'];
   const rocYear = y - 1911;
+  const DOW_TW  = ['日','一','二','三','四','五','六'];
+
+  // 只取工作日（過濾六日與假日）
+  const daysInMonth = new Date(y, mo, 0).getDate();
+  const workDays = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (!isHolidayDate(dateStr, hols, works)) workDays.push(dateStr);
+  }
+
+  // 共用：過濾假日 XLS present
+  function validRec(r) {
+    if (r.status === 'present' && r.note === 'XLS匯入' && isHolidayDate(r.date, hols, works)) return false;
+    return true;
+  }
+  function getMemberRec(memberId, dateStr) {
+    return allAtt.find(r => r.memberId === memberId && r.date === dateStr && validRec(r)) || null;
+  }
+
+  // ── 樣式常數 ──
+  const B = { top:{style:'thin',color:{rgb:'BBBBBB'}}, bottom:{style:'thin',color:{rgb:'BBBBBB'}}, left:{style:'thin',color:{rgb:'BBBBBB'}}, right:{style:'thin',color:{rgb:'BBBBBB'}} };
+  const BM= { top:{style:'medium',color:{rgb:'0F204B'}}, bottom:{style:'medium',color:{rgb:'0F204B'}}, left:{style:'medium',color:{rgb:'0F204B'}}, right:{style:'medium',color:{rgb:'0F204B'}} };
+
+  const sTitle  = { font:{bold:true,sz:13,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'} };
+  const sSub    = { font:{sz:9,color:{rgb:'555555'}}, alignment:{horizontal:'left',vertical:'center'} };
+  const sHdrDNV = { fill:{fgColor:{rgb:'0F204B'}}, font:{bold:true,color:{rgb:'FFFFFF'},sz:10}, alignment:{horizontal:'center',vertical:'center',wrapText:true}, border:BM };
+  const sHdrDay = (isHol) => ({ fill:{fgColor:{rgb:isHol?'FFE0CC':'E8EDF8'}}, font:{bold:true,sz:9,color:{rgb:isHol?'C0392B':'1A3A6B'}}, alignment:{horizontal:'center',vertical:'center'}, border:B });
+  const sName   = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{bold:true,sz:10,color:{rgb:'0F204B'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
+  const sRole   = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{sz:9,color:{rgb:'555566'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
+
+  // 時間格
+  const sTime = (val) => {
+    const bg = val?'FFFFFF':'F8F8F8';
+    return { fill:{fgColor:{rgb:bg}}, font:{sz:9,color:{rgb:val?'222222':'AAAAAA'},name:'DM Mono'}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  };
+  // 工時格
+  const sHours = (mins) => {
+    const bg = mins>480?'FFF3E0':mins>0?'E8F5E9':'F8F8F8';
+    const fc = mins>480?'E65100':mins>0?'1B5E20':'AAAAAA';
+    return { fill:{fgColor:{rgb:bg}}, font:{bold:mins>0,sz:10,color:{rgb:fc}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  };
+  // 小計格
+  const sTotalHdr = { fill:{fgColor:{rgb:'1A3A6B'}}, font:{bold:true,sz:10,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
+  const sTotalVal = { fill:{fgColor:{rgb:'D9E4F5'}}, font:{bold:true,sz:11,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
+
+  // 出勤格
+  const sAtt1 = { fill:{fgColor:{rgb:'C8F0D8'}}, font:{bold:true,sz:12,color:{rgb:'166534'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  const sAtt0 = { fill:{fgColor:{rgb:'F8F8F8'}}, font:{sz:11,color:{rgb:'CCCCCC'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  const sAttHol={ fill:{fgColor:{rgb:'FFF3EE'}}, font:{sz:9,color:{rgb:'DDAA99'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+  const sSumHdr = { fill:{fgColor:{rgb:'0F204B'}}, font:{bold:true,sz:10,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
+  const sSumVal = (n,total) => {
+    const pct = total ? n/total : 0;
+    const bg  = pct>=0.9?'C8F0D8':pct>=0.5?'FFF9C4':'FFE0CC';
+    const fc  = pct>=0.9?'166534':pct>=0.5?'856404':'C0392B';
+    return { fill:{fgColor:{rgb:bg}}, font:{bold:true,sz:12,color:{rgb:fc}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
+  };
+
+  function ec(r,c) { return XLSX.utils.encode_cell({r,c}); }
+  function setCell(ws, r, c, v, style, t) {
+    ws[ec(r,c)] = { v, t: t||(typeof v==='number'?'n':'s'), s: style };
+  }
+
+  // ══════════════════════════════════════════
+  // Sheet 1：每日打卡時間 & 工時（橫式）
+  // 列：標題、副標、空、欄頭（日期）、人員 × [IN、OUT、工時]、月計
+  // ══════════════════════════════════════════
+  const ws1 = {};
+  const WD  = workDays.length;
+  // 欄配置：姓名(0)、職稱(1)、日期(2..WD+1)、月累計(WD+2)
+  const S1_DATE_START = 2;
+  const S1_TOTAL_COL  = S1_DATE_START + WD;
+  const S1_COLS       = S1_TOTAL_COL + 1;
+
+  // 列0 標題
+  setCell(ws1, 0, 0, `監造人員出勤打卡時間表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
+  setCell(ws1, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　　製表：${y}-${String(mo).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`, sSub);
+
+  // 列3 欄頭
+  const HDR1 = 3;
+  setCell(ws1, HDR1, 0, '姓名', sHdrDNV);
+  setCell(ws1, HDR1, 1, '職稱', sHdrDNV);
+  workDays.forEach((dateStr, di) => {
+    const dow = new Date(dateStr).getDay();
+    setCell(ws1, HDR1, S1_DATE_START+di, `${parseInt(dateStr.slice(8))}\n(${DOW_TW[dow]})`, sHdrDay(false));
+  });
+  setCell(ws1, HDR1, S1_TOTAL_COL, '月累計\n工時', sTotalHdr);
+
+  // 子標題列（IN/OUT/工時 橫標籤放在人員列內，用顏色區分）
+  // 每人佔 3 列：IN、OUT、工時
+  const ROWS_PER_PERSON = 3;
+  const ROW_LABELS = ['到班', '退班', '工時'];
+  const ROW_COLORS = ['E3F2FD','FFF3E0','E8F5E9'];
+  const ROW_FC     = ['1565C0','E65100','1B5E20'];
+
+  const merges1 = [
+    { s:{r:0,c:0}, e:{r:0,c:S1_COLS-1} },
+    { s:{r:1,c:0}, e:{r:1,c:S1_COLS-1} },
+  ];
+
+  pickedMembers.forEach((m, mi) => {
+    const baseRow = HDR1 + 1 + mi * ROWS_PER_PERSON;
+    // 姓名跨3列合併
+    merges1.push({ s:{r:baseRow,c:0}, e:{r:baseRow+2,c:0} });
+    merges1.push({ s:{r:baseRow,c:1}, e:{r:baseRow+2,c:1} });
+    setCell(ws1, baseRow,   0, m.name,          sName);
+    setCell(ws1, baseRow,   1, m.role||'監造人員', sRole);
+    setCell(ws1, baseRow+1, 0, '', sName);
+    setCell(ws1, baseRow+1, 1, '', sRole);
+    setCell(ws1, baseRow+2, 0, '', sName);
+    setCell(ws1, baseRow+2, 1, '', sRole);
+
+    // 每個工作日
+    let totalMin = 0;
+    workDays.forEach((dateStr, di) => {
+      const col = S1_DATE_START + di;
+      const rec = getMemberRec(m.id, dateStr);
+      const timeIn  = rec ? (rec.timeIn  || '') : '';
+      const timeOut = rec ? (rec.timeOut || '') : '';
+      const mins    = rec ? calcWorkMinutes(rec.timeIn, rec.timeOut) : 0;
+      totalMin += mins;
+
+      const bgIn  = { fill:{fgColor:{rgb:timeIn ?'D6EAF8':'F8F8F8'}}, font:{sz:9,color:{rgb:timeIn ?'1A5276':'BBBBBB'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+      const bgOut = { fill:{fgColor:{rgb:timeOut?'FDEBD0':'F8F8F8'}}, font:{sz:9,color:{rgb:timeOut?'784212':'BBBBBB'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
+      setCell(ws1, baseRow,   col, timeIn  || '—', bgIn);
+      setCell(ws1, baseRow+1, col, timeOut || '—', bgOut);
+      setCell(ws1, baseRow+2, col, mins ? fmtMinutes(mins) : '—', sHours(mins));
+    });
+
+    // 月累計
+    merges1.push({ s:{r:baseRow,c:S1_TOTAL_COL}, e:{r:baseRow+2,c:S1_TOTAL_COL} });
+    setCell(ws1, baseRow,   S1_TOTAL_COL, fmtMinutes(totalMin), sTotalVal);
+    setCell(ws1, baseRow+1, S1_TOTAL_COL, '', sTotalVal);
+    setCell(ws1, baseRow+2, S1_TOTAL_COL, '', sTotalVal);
+  });
+
+  ws1['!merges'] = merges1;
+  ws1['!cols']   = [{wch:9},{wch:11},...Array(WD).fill({wch:6.5}),{wch:8}];
+  const dataRows1 = pickedMembers.length * ROWS_PER_PERSON;
+  ws1['!rows']   = [{hpx:30},{hpx:14},{hpx:6},{hpx:32},...Array(dataRows1).fill({hpx:20})];
+  ws1['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:HDR1+dataRows1, c:S1_COLS-1}});
+
+  // ══════════════════════════════════════════
+  // Sheet 2：預計出勤人次（橫式）
+  // 列：標題、欄頭（日期）、每人一列（0/1）、合計列
+  // ══════════════════════════════════════════
+  const ws2 = {};
+  // 欄：序(0)、姓名(1)、職稱(2)、日期(3..WD+2)、出勤天數(WD+3)、出勤率(WD+4)
+  const S2_DATE_START  = 3;
+  const S2_TOTAL_COL   = S2_DATE_START + WD;
+  const S2_RATE_COL    = S2_TOTAL_COL + 1;
+  const S2_COLS        = S2_RATE_COL + 1;
+
+  setCell(ws2, 0, 0, `監造人員預計出勤人次表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
+  setCell(ws2, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　　（工作日共 ${WD} 天）`, sSub);
+
+  const HDR2 = 3;
+  setCell(ws2, HDR2, 0, '序',   sHdrDNV);
+  setCell(ws2, HDR2, 1, '姓名', sHdrDNV);
+  setCell(ws2, HDR2, 2, '職稱', sHdrDNV);
+  workDays.forEach((dateStr, di) => {
+    const dow = new Date(dateStr).getDay();
+    setCell(ws2, HDR2, S2_DATE_START+di, `${parseInt(dateStr.slice(8))}\n(${DOW_TW[dow]})`, sHdrDay(false));
+  });
+  setCell(ws2, HDR2, S2_TOTAL_COL, '出勤\n天數', sHdrDNV);
+  setCell(ws2, HDR2, S2_RATE_COL,  '出勤率', sHdrDNV);
+
+  // 每人列
+  const merges2 = [
+    { s:{r:0,c:0}, e:{r:0,c:S2_COLS-1} },
+    { s:{r:1,c:0}, e:{r:1,c:S2_COLS-1} },
+  ];
+
+  pickedMembers.forEach((m, mi) => {
+    const row = HDR2 + 1 + mi;
+    setCell(ws2, row, 0, mi+1,           { ...sName, alignment:{horizontal:'center',vertical:'center'}, border:B });
+    setCell(ws2, row, 1, m.name,         sName);
+    setCell(ws2, row, 2, m.role||'監造人員', sRole);
+
+    let attCount = 0;
+    workDays.forEach((dateStr, di) => {
+      const rec = getMemberRec(m.id, dateStr);
+      const isAtt = rec && (rec.status === 'present' || rec.status === 'late');
+      if (isAtt) attCount++;
+      setCell(ws2, row, S2_DATE_START+di, isAtt ? 1 : 0, isAtt ? sAtt1 : sAtt0, 'n');
+    });
+
+    const rate = WD ? Math.min(100, Math.round(attCount/WD*100)) : 0;
+    setCell(ws2, row, S2_TOTAL_COL, attCount, sTotalVal, 'n');
+    setCell(ws2, row, S2_RATE_COL,  `${rate}%`, {
+      fill:{fgColor:{rgb:rate>=90?'C8F0D8':rate>=70?'FFF9C4':'FFE0CC'}},
+      font:{bold:true,sz:11,color:{rgb:rate>=90?'166534':rate>=70?'856404':'C0392B'}},
+      alignment:{horizontal:'center',vertical:'center'}, border:BM,
+    });
+  });
+
+  // 合計列（當日出勤人次）
+  const sumRow = HDR2 + 1 + pickedMembers.length;
+  setCell(ws2, sumRow, 0, '合計', sSumHdr);
+  setCell(ws2, sumRow, 1, '當日出勤人次', sSumHdr);
+  setCell(ws2, sumRow, 2, '', sSumHdr);
+  merges2.push({ s:{r:sumRow,c:0}, e:{r:sumRow,c:0} });
+  merges2.push({ s:{r:sumRow,c:1}, e:{r:sumRow,c:2} });
+
+  workDays.forEach((dateStr, di) => {
+    const cnt = pickedMembers.filter(m => {
+      const rec = getMemberRec(m.id, dateStr);
+      return rec && (rec.status === 'present' || rec.status === 'late');
+    }).length;
+    setCell(ws2, sumRow, S2_DATE_START+di, cnt, sSumVal(cnt, pickedMembers.length), 'n');
+  });
+  setCell(ws2, sumRow, S2_TOTAL_COL, '', sSumHdr);
+  setCell(ws2, sumRow, S2_RATE_COL,  '', sSumHdr);
+
+  ws2['!merges'] = merges2;
+  ws2['!cols']   = [{wch:4},{wch:9},{wch:11},...Array(WD).fill({wch:5}),{wch:7},{wch:7}];
+  ws2['!rows']   = [{hpx:30},{hpx:14},{hpx:6},{hpx:32},...Array(pickedMembers.length).fill({hpx:22}),{hpx:24}];
+  ws2['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:sumRow, c:S2_COLS-1}});
+
+  // ══ 輸出 ══
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, `打卡時間_${mo}月`);
+  XLSX.utils.book_append_sheet(wb, ws2, `出勤人次_${mo}月`);
+  XLSX.writeFile(wb, `監造出勤月報_${rocYear}年${mo}月.xlsx`, { bookType:'xlsx', cellStyles:true });
+}
 
   // ── 共用：過濾假日 XLS present ──
   function validRec(r) {
@@ -418,107 +674,6 @@ function exportAttXLSX() {
     ws1[XLSX.utils.encode_cell({r:row, c:statCols+3})] = { v: `${rate}%`, t:'s', s:{ ...sStatV, font:{ bold:true, sz:11, color:{ rgb: rate>=90?'166534':rate>=70?'92400E':'991B1B' } } } };
   });
 
-  // 圖例列
-  const legendRow = HDR_ROW + 1 + activeMembers.length + 1;
-  const legends = ['● 出勤', '▲ 遲到', '✕ 缺勤', '假 請假', '公 公假', `應出勤：${wdays} 天`];
-  ws1[XLSX.utils.encode_cell({r:legendRow, c:0})] = { v:'【圖例】', t:'s', s:{ font:{ bold:true, sz:9, color:{ rgb:'555555' } } } };
-  legends.forEach((lg, li) => {
-    ws1[XLSX.utils.encode_cell({r:legendRow, c:1+li})] = { v: lg, t:'s', s:{ font:{ sz:9, color:{ rgb:'555555' } } } };
-  });
-
-  // 簽核列
-  const signRow = legendRow + 2;
-  ws1[XLSX.utils.encode_cell({r:signRow, c:0})] = { v:'製表人：', t:'s', s: sSign };
-  ws1[XLSX.utils.encode_cell({r:signRow, c:Math.floor(totalCols*0.33)})] = { v:'審核：', t:'s', s: sSign };
-  ws1[XLSX.utils.encode_cell({r:signRow, c:Math.floor(totalCols*0.66)})] = { v:'監造主任：', t:'s', s: sSign };
-
-  // 合併儲存格
-  ws1['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:totalCols-1} },       // 主標題
-    { s:{r:1,c:0}, e:{r:1,c:Math.floor(totalCols/2)-1} }, // 工程名稱
-    { s:{r:1,c:Math.floor(totalCols/2)}, e:{r:1,c:totalCols-1} }, // 製表日期
-  ];
-
-  // 欄寬：序(3)、姓名(8)、職稱(10)、日期欄(2.8each)、統計欄(6)
-  ws1['!cols'] = [
-    {wch:3}, {wch:8}, {wch:10},
-    ...Array(daysInMonth).fill({wch:3.2}),
-    {wch:5}, {wch:5}, {wch:5}, {wch:6},
-  ];
-  // 列高：標題(30)、資訊(18)、空行(8)、欄頭(32)、資料(22)
-  ws1['!rows'] = [
-    {hpx:32}, {hpx:18}, {hpx:8}, {hpx:36},
-    ...Array(activeMembers.length).fill({hpx:22}),
-    {hpx:8}, {hpx:16}, {hpx:8}, {hpx:24},
-  ];
-  ws1['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:signRow+1, c:totalCols-1} });
-
-  // ══════════════════════════════════════════
-  // Sheet 2：出勤統計摘要（正式公文格式）
-  // ══════════════════════════════════════════
-  const ws2 = {};
-  const S2_COLS = 8;
-
-  const s2Title = { font:{ bold:true, sz:14, color:{ rgb:'0F204B' } }, alignment:{ horizontal:'center', vertical:'center' } };
-  const s2Sub   = { font:{ sz:10 }, alignment:{ horizontal:'center', vertical:'center' } };
-  const s2H     = { fill:{ fgColor:{ rgb:'0F204B' } }, font:{ bold:true, color:{ rgb:'FFFFFF' }, sz:10 }, alignment:{ horizontal:'center', vertical:'center' }, border: BORDER_BOLD };
-  const s2D     = { font:{ sz:10 }, alignment:{ horizontal:'center', vertical:'center' }, border: BORDER };
-  const s2DL    = { font:{ sz:10 }, alignment:{ horizontal:'left', vertical:'center' }, border: BORDER };
-  const s2DG    = (rate) => ({ font:{ bold:true, sz:11, color:{ rgb: rate>=90?'166534':rate>=70?'92400E':'991B1B' } }, alignment:{ horizontal:'center', vertical:'center' }, border: BORDER });
-
-  ws2['A1'] = { v:`臺中市碳循環示範場域建置工程 減碳A標`, t:'s', s: s2Title };
-  ws2['A2'] = { v:`監造人員出勤統計表　${rocYear} 年 ${mo} 月（應出勤 ${wdays} 天）`, t:'s', s: s2Sub };
-  ws2['A3'] = { v:'', t:'s' };
-
-  const s2HRow = 3;
-  ['序','姓名','職稱','應出勤','實出勤','缺勤','請假','出勤率'].forEach((h,ci)=>{
-    ws2[XLSX.utils.encode_cell({r:s2HRow, c:ci})] = { v:h, t:'s', s: s2H };
-  });
-
-  activeMembers.forEach((m, mi) => {
-    const row = s2HRow + 1 + mi;
-    const memberRecs = allAtt.filter(r => r.memberId===m.id && r.date.startsWith(selMonth) && validRec(r));
-    const present = memberRecs.filter(r=>r.status==='present').length;
-    const late    = memberRecs.filter(r=>r.status==='late').length;
-    const absent  = memberRecs.filter(r=>r.status==='absent').length;
-    const leave   = memberRecs.filter(r=>r.status==='leave'||r.status==='holiday').length;
-    const actual  = present + late;
-    const rate    = wdays ? Math.min(100, Math.round(actual/wdays*100)) : 0;
-    [mi+1, m.name, m.role||'監造人員', wdays, actual, absent, leave].forEach((v,ci)=>{
-      ws2[XLSX.utils.encode_cell({r:row, c:ci})] = { v, t: typeof v==='number'?'n':'s', s: ci<=2?s2DL:s2D };
-    });
-    ws2[XLSX.utils.encode_cell({r:row, c:7})] = { v:`${rate}%`, t:'s', s: s2DG(rate) };
-  });
-
-  // 備注列
-  const s2NoteRow = s2HRow + 1 + activeMembers.length + 1;
-  ws2[XLSX.utils.encode_cell({r:s2NoteRow, c:0})] = { v:'備註：出勤率 = 實出勤 ÷ 應出勤 × 100%　　●出勤　▲遲到　✕缺勤　假=請假　公=公假', t:'s', s:{ font:{sz:9, color:{rgb:'888888'}}, alignment:{horizontal:'left'} } };
-
-  // 簽核欄
-  const s2SignRow = s2NoteRow + 2;
-  ws2[XLSX.utils.encode_cell({r:s2SignRow, c:0})] = { v:'監造主任：　　　　　　　　　', t:'s', s: s2D };
-  ws2[XLSX.utils.encode_cell({r:s2SignRow, c:3})] = { v:'審核：　　　　　　', t:'s', s: s2D };
-  ws2[XLSX.utils.encode_cell({r:s2SignRow, c:6})] = { v:'製表人：　　　　　　', t:'s', s: s2D };
-
-  ws2['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:S2_COLS-1} },
-    { s:{r:1,c:0}, e:{r:1,c:S2_COLS-1} },
-    { s:{r:s2NoteRow,c:0}, e:{r:s2NoteRow,c:S2_COLS-1} },
-    { s:{r:s2SignRow,c:0}, e:{r:s2SignRow,c:2} },
-    { s:{r:s2SignRow,c:3}, e:{r:s2SignRow,c:5} },
-    { s:{r:s2SignRow,c:6}, e:{r:s2SignRow,c:S2_COLS-1} },
-  ];
-  ws2['!cols'] = [{wch:4},{wch:9},{wch:12},{wch:8},{wch:8},{wch:6},{wch:6},{wch:8}];
-  ws2['!rows'] = [{hpx:28},{hpx:18},{hpx:6},{hpx:30},...Array(activeMembers.length).fill({hpx:22}),{hpx:6},{hpx:16},{hpx:6},{hpx:28}];
-  ws2['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:s2SignRow+2, c:S2_COLS-1} });
-
-  // ══ 輸出 ══
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws1, `${mo}月出勤月報`);
-  XLSX.utils.book_append_sheet(wb, ws2, '出勤統計摘要');
-  const fileName = `監造人員出勤月報_${rocYear}年${mo}月.xlsx`;
-  XLSX.writeFile(wb, fileName, { bookType:'xlsx', cellStyles:true });
-}
 
 // ── 資料診斷 ──
 function diagStorage() {
