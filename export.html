@@ -295,17 +295,23 @@ function exportAttXLSX() {
   const activeMembers = allMembers.filter(m => m.active !== false);
   const STATUS_TW = { present:'出勤', late:'遲到', absent:'缺勤', leave:'請假', holiday:'公假' };
 
+  // 共用：過濾假日 XLS present 記錄（跟系統顯示邏輯一致）
+  function validRec(r) {
+    if (r.status === 'present' && r.note === 'XLS匯入' && isHolidayDate(r.date, hols, works)) return false;
+    return true;
+  }
+
   // Summary sheet
   const summaryData = [
     ['姓名','職稱','應出勤天數','實出勤天數','遲到天數','缺勤天數','請假天數','出勤率（%）','總工時'],
     ...activeMembers.map(m => {
-      const recs    = allAtt.filter(r => r.memberId===m.id && r.date.startsWith(selMonth));
+      const recs    = allAtt.filter(r => r.memberId===m.id && r.date.startsWith(selMonth) && validRec(r));
       const present = recs.filter(r=>r.status==='present').length;
       const late    = recs.filter(r=>r.status==='late').length;
       const absent  = recs.filter(r=>r.status==='absent').length;
       const leave   = recs.filter(r=>r.status==='leave'||r.status==='holiday').length;
       const actual  = present + late;
-      const rate    = wdays ? Math.round(actual/wdays*100) : 0;
+      const rate    = wdays ? Math.min(100, Math.round(actual/wdays*100)) : 0;
       const totalMin= recs.reduce((sum,r)=>sum+calcWorkMinutes(r.timeIn,r.timeOut),0);
       return [s(m.name),s(m.role||'監造工程師'),wdays,actual,late,absent,leave,rate,fmtMinutes(totalMin)];
     }),
@@ -320,14 +326,26 @@ function exportAttXLSX() {
     const dateStr = y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const dow     = ['日','一','二','三','四','五','六'][new Date(y,mo-1,d).getDay()];
     const holName = (hols[dateStr]||'');
-    const dayRecs = allAtt.filter(r=>r.date===dateStr);
+    // 只取有效記錄（過濾假日 XLS present）
+    const dayRecs = allAtt.filter(r => r.date===dateStr && validRec(r));
     if (!dayRecs.length && holName) {
       detailData.push([dateStr,dow,holName,'','','','','','']);
     } else {
       dayRecs.forEach(r => {
-        const m   = allMembers.find(x=>x.id===r.memberId);
-        const mn  = calcWorkMinutes(r.timeIn,r.timeOut);
-        detailData.push([dateStr,dow,holName,s(m?m.name:'—'),STATUS_TW[r.status]||s(r.status),s(r.timeIn),s(r.timeOut),fmtMinutes(mn),s(r.note)]);
+        const m      = allMembers.find(x=>x.id===r.memberId);
+        const timeIn = r.timeIn  || '—';
+        const timeOut= r.timeOut || '—';
+        const mn     = calcWorkMinutes(r.timeIn, r.timeOut);
+        // 備註：XLS匯入字樣移除，只保留有意義的手動備註
+        const note   = (r.note === 'XLS匯入' || !r.note) ? '' : s(r.note);
+        detailData.push([
+          dateStr, dow, holName,
+          s(m ? m.name : '—'),
+          STATUS_TW[r.status] || s(r.status),
+          timeIn, timeOut,
+          mn ? fmtMinutes(mn) : '—',
+          note,
+        ]);
       });
     }
   }
