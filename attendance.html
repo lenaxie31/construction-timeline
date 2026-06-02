@@ -91,6 +91,9 @@
       <button class="btn-secondary" onclick="purgeMonthRecords()"
         style="font-size:11px;color:var(--c-red);border-color:var(--c-red-border);">🗑 清除本月全部出勤記錄</button>
       <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0 6px;">清除後可重新匯入 Excel</div>
+      <button class="btn-secondary" onclick="fixOrphanRecords()"
+        style="font-size:11px;color:var(--c-blue);border-color:var(--c-blue-border);">🔧 修復孤兒出勤記錄</button>
+      <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0 6px;">修正 memberId 不一致問題</div>
       <button class="btn-secondary" onclick="purgeHolidayRecords()"
         style="font-size:11px;color:var(--c-amber);border-color:var(--c-amber-border);">🗑 清除假日錯誤記錄</button>
       <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0;">移除週六日/假日的 XLS 匯入出勤記錄</div>
@@ -534,6 +537,56 @@ function removeWorkdayEntry(d) { if(holidayData.workdays) delete holidayData.wor
 function saveHolidaysAndClose() {
   try { localStorage.setItem('construction_tw_holidays_v1', JSON.stringify(holidayData)); } catch(e) {}
   document.getElementById('holiday-modal').style.display = 'none';
+  renderAll();
+}
+
+// ── 修復孤兒出勤記錄（memberId 無對應人員）──
+function fixOrphanRecords() {
+  const memberIds = new Set(members.map(m => m.id));
+  const orphans   = attRecords.filter(r => !memberIds.has(r.memberId));
+  if (!orphans.length) { alert('沒有發現孤兒記錄，資料正常。'); return; }
+
+  // 用時間記錄的 note 或其他方式無法知道名字，只能刪除孤兒
+  // 但若孤兒有時間資料，嘗試用日期+時間找到最接近的人員記錄並合併
+  const orphanIds = [...new Set(orphans.map(r => r.memberId))];
+  let fixed = 0, removed = 0;
+
+  orphanIds.forEach(orphanId => {
+    const orphanRecs   = attRecords.filter(r => r.memberId === orphanId);
+    const withTime     = orphanRecs.filter(r => r.timeIn);
+
+    if (!withTime.length) {
+      // 無時間的孤兒直接刪除
+      attRecords = attRecords.filter(r => r.memberId !== orphanId);
+      removed += orphanRecs.length;
+      return;
+    }
+
+    // 有時間的孤兒：找系統人員中同月同日有記錄但無時間的那個，把時間搬過去
+    withTime.forEach(orphanRec => {
+      // 找同一天、有出勤但無時間的記錄
+      const target = attRecords.find(r =>
+        r.memberId !== orphanId &&
+        r.date === orphanRec.date &&
+        !r.timeIn &&
+        memberIds.has(r.memberId)
+      );
+      if (target) {
+        target.timeIn  = orphanRec.timeIn;
+        target.timeOut = orphanRec.timeOut;
+        target.note    = 'XLS匯入';
+        fixed++;
+      }
+    });
+
+    // 孤兒記錄全部刪除（已搬移或無法搬移）
+    attRecords = attRecords.filter(r => r.memberId !== orphanId);
+    removed   += orphanRecs.length;
+  });
+
+  attSave();
+  cloudSaveAll('att', attRecords).catch(() => {});
+  alert(`✅ 修復完成\n搬移時間：${fixed} 筆\n刪除孤兒：${removed} 筆\n\n如仍有問題，請用「清除本月記錄」後重新匯入。`);
   renderAll();
 }
 
