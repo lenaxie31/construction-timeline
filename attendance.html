@@ -628,10 +628,11 @@ function importPunchXLS(input) {
           if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
 
           const status = codeToStatus(row[c]);
-          if (!status) continue; // 0 或空 = 假日，不建立記錄
+          if (!status) continue; // 0 或空，不建立記錄
 
-          // 請假/出差不受假日限制；一般出勤若當天是假日則跳過
-          if (status === 'present' && isHolidayDate(dateStr, importHols, importWorks)) continue;
+          // 所有狀態（含請假/出差）一律跳過週六日與國定假日
+          // 因為此排班表全月填 1.0，無法區分實際有無打卡
+          if (isHolidayDate(dateStr, importHols, importWorks)) continue;
 
           const existIdx = attRecords.findIndex(
             rec => rec.memberId === m.id && rec.date === dateStr
