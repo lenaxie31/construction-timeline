@@ -86,11 +86,11 @@
         <input type="file" id="xls-file" accept=".xls,.xlsx" style="display:none;" onchange="importPunchXLS(this)">
         <button class="btn-secondary" onclick="document.getElementById('xls-file').click()">⬆ 匯入排班表 XLS</button>
       </label>
-      <div class="xls-hint">支援人員排班表格式<br>自動跳過週六日與國定假日</div>
+      <div class="xls-hint">支援人員排班表格式<br>週六日打卡自動列為加班<br>國定假日仍自動跳過</div>
       <div class="sidebar-section-title" style="margin-top:12px;">資料修復</div>
       <button class="btn-secondary" onclick="purgeHolidayRecords()"
         style="font-size:11px;color:var(--c-red);border-color:var(--c-red-border);">🗑 清除假日錯誤記錄</button>
-      <div class="xls-hint">移除週六日/假日的<br>XLS 匯入出勤記錄</div>
+      <div class="xls-hint">移除國定假日的<br>XLS 匯入出勤記錄<br>（週末加班記錄不受影響）</div>
     </div>
   </div>
   <div class="main">
@@ -124,7 +124,7 @@
           <thead><tr>
             <th>人員</th><th>職稱</th><th>應出勤</th>
             <th>實出勤</th><th>遲到</th><th>缺勤</th><th>請假</th>
-            <th>出勤率</th><th>出勤率圖</th><th>總工時</th>
+            <th>出勤率</th><th>出勤率圖</th><th>總工時</th><th>加班工時</th>
           </tr></thead>
           <tbody id="att-summary-tbody"></tbody>
         </table>
@@ -215,6 +215,21 @@
 'use strict';
 if (!requireAuth()) throw new Error('not auth');
 
+// ── 輔助：純週末判斷（不含假日邏輯）──
+function isWeekendDate(dateStr) {
+  const d = new Date(dateStr);
+  const dow = d.getDay(); // 0=日, 6=六
+  return dow === 0 || dow === 6;
+}
+
+// ── 輔助：只判斷「國定假日」（不把一般週末算進去）──
+// 補班日（workdays）視為工作日，覆蓋週末
+function isPublicHoliday(dateStr, hols, works) {
+  if (works && works[dateStr]) return false; // 補班日 → 工作日
+  if (hols && hols[dateStr]) return true;    // 明確標記假日
+  return false;                              // 週末不在此函式判斷
+}
+
 // ── 狀態 ──
 let curYear, curMonth; // 1-based month
 let attRecords = []; // { id, date, memberId, status, timeIn, timeOut, note }
@@ -299,14 +314,16 @@ function renderCalendar() {
     // 假日格子裡的 present 記錄（匯入錯誤殘留）一律隱藏
     const dayRecs = attRecords.filter(r => {
       if (r.date !== dateStr) return false;
-      if (isHoliday && r.status === 'present' && r.note === 'XLS匯入') return false;
+      // 只隱藏「國定假日」的 XLS 匯入記錄，週末加班仍顯示
+      if (isPublicHoliday(dateStr, hols, works) && r.status === 'present' && r.note === 'XLS匯入') return false;
       return true;
     });
     const pips = dayRecs.map(r => {
       const m   = members.find(x => x.id === r.memberId);
       if (!m) return '';
-      const cls  = ATT_STATUS_PIP[r.status] || 'pip-present';
-      const role = m.role || '';
+      const isOt = isWeekendDate(dateStr) && (r.note === 'XLS匯入(加班)' || r.note === 'XLS匯入');
+      const cls  = isOt ? 'pip-late' : (ATT_STATUS_PIP[r.status] || 'pip-present');
+      const role = isOt ? '加班' : (m.role || '');
       return `<span class="att-pip ${cls}">
         <span class="att-pip-name">${esc(m.name)}</span>
         ${role ? `<span class="att-pip-role">${esc(role)}</span>` : ''}
@@ -341,10 +358,10 @@ function renderSummary() {
   if (!activeMembers.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-muted);">尚無人員</td></tr>'; return; }
 
   tbody.innerHTML = activeMembers.map(m => {
-    // 過濾假日裡的 XLS present 記錄，避免週六日計入出勤
+    // 過濾「國定假日」的 XLS present 記錄（週末加班仍計入）
     const recs = attRecords.filter(r => {
       if (r.memberId !== m.id || !r.date.startsWith(monthPrefix)) return false;
-      if (r.status === 'present' && r.note === 'XLS匯入' && isHolidayDate(r.date, hols, works)) return false;
+      if (r.status === 'present' && r.note === 'XLS匯入' && isPublicHoliday(r.date, hols, works)) return false;
       return true;
     });
     const present = recs.filter(r => r.status === 'present').length;
@@ -355,7 +372,14 @@ function renderSummary() {
     // 出勤率上限 100%
     const rate    = wdays ? Math.min(100, Math.round(actual / wdays * 100)) : 0;
     const rateCls = rate >= 90 ? 'att-rate-good' : rate >= 70 ? 'att-rate-warn' : 'att-rate-bad';
-    const totalMin= recs.reduce((sum, r) => sum + calcWorkMinutes(r.timeIn, r.timeOut), 0);
+    // 工時：區分正常出勤與週末加班
+    const weekdayRecs  = recs.filter(r => !isWeekendDate(r.date));
+    const weekendRecs  = recs.filter(r => isWeekendDate(r.date) && (r.status === 'present' || r.status === 'late'));
+    const totalMin     = weekdayRecs.reduce((sum, r) => sum + calcWorkMinutes(r.timeIn, r.timeOut), 0);
+    const overtimeMin  = weekendRecs.reduce((sum, r) => sum + calcWorkMinutes(r.timeIn, r.timeOut), 0);
+    const overtimeTxt  = overtimeMin > 0
+      ? `<span style="color:var(--c-amber);font-weight:700;">${fmtMinutes(overtimeMin)}</span>`
+      : `<span style="color:var(--text-muted);">—</span>`;
     return `<tr>
       <td style="font-weight:600;">${esc(m.name)}</td>
       <td style="font-size:11px;color:var(--text-muted);">${esc(m.role||'')}</td>
@@ -367,6 +391,7 @@ function renderSummary() {
       <td><span class="att-rate-badge ${rateCls}">${rate}%</span></td>
       <td><div class="att-bar"><div class="att-bar-fill" style="width:${rate}%"></div></div></td>
       <td style="font-family:monospace;font-size:11px;color:var(--text-muted);">${fmtMinutes(totalMin)}</td>
+      <td style="font-family:monospace;font-size:11px;">${overtimeTxt}</td>
     </tr>`;
   }).join('');
 }
@@ -539,14 +564,14 @@ function purgeHolidayRecords() {
   const works = (loadHolidays().workdays)   || {};
   const before = attRecords.length;
   attRecords = attRecords.filter(r => {
-    // 只清掉「XLS匯入」且是假日且狀態是 present 的記錄
+    // 只清掉「XLS匯入」且是【國定假日】且狀態是 present 的記錄（週末加班不清）
     if (r.note !== 'XLS匯入' || r.status !== 'present') return true;
-    return !isHolidayDate(r.date, hols, works);
+    return !isPublicHoliday(r.date, hols, works);
   });
   const removed = before - attRecords.length;
   if (removed === 0) { alert('沒有找到需要清除的假日記錄'); return; }
   attSave();
-  alert(`✅ 已清除 ${removed} 筆假日出勤記錄`);
+  alert(`✅ 已清除 ${removed} 筆國定假日出勤記錄\n（週末加班記錄已保留）`);
   renderAll();
 }
 
@@ -666,8 +691,11 @@ function importFromDetailSheets(wb, sheetNames) {
         // 沒有任何打卡記錄 → 跳過
         if (!timeIn && !timeOut) continue;
 
-        // 假日跳過
-        if (isHolidayDate(dateStr, importHols, importWorks)) { skippedHol++; continue; }
+        // 假日跳過（只跳國定假日，週末加班記錄保留）
+        if (isPublicHoliday(dateStr, importHols, importWorks)) { skippedHol++; continue; }
+
+        // 週末加班：note 標記為 'XLS匯入(加班)'
+        const isWkend = isWeekendDate(dateStr);
 
         // 到班時間超過 08:30 → 自動修正為 08:30（請款用，不標遲到）
         let adjustedTimeIn = timeIn;
@@ -684,15 +712,16 @@ function importFromDetailSheets(wb, sheetNames) {
           // 已有記錄：更新時間（到班用修正後時間）
           attRecords[existIdx].timeIn  = adjustedTimeIn || attRecords[existIdx].timeIn;
           attRecords[existIdx].timeOut = timeOut || attRecords[existIdx].timeOut;
-          attRecords[existIdx].note    = 'XLS匯入';
-          if (attRecords[existIdx].note === 'XLS匯入') {
+          attRecords[existIdx].note    = isWkend ? 'XLS匯入(加班)' : 'XLS匯入';
+          if (attRecords[existIdx].note === 'XLS匯入' || attRecords[existIdx].note === 'XLS匯入(加班)') {
             attRecords[existIdx].status = status;
           }
           updated++;
         } else {
           attRecords.push({
             id: uid(), date: dateStr, memberId: m.id,
-            status, timeIn: adjustedTimeIn, timeOut, note:'XLS匯入',
+            status, timeIn: adjustedTimeIn, timeOut,
+            note: isWkend ? 'XLS匯入(加班)' : 'XLS匯入',
           });
           added++;
         }
@@ -705,8 +734,9 @@ function importFromDetailSheets(wb, sheetNames) {
     '✅ 打卡時間匯入完成！',
     `新增：${added} 筆`,
     `更新：${updated} 筆`,
-    skippedHol ? `跳過假日：${skippedHol} 筆` : '',
+    skippedHol ? `跳過國定假日：${skippedHol} 筆` : '',
     '',
+    '週末打卡已列為加班工時',
     '僅匯入有實際打卡記錄的日期',
   ].filter(Boolean).join('\n'));
   renderAll();
@@ -763,20 +793,22 @@ function importFromRankingSheet(wb) {
 
       const status = codeToStatus(row[c]);
       if (!status) continue;
-      if (isHolidayDate(dateStr, importHols, importWorks)) continue;
+      if (isPublicHoliday(dateStr, importHols, importWorks)) continue;
+      const isWkend = isWeekendDate(dateStr);
 
       const existIdx = attRecords.findIndex(
         rec => rec.memberId === m.id && rec.date === dateStr
       );
       if (existIdx >= 0) {
-        if (attRecords[existIdx].note === 'XLS匯入') {
+        if (attRecords[existIdx].note === 'XLS匯入' || attRecords[existIdx].note === 'XLS匯入(加班)') {
           attRecords[existIdx].status = status;
           updated++;
         }
       } else {
         attRecords.push({
           id: uid(), date: dateStr, memberId: m.id,
-          status, timeIn:'', timeOut:'', note:'XLS匯入',
+          status, timeIn:'', timeOut:'',
+          note: isWkend ? 'XLS匯入(加班)' : 'XLS匯入',
         });
         added++;
       }
