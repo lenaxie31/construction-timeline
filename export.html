@@ -351,11 +351,11 @@ function exportAttXLSX() {
   const BM = { top:{style:'medium',color:{rgb:'0F204B'}}, bottom:{style:'medium',color:{rgb:'0F204B'}}, left:{style:'medium',color:{rgb:'0F204B'}}, right:{style:'medium',color:{rgb:'0F204B'}} };
 
   const sTitle   = { font:{bold:true,sz:13,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'} };
-  const sSub     = { font:{sz:9,color:{rgb:'555555'}}, alignment:{horizontal:'left',vertical:'center'} };
+  const sSub     = { font:{sz:9,color:{rgb:'555555'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true} };
   const sHdrDNV  = { fill:{fgColor:{rgb:'0F204B'}}, font:{bold:true,color:{rgb:'FFFFFF'},sz:10}, alignment:{horizontal:'center',vertical:'center',wrapText:true}, border:BM };
   const sHdrDay  = { fill:{fgColor:{rgb:'E8EDF8'}}, font:{bold:true,sz:9,color:{rgb:'1A3A6B'}}, alignment:{horizontal:'center',vertical:'center'}, border:B };
-  const sName    = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{bold:true,sz:10,color:{rgb:'0F204B'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
-  const sRole    = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{sz:9,color:{rgb:'555566'}}, alignment:{horizontal:'left',vertical:'center',wrapText:true}, border:B };
+  const sName    = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{bold:true,sz:10,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center',wrapText:true}, border:B };
+  const sRole    = { fill:{fgColor:{rgb:'EEF2FF'}}, font:{sz:9,color:{rgb:'555566'}}, alignment:{horizontal:'center',vertical:'center',wrapText:true}, border:B };
   const sHours   = (mins) => ({ fill:{fgColor:{rgb:mins>480?'FFF3E0':mins>0?'E8F5E9':'F8F8F8'}}, font:{bold:mins>0,sz:10,color:{rgb:mins>480?'E65100':mins>0?'1B5E20':'AAAAAA'}}, alignment:{horizontal:'center',vertical:'center'}, border:B });
   const sTotalHdr= { fill:{fgColor:{rgb:'1A3A6B'}}, font:{bold:true,sz:10,color:{rgb:'FFFFFF'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
   const sTotalVal= { fill:{fgColor:{rgb:'D9E4F5'}}, font:{bold:true,sz:11,color:{rgb:'0F204B'}}, alignment:{horizontal:'center',vertical:'center'}, border:BM };
@@ -374,7 +374,7 @@ function exportAttXLSX() {
   const HDR1 = 3, ROWS_PP = 3;
 
   sc(ws1, 0, 0, `監造人員出勤打卡時間表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
-  sc(ws1, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　製表：${y}-${String(mo).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`, sSub);
+  sc(ws1, 1, 0, `工程名稱：台中減碳技術園區設備採購帶安裝委託監造技術服務工作　製表：${y}-${String(mo).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`, sSub);
   sc(ws1, HDR1, 0, '姓名', sHdrDNV);
   sc(ws1, HDR1, 1, '職稱', sHdrDNV);
   workDays.forEach((ds,di) => {
@@ -424,7 +424,7 @@ function exportAttXLSX() {
   const HDR2 = 3;
 
   sc(ws2, 0, 0, `監造人員預計出勤人次表　民國 ${rocYear} 年 ${mo} 月`, sTitle);
-  sc(ws2, 1, 0, `工程名稱：臺中市碳循環示範場域建置工程 減碳A標　（工作日共 ${WD} 天）`, sSub);
+  sc(ws2, 1, 0, `工程名稱：台中減碳技術園區設備採購帶安裝委託監造技術服務工作　（工作日共 ${WD} 天）`, sSub);
   sc(ws2, HDR2, 0, '序',   sHdrDNV);
   sc(ws2, HDR2, 1, '姓名', sHdrDNV);
   sc(ws2, HDR2, 2, '職稱', sHdrDNV);
