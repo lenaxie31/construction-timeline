@@ -730,7 +730,8 @@ function importFromDetailSheets(wb, sheetNames) {
         if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
 
         const timeIn  = parseTimeStr(row[baseCol + 1]); // 時段一上班
-        const timeOut = parseTimeStr(row[baseCol + 3]); // 時段一下班
+        // 下班：優先取時段一下班(+3)，沒有則取時段二下班(+8)
+        const timeOut = parseTimeStr(row[baseCol + 3]) || parseTimeStr(row[baseCol + 8]);
 
         if (!timeIn && !timeOut) continue; // 無打卡記錄跳過
 
