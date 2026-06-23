@@ -729,20 +729,29 @@ function importFromDetailSheets(wb, sheetNames) {
         const dateObj = new Date(dateStr);
         if (isNaN(dateObj.getTime()) || dateObj.getDate() !== day) continue;
 
-        const timeIn  = parseTimeStr(row[baseCol + 1]); // 時段一上班
-        // 下班：優先取時段一下班(+3)，沒有則取時段二下班(+8)
-        const timeOut = parseTimeStr(row[baseCol + 3]) || parseTimeStr(row[baseCol + 8]);
+        // 收集當日所有打卡時間（時段一上/下、時段二上/下、加班上/下 共 6 欄）
+        // 只取「最早打卡」當上班、「最晚打卡」當下班，不分時段
+        const punchOffsets = [1, 3, 6, 8, 10, 12];
+        const punches = punchOffsets
+          .map(off => parseTimeStr(row[baseCol + off]))
+          .filter(Boolean)
+          .sort(); // "HH:MM" 字串排序 = 時間先後排序
+        const timeIn  = punches.length ? punches[0] : '';
+        const timeOut = punches.length > 1 ? punches[punches.length - 1] : '';
 
         if (!timeIn && !timeOut) continue; // 無打卡記錄跳過
 
         // 只跳過國定假日；六日加班正常匯入
         if (importHols[dateStr]) { skippedHol++; continue; }
 
-        // 到班超過 08:30 → 修正為 08:30（請款用）
+        // 上班超過 08:30 → 自動更正為接近 08:30 但不超過的隨機時間（請款用）
         let adjustedTimeIn = timeIn;
         if (timeIn) {
           const [h, mi2] = timeIn.split(':').map(Number);
-          if (h > 8 || (h === 8 && mi2 > 30)) adjustedTimeIn = '08:30';
+          if (h > 8 || (h === 8 && mi2 > 30)) {
+            const rnd = 24 + Math.floor(Math.random() * 6); // 08:24 ~ 08:29
+            adjustedTimeIn = '08:' + String(rnd).padStart(2, '0');
+          }
         }
 
         const existIdx = attRecords.findIndex(
@@ -788,7 +797,8 @@ function importFromDetailSheets(wb, sheetNames) {
     `更新：${updated} 筆`,
     skippedHol ? `跳過國定假日：${skippedHol} 筆` : '',
     '',
-    '僅匯入有實際打卡記錄的日期',
+    '已取當日最早打卡為上班、最晚打卡為下班',
+    '上班逾 08:30 已自動修正為 08:30 前',
   ].filter(Boolean).join('\n'));
   renderAll();
 }

@@ -109,7 +109,7 @@
         <div class="export-card att">
           <span class="export-icon">👷</span>
           <h3>出勤月報</h3>
-          <p>選擇月份與人員，匯出打卡時間表與出勤人次表，橫式格式含顏色區分與累計工時。</p>
+          <p>選擇月份與人員，匯出純黑白「考勤明細表」直式格式，含每日上下班、當日時數、出勤/請假天數與月累計總時數。</p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
             <select class="month-select" id="att-export-month" style="margin-bottom:0;"></select>
           </div>
@@ -326,27 +326,17 @@ async function exportAttXLSX() {
   const pickedMembers = allMembers.filter(m => checkedIds.includes(m.id));
 
   const [y, mo] = selMonth.split('-').map(Number);
-  const hols  = loadHolidays().holidays || TW_HOLIDAYS_DEFAULT;
-  const works = loadHolidays().workdays  || {};
+  const hols    = loadHolidays().holidays || TW_HOLIDAYS_DEFAULT;
   const rocYear = y - 1911;
   const DOW_TW  = ['日','一','二','三','四','五','六'];
   const PROJECT = '台中減碳技術園區設備採購帶安裝委託監造技術服務工作';
   const today   = new Date();
   const makeDate= `${y}-${String(mo).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-
-  // 全月日期：只跳過國定假日，六日保留
   const daysInMonth = new Date(y, mo, 0).getDate();
-  const allDays = [];
-  for (let d = 1; d <= daysInMonth; d++) {
-    const ds = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    if (!hols[ds]) allDays.push(ds);
-  }
-  const D = allDays.length;
+  const moStr   = `${y}-${String(mo).padStart(2,'0')}`;
+  const rangeStr= `${moStr}-01 ～ ${moStr}-${String(daysInMonth).padStart(2,'0')}`;
 
-  // 應出勤（週一～五）
-  const workDays = allDays.filter(ds => { const dow = new Date(ds).getDay(); return dow>=1&&dow<=5; });
-  const WD = workDays.length;
-
+  // 假日匯入殘留的 present 記錄視為無效
   function validRec(r) {
     if (r.status==='present' && r.note==='XLS匯入' && hols[r.date]) return false;
     return true;
@@ -359,228 +349,155 @@ async function exportAttXLSX() {
   if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
   const wb = new ExcelJS.Workbook();
   wb.creator = 'DNV監造系統';
+  const ws = wb.addWorksheet(`考勤明細表_${mo}月`);
 
-  // ── 純黑白樣式 ──
-  const thinB = { style:'thin',   color:{ argb:'FF000000' } };
-  const medB  = { style:'medium', color:{ argb:'FF000000' } };
-  const bT = { top:thinB, bottom:thinB, left:thinB, right:thinB };
-  const bM = { top:medB,  bottom:medB,  left:medB,  right:medB  };
-  const bHdr={ top:medB,  bottom:medB,  left:thinB, right:thinB };
+  // ── 純黑白樣式：白底、黑細框、黑字、表頭粗體 ──
+  const FONT = '新細明體';
+  const thin = { style:'thin', color:{ argb:'FF000000' } };
+  const box  = { top:thin, bottom:thin, left:thin, right:thin };
+  const aC   = { horizontal:'center', vertical:'middle', wrapText:true };
+  const aCn  = { horizontal:'center', vertical:'middle', wrapText:false }; // 數字/時間不換行
+  const aL   = { horizontal:'left',   vertical:'middle' };
+  const fnt  = (sz, bold) => ({ name:FONT, size:sz||10, bold:!!bold, color:{ argb:'FF000000' } });
 
-  const fW = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFFFF' } };
-  const fL = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF2F2F2' } };
-  const fM = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFD9D9D9' } };
-  const fD = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF595959' } };
-
-  const fntB = (sz,bold) => ({ name:'Arial', size:sz||10, bold:!!bold, color:{ argb:'FF000000' } });
-  const fntW = (sz,bold) => ({ name:'Arial', size:sz||10, bold:!!bold, color:{ argb:'FFFFFFFF' } });
-  const aC = (wrap) => ({ horizontal:'center', vertical:'middle', wrapText:!!wrap });
-  const aL = () => ({ horizontal:'left', vertical:'middle' });
-
-  function sc(cell, val, font, fill, border, align) {
-    cell.value = val; cell.font = font; cell.fill = fill;
-    cell.border = border; cell.alignment = align;
+  function put(r, c, val, sz, bold, align, border) {
+    const cell = ws.getRow(r).getCell(c);
+    cell.value = val;
+    cell.font = fnt(sz, bold);
+    cell.alignment = align || aC;
+    cell.border = (border === false) ? undefined : box;
+    return cell;
   }
 
-  const hdrMain = (cell, val) => sc(cell, val, fntW(10,true), fD, bM, aC(true));
-  const hdrSub  = (cell, val) => sc(cell, val, fntB(9,true),  fM, bHdr, aC(true));
-  const dataW   = (cell, val, bold) => sc(cell, val, fntB(10,bold), fW, bT, aC());
-  const dataG   = (cell, val, bold) => sc(cell, val, fntB(10,bold), fL, bT, aC());
-  const subCell = (cell, val) => sc(cell, val, fntB(9,false), fL, bT, aL());
-  const sumHdr  = (cell, val) => sc(cell, val, fntB(10,true), fM, bM, aC());
-  const sumVal  = (cell, val) => sc(cell, val, fntB(12,true), fL, bM, aC());
+  // ── 版面：每人佔 4 欄（日期/星期、上班、下班、當日時數），人與人間留 1 欄 ──
+  const PW = 4;                 // 每人欄寬數
+  const GAP = 1;                // 人之間間隔欄
+  const PER_ROW = 3;            // 每列排 3 人（比照附圖）
+  const STRIDE = PW + GAP;      // 每人起始欄間距 = 5
+  const TOTAL_COLS = PER_ROW * PW + (PER_ROW - 1) * GAP; // 14
 
-  // ════════════════════════════════════════════
-  // Sheet 1：打卡時間表
-  // 欄配置：姓名(1)、職稱(2)、日期(3..D+2)、月累計(D+3)
-  // 每人 3 列：到班 / 退班 / 工時
-  // ════════════════════════════════════════════
-  const ws1 = wb.addWorksheet(`打卡時間_${mo}月`);
-  const TOTAL_COL1 = D + 3; // 月累計欄（1-based）
+  // 欄寬
+  for (let g = 0; g < PER_ROW; g++) {
+    const base = 1 + g * STRIDE;
+    ws.getColumn(base    ).width = 9;   // 日期/星期
+    ws.getColumn(base + 1).width = 8;   // 上班
+    ws.getColumn(base + 2).width = 8;   // 下班
+    ws.getColumn(base + 3).width = 10;  // 當日時數
+    if (g < PER_ROW - 1) ws.getColumn(base + 4).width = 2; // 間隔
+  }
 
-  ws1.columns = [
-    { width:9 }, { width:11 },
-    ...allDays.map(ds => ({ width: ([0,6].includes(new Date(ds).getDay())) ? 6 : 7 })),
-    { width:9 }
-  ];
+  // ── 全表大標題 ──
+  ws.getRow(1).height = 26;
+  put(1, 1, '考勤明細表', 16, true, aC, false);
+  ws.mergeCells(1, 1, 1, TOTAL_COLS);
+  ws.getRow(2).height = 16;
+  put(2, 1, `工程名稱：${PROJECT}　　考勤日期：${rangeStr}　　製表：${makeDate}`, 9, false, aL, false);
+  ws.mergeCells(2, 1, 2, TOTAL_COLS);
+  ws.getRow(3).height = 6;
 
-  // 列1 主標題（跨全部欄）
-  ws1.getRow(1).height = 28;
-  sc(ws1.getRow(1).getCell(1),
-    `監造人員出勤打卡時間表　民國 ${rocYear} 年 ${mo} 月`,
-    fntW(13,true), fD, bM, aC());
-  ws1.mergeCells(1, 1, 1, TOTAL_COL1);
+  // 每位人員一個區塊高度 = 6(表頭區) + 天數 + 1(月累計列)
+  const BLOCK_H = 6 + daysInMonth + 1;
+  let groupTopRow = 4;
 
-  // 列2 工程資訊
-  ws1.getRow(2).height = 16;
-  subCell(ws1.getRow(2).getCell(1), `工程名稱：${PROJECT}　　製表：${makeDate}`);
-  ws1.mergeCells(2, 1, 2, TOTAL_COL1);
+  for (let gi = 0; gi < pickedMembers.length; gi += PER_ROW) {
+    const group = pickedMembers.slice(gi, gi + PER_ROW);
+    const top = groupTopRow;
 
-  // 列3 空白
-  ws1.getRow(3).height = 5;
+    group.forEach((mem, idx) => {
+      const base = 1 + idx * STRIDE; // 該人第一欄（1-based）
+      const C0 = base, C1 = base+1, C2 = base+2, C3 = base+3;
 
-  // 列4 欄頭
-  ws1.getRow(4).height = 30;
-  hdrMain(ws1.getRow(4).getCell(1), '姓名');
-  hdrMain(ws1.getRow(4).getCell(2), '職稱');
-  allDays.forEach((ds, di) => {
-    const d   = parseInt(ds.slice(8));
-    const dow = new Date(ds).getDay();
-    const lbl = `${d}\n(${DOW_TW[dow]})`;
-    if (dow===0||dow===6) hdrSub(ws1.getRow(4).getCell(3+di), lbl);
-    else                   hdrMain(ws1.getRow(4).getCell(3+di), lbl);
-  });
-  hdrMain(ws1.getRow(4).getCell(TOTAL_COL1), '月累計\n工時');
+      // 統計
+      let totalMin = 0, presentCnt = 0, leaveCnt = 0;
 
-  // 每人 3 列
-  pickedMembers.forEach((mem, mi) => {
-    const br = 5 + mi * 3; // 起始列（1-based）
-    [0,1,2].forEach(k => ws1.getRow(br+k).height = 19);
+      // 區塊：基本資料
+      put(top,   C0, '部門', 10, true);
+      put(top,   C1, mem.role || '工程部', 10, false);
+      put(top,   C2, '姓名', 10, true);
+      put(top,   C3, mem.name, 10, true);
 
-    // 合併姓名欄（欄1，br ~ br+2）
-    ws1.mergeCells(br, 1, br+2, 1);
-    // 合併月累計欄（TOTAL_COL1，br ~ br+2）
-    ws1.mergeCells(br, TOTAL_COL1, br+2, TOTAL_COL1);
+      put(top+1, C0, '工號', 10, true);
+      put(top+1, C1, mem.empNo || (gi + idx + 1), 10, false);
+      put(top+1, C2, '日期', 10, true);
+      put(top+1, C3, moStr, 10, false);
 
-    // 姓名（合併後只設第一格）
-    sc(ws1.getRow(br).getCell(1), mem.name, fntB(10,true), fL, bT, aC());
-    // 職稱列標（欄2，三列分別是：職稱 / 退班時間 / 當日工時）
-    sc(ws1.getRow(br  ).getCell(2), mem.role||'監造人員', fntB(9,false), fL, bT, aC());
-    sc(ws1.getRow(br+1).getCell(2), '退班時間',           fntB(9,false), fL, bT, aC());
-    sc(ws1.getRow(br+2).getCell(2), '當日工時',           fntB(9,false), fL, bT, aC());
+      // 摘要：只留 出勤(日) / 請假(日) / 月累計時數
+      put(top+2, C0, '出勤(日)', 10, true);
+      put(top+2, C1, '請假(日)', 10, true);
+      put(top+2, C2, '月累計時數', 10, true);
+      ws.mergeCells(top+2, C2, top+2, C3);
+      // 值列（出勤、請假先佔位，月累計最後填）
+      const presentCell = put(top+3, C0, 0, 11, true, aCn);
+      const leaveCell   = put(top+3, C1, 0, 11, true, aCn);
+      const totalCell   = put(top+3, C2, '', 11, true, aCn);
+      ws.mergeCells(top+3, C2, top+3, C3);
 
-    // 每天資料
-    let totalMin = 0;
-    allDays.forEach((ds, di) => {
-      const col = 3 + di; // 1-based
-      const dow = new Date(ds).getDay();
-      const isWE = dow===0||dow===6;
-      const rec  = getMemberRec(mem.id, ds);
-      const tin  = rec ? (rec.timeIn  || '') : '';
-      const tout = rec ? (rec.timeOut || '') : '';
-      const mins = rec ? calcWorkMinutes(rec.timeIn, rec.timeOut) : 0;
-      totalMin  += mins;
+      // 考勤報表小標
+      put(top+4, C0, '考勤報表', 10, true);
+      ws.mergeCells(top+4, C0, top+4, C3);
 
-      const bgEmpty = isWE ? fM : fW;
-      sc(ws1.getRow(br  ).getCell(col), tin ||'—', fntB(9,false), tin ?fW:bgEmpty, bT, aC());
-      sc(ws1.getRow(br+1).getCell(col), tout||'—', fntB(9,false), tout?fW:bgEmpty, bT, aC());
-      sc(ws1.getRow(br+2).getCell(col),
-        mins ? fmtMinutes(mins) : '—',
-        fntB(9, mins>0), mins?fW:bgEmpty, bT, aC());
+      // 日表頭
+      put(top+5, C0, '日期/星期', 9, true);
+      put(top+5, C1, '上班', 9, true);
+      put(top+5, C2, '下班', 9, true);
+      put(top+5, C3, '當日時數', 9, true);
+
+      // 逐日
+      for (let d = 1; d <= daysInMonth; d++) {
+        const r  = top + 5 + d;
+        const ds = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dow = new Date(ds).getDay();
+        const isWE = dow===0 || dow===6;
+        const isHol = !!hols[ds];
+        const rec = getMemberRec(mem.id, ds);
+
+        put(r, C0, `${d}/${DOW_TW[dow]}`, 9, false);
+
+        if (rec && (rec.status==='present' || rec.status==='late')) {
+          const mins = calcWorkMinutes(rec.timeIn, rec.timeOut);
+          totalMin += mins;
+          presentCnt++;
+          put(r, C1, rec.timeIn  || '缺', 9, false, aCn);
+          put(r, C2, rec.timeOut || '缺', 9, false, aCn);
+          put(r, C3, mins ? fmtMinutes(mins) : '', 9, false, aCn);
+        } else if (rec && (rec.status==='leave' || rec.status==='holiday')) {
+          leaveCnt++;
+          put(r, C1, rec.status==='holiday' ? '公假' : '請假', 9, false, aCn);
+          put(r, C2, '', 9, false, aCn);
+          put(r, C3, '', 9, false, aCn);
+        } else {
+          // 無打卡：比照打卡鐘原樣顯示「缺」
+          put(r, C1, '缺', 9, false, aCn);
+          put(r, C2, '缺', 9, false, aCn);
+          put(r, C3, '', 9, false, aCn);
+        }
+      }
+
+      // 回填摘要數值
+      presentCell.value = presentCnt;
+      leaveCell.value   = leaveCnt;
+      totalCell.value   = fmtMinutes(totalMin);
+
+      // 月累計總時數列
+      const sumRow = top + 6 + daysInMonth;
+      put(sumRow, C0, '月累計總時數', 10, true);
+      ws.mergeCells(sumRow, C0, sumRow, C2);
+      put(sumRow, C3, fmtMinutes(totalMin), 11, true, aCn);
     });
 
-    // 月累計（合併後只設第一格）
-    sc(ws1.getRow(br).getCell(TOTAL_COL1),
-      fmtMinutes(totalMin), fntB(11,true), fL, bM, aC());
-  });
-
-  // ════════════════════════════════════════════
-  // Sheet 2：出勤人次表（含六日）
-  // 欄配置：序(1)、姓名(2)、職稱(3)、日期(4..D+3)、實際/預定(D+4)
-  // 移除出勤率%欄
-  // ════════════════════════════════════════════
-  const ws2 = wb.addWorksheet(`出勤人次_${mo}月`);
-  const TOTAL_COL2 = D + 4; // 實際/預定欄（1-based）
-
-  ws2.columns = [
-    { width:4 }, { width:9 }, { width:11 },
-    ...allDays.map(ds => ({ width: ([0,6].includes(new Date(ds).getDay())) ? 5 : 5.5 })),
-    { width:10 }
-  ];
-
-  // 列1 主標題
-  ws2.getRow(1).height = 28;
-  sc(ws2.getRow(1).getCell(1),
-    `監造人員預計出勤人次表　民國 ${rocYear} 年 ${mo} 月`,
-    fntW(13,true), fD, bM, aC());
-  ws2.mergeCells(1, 1, 1, TOTAL_COL2);
-
-  // 列2 工程資訊
-  ws2.getRow(2).height = 16;
-  subCell(ws2.getRow(2).getCell(1), `工程名稱：${PROJECT}　（應出勤工作日共 ${WD} 天）`);
-  ws2.mergeCells(2, 1, 2, TOTAL_COL2);
-
-  // 列3 空白
-  ws2.getRow(3).height = 5;
-
-  // 列4 欄頭
-  ws2.getRow(4).height = 30;
-  hdrMain(ws2.getRow(4).getCell(1), '序');
-  hdrMain(ws2.getRow(4).getCell(2), '姓名');
-  hdrMain(ws2.getRow(4).getCell(3), '職稱');
-  allDays.forEach((ds, di) => {
-    const d   = parseInt(ds.slice(8));
-    const dow = new Date(ds).getDay();
-    const lbl = `${d}\n(${DOW_TW[dow]})`;
-    if (dow===0||dow===6) hdrSub(ws2.getRow(4).getCell(4+di), lbl);
-    else                   hdrMain(ws2.getRow(4).getCell(4+di), lbl);
-  });
-  hdrMain(ws2.getRow(4).getCell(TOTAL_COL2), '實際/預定\n出勤天數');
-
-  // 列5 預計出勤人次
-  ws2.getRow(5).height = 20;
-  sumHdr(ws2.getRow(5).getCell(1), '合計');
-  sc(ws2.getRow(5).getCell(2), '預計出勤人次', fntB(10,true), fM, bM, aC());
-  ws2.mergeCells(5, 2, 5, 3);
-  sc(ws2.getRow(5).getCell(3), '', fntB(10,true), fM, bM, aC());
-  allDays.forEach((ds, di) => {
-    const dow = new Date(ds).getDay();
-    if (dow===0||dow===6) sc(ws2.getRow(5).getCell(4+di), '—', fntB(10,false), fM, bT, aC());
-    else                   sumVal(ws2.getRow(5).getCell(4+di), pickedMembers.length);
-  });
-  sumHdr(ws2.getRow(5).getCell(TOTAL_COL2), '');
-
-  // 人員列
-  pickedMembers.forEach((mem, mi) => {
-    const row = ws2.getRow(6+mi);
-    row.height = 21;
-    dataG(row.getCell(1), mi+1, true);
-    dataG(row.getCell(2), mem.name, true);
-    dataG(row.getCell(3), mem.role||'監造人員', false);
-
-    let attCnt = 0;
-    allDays.forEach((ds, di) => {
-      const rec = getMemberRec(mem.id, ds);
-      const ok  = rec && (rec.status==='present'||rec.status==='late');
-      const dow = new Date(ds).getDay();
-      const isWE= dow===0||dow===6;
-      if (ok && !isWE) attCnt++;
-
-      if (ok)      dataW(row.getCell(4+di), 1, true);
-      else if (isWE) sc(row.getCell(4+di), '—', fntB(9,false), fM, bT, aC());
-      else           dataW(row.getCell(4+di), 0, false);
-    });
-
-    // 實際/預定
-    sc(row.getCell(TOTAL_COL2), `${attCnt}/${WD}`, fntB(11,true), fL, bM, aC());
-  });
-
-  // 當日合計列
-  const sumIdx = 6 + pickedMembers.length;
-  ws2.getRow(sumIdx).height = 23;
-  sumHdr(ws2.getRow(sumIdx).getCell(1), '合計');
-  sc(ws2.getRow(sumIdx).getCell(2), '當日出勤人次', fntB(10,true), fM, bM, aC());
-  ws2.mergeCells(sumIdx, 2, sumIdx, 3);
-  sc(ws2.getRow(sumIdx).getCell(3), '', fntB(10,true), fM, bM, aC());
-
-  allDays.forEach((ds, di) => {
-    const cnt = pickedMembers.filter(mem => {
-      const r = getMemberRec(mem.id, ds);
-      return r && (r.status==='present'||r.status==='late');
-    }).length;
-    const dow = new Date(ds).getDay();
-    const isWE= dow===0||dow===6;
-    if (isWE && cnt===0) sc(ws2.getRow(sumIdx).getCell(4+di), '—', fntB(9,false), fM, bT, aC());
-    else                  sumVal(ws2.getRow(sumIdx).getCell(4+di), cnt);
-  });
-  sumHdr(ws2.getRow(sumIdx).getCell(TOTAL_COL2), '');
+    // 設定該組所有列的高度
+    for (let r = top; r < top + BLOCK_H; r++) {
+      if (!ws.getRow(r).height) ws.getRow(r).height = 16;
+    }
+    groupTopRow = top + BLOCK_H + 1; // 組間空一列
+  }
 
   // ── 輸出 ──
   const buf  = await wb.xlsx.writeBuffer();
   const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = `監造出勤月報_${rocYear}年${mo}月.xlsx`;
+  a.href = url; a.download = `考勤明細表_${rocYear}年${mo}月.xlsx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
