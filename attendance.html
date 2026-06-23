@@ -708,10 +708,13 @@ function importFromDetailSheets(wb, sheetNames) {
         // 找不到精確比對，再試去除空白後比對
         m = members.find(x => x.name.replace(/\s/g,'') === name.replace(/\s/g,''));
       }
+      const empNo = String(raw[3][baseCol + 9] || '').trim(); // 工號（列4）
       if (!m) {
         const dept = String(raw[2][baseCol + 1] || '').trim();
-        m = { id:'m'+uid(), name, role: dept || '監造人員', active:true };
+        m = { id:'m'+uid(), name, role: dept || '監造人員', empNo, active:true };
         members.push(m);
+      } else if (empNo && !m.empNo) {
+        m.empNo = empNo; // 補上既有人員缺少的工號
       }
 
       // 資料從列12開始（0-based index 11）
