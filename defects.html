@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>改善事項追蹤 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── 改善事項通知單 表格式版面 ── */
+.d-table { width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border); }
+.d-th { background:var(--dnv-dark-blue);color:#fff;font-size:11px;font-weight:700;padding:10px 12px;text-align:left;letter-spacing:.3px;white-space:nowrap; }
+.d-cell { padding:10px 12px;border-bottom:1px solid var(--border-light);vertical-align:middle; }
+.d-row:hover .d-cell { background:#F8F9FF; }
+.d-row-closed .d-cell { opacity:.7; }
+.d-st-open    { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEE2E2;color:#991B1B;white-space:nowrap; }
+.d-st-replied { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEF3C7;color:#92400E;white-space:nowrap; }
+.d-st-recheck { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DBEAFE;color:#1E40AF;white-space:nowrap; }
+.d-st-closed  { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DCFCE7;color:#166534;white-space:nowrap; }
+.d-overdue { font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FEE2E2;color:#991B1B;margin-left:4px; }
+.d-soon    { font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FEF3C7;color:#92400E;margin-left:4px; }
+.d-tag-checkpoint { font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--c-purple-bg);color:var(--c-purple);margin-left:6px;vertical-align:middle; }
+.d-chip { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-right:4px; }
+.d-chip-open    { background:#FEE2E2;color:#991B1B; }
+.d-chip-replied { background:#FEF3C7;color:#92400E; }
+.d-chip-recheck { background:#DBEAFE;color:#1E40AF; }
+.d-chip-closed  { background:#DCFCE7;color:#166534; }
+/* 開立方式 標籤/頁籤 */
+.d-src-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;white-space:nowrap; }
+.d-src-utility    { background:#E0E7FF;color:#3730A3; }
+.d-src-supervisor { background:#FCE7F3;color:#9D174D; }
+.d-src-tabs { display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap; }
+.d-src-tab { font-family:inherit;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
+.d-src-tab:hover { background:var(--border-light); }
+.d-src-tab.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
+.d-src-tab .cnt { opacity:.75;font-weight:500;margin-left:2px; }
+/* 展開詳細面板 */
+.d-detail-panel { background:linear-gradient(135deg,#f8faff 0%,#f4f3ef 100%);border-top:2px solid var(--c-blue-border);padding:16px 20px;display:flex;flex-direction:column;gap:12px;animation:slideDown .18s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+.d-detail-section { background:var(--surface);border-radius:var(--radius-sm);padding:10px 12px;border:1px solid var(--border-light); }
+.d-detail-label   { font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px; }
+.d-detail-content { font-size:13px;color:var(--text-primary);line-height:1.6; }
+.d-notes-area { width:100%;font-family:inherit;font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);resize:vertical;min-height:52px;outline:none;color:var(--text-primary);margin-top:4px; }
+.d-notes-area:focus { border-color:var(--text-primary);background:#fff; }
+.notes-saved-hint { position:absolute;bottom:18px;right:22px;font-size:10px;color:var(--c-green);font-weight:600;pointer-events:none;display:none; }
+.remind-banner { background:var(--c-amber-bg);border:1px solid var(--c-amber-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:14px;font-size:13px;color:#78350F;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.btn-status { font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s; }
+.btn-status:hover { background:var(--border-light); }
+.btn-status.active-open    { background:#FEE2E2;color:#991B1B;border-color:#fecaca; }
+.btn-status.active-replied { background:#FEF3C7;color:#92400E;border-color:#fde68a; }
+.btn-status.active-recheck { background:#DBEAFE;color:#1E40AF;border-color:#bfdbfe; }
+.btn-status.active-closed  { background:#DCFCE7;color:#166534;border-color:#bbf7d0; }
+/* Modal extra */
+.modal-section { background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light); }
+.modal-section-title { font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px; }
+@media(max-width:767px) {
+  .d-table { min-width:600px;font-size:11px; }
+  .d-th,.d-cell { padding:8px 8px; }
+  .d-detail-panel { padding:12px 14px; }
+  .d-detail-panel > div[style*="grid"] { grid-template-columns:1fr!important; }
+}
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+<div class="layout">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="timeline.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 時間軸</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="tab-panel">
+      <div class="page-header">
+        <h2>改善事項通知單追蹤</h2>
+        <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增改善事項通知單</button>
+      </div>
+      <div id="defect-remind-banner"></div>
+      <div id="defect-src-tabs" class="d-src-tabs"></div>
+      <div id="defect-count" style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;"></div>
+      <div style="overflow-x:auto;"><div id="defects-list"></div></div>
+    </div>
+  </div>
+</div>
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+
+<!-- 改善事項 Modal -->
+<div class="modal-overlay" id="defect-modal" style="display:none">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header"><h3 id="dm-modal-title">新增改善事項通知單</h3><button class="modal-close" onclick="closeDefectModal()">×</button></div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">基本資訊</div>
+        <div class="field-row">
+          <div class="field"><label>通知單標號</label><input type="text" id="dm-no" placeholder="例：10490817-0005"></div>
+          <div class="field"><label>開立日期</label><input type="date" id="dm-date"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>開立方式</label>
+            <select id="dm-source"><option value="supervisor">📝 監造紙本開立</option><option value="utility">💻 台電電子系統</option></select>
+          </div>
+          <div class="field"><label>開立時機</label>
+            <select id="dm-occasion"><option value="random">隨機抽查</option><option value="checkpoint">檢驗停留點</option></select>
+          </div>
+        </div>
+        <div class="field"><label>查驗報告編號（選填）</label><input type="text" id="dm-report-no" placeholder="停留點才需填寫"></div>
+        <div class="field"><label>改善期限</label><input type="date" id="dm-deadline"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">改善事項說明</div>
+        <div class="field"><textarea id="dm-title" placeholder="描述改善事項內容" style="min-height:72px;"></textarea></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">改善追蹤</div>
+        <div class="field"><label>目前狀態</label>
+          <select id="dm-status">
+            <option value="open">未結案（待承商改善）</option>
+            <option value="replied">承商已回覆改善</option>
+            <option value="recheck">複驗中</option>
+            <option value="closed">已結案（複驗合格）</option>
+          </select>
+        </div>
+        <div class="field"><label>改善經過</label><textarea id="dm-progress" style="min-height:56px;" placeholder="承商說明改善過程…"></textarea></div>
+        <div class="field"><label>改善結果判定</label>
+          <select id="dm-result">
+            <option value="">—（尚未判定）</option>
+            <option value="pass">✅ 複驗合格</option>
+            <option value="fail">❌ 複驗不合格</option>
+            <option value="partial">⚠️ 部分合格</option>
+          </select>
+        </div>
+        <div class="field"><label>監造備註（選填）</label><textarea id="dm-notes" style="min-height:48px;" placeholder="監造追蹤記錄…"></textarea></div>
+      </div>
+      <div style="background:var(--c-amber-bg);border-radius:8px;padding:10px 12px;border:1px solid var(--c-amber-border);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:14px;">🔔</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#78350F;font-weight:600;flex:1;">
+          <input type="checkbox" id="dm-remind" checked style="accent-color:var(--c-amber);">
+          改善期限前
+          <select id="dm-remind-days" style="font-family:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--c-amber-border);border-radius:4px;background:#fff;">
+            <option value="3">3</option><option value="5" selected>5</option><option value="7">7</option><option value="10">10</option>
+          </select>
+          天顯示催件提醒
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn-modal" id="dm-delete-btn" style="display:none;color:var(--c-red);border-color:var(--c-red-border);background:var(--c-red-bg);" onclick="deleteDefectFromModal()">刪除</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-modal" onclick="closeDefectModal()">取消</button>
+        <button class="btn-modal primary" onclick="saveDefect()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-confirm" id="toast-confirm">
+  <span id="toast-msg">確定要刪除？</span>
+  <div style="display:flex;gap:8px;">
+    <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+let defects = [];
+let editingDefectId = null;
+let defectSourceFilter = 'all'; // all | supervisor | utility
+const defectSaveTimer = { t:null };
+
+const defectSave = makeModuleSave('construction_defects_v1','defects',()=>defects);
+
+async function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('改善事項追蹤');
+  initSidebarState();
+  renderNav('defects');
+  const data = await loadAllData();
+  defects = data.defects;
+  migrateDefects();
+  renderDefects();
+}
+
+function migrateDefects() {
+  defects.forEach(d => {
+    if (!d.occasion) d.occasion = 'random';
+    if (d.remind===undefined) d.remind = true;
+    if (!d.remindDays) d.remindDays = 5;
+    if (!d.source) d.source = 'supervisor'; // 舊資料預設為監造紙本開立
+  });
+}
+
+function setDefectSourceFilter(f) {
+  defectSourceFilter = f;
+  renderDefects();
+}
+
+function renderDefects() {
+  updateRemindBanner();
+
+  const srcTabsEl = document.getElementById('defect-src-tabs');
+  if (srcTabsEl) {
+    const allN  = defects.length;
+    const supN  = defects.filter(d=>d.source==='supervisor').length;
+    const utiN  = defects.filter(d=>d.source==='utility').length;
+    srcTabsEl.innerHTML = `
+      <button class="d-src-tab${defectSourceFilter==='all'?' active':''}" onclick="setDefectSourceFilter('all')">全部合併檢視<span class="cnt">(${allN})</span></button>
+      <button class="d-src-tab${defectSourceFilter==='supervisor'?' active':''}" onclick="setDefectSourceFilter('supervisor')">📝 監造紙本開立<span class="cnt">(${supN})</span></button>
+      <button class="d-src-tab${defectSourceFilter==='utility'?' active':''}" onclick="setDefectSourceFilter('utility')">💻 台電電子系統<span class="cnt">(${utiN})</span></button>`;
+  }
+
+  const visible = defectSourceFilter==='all' ? defects : defects.filter(d=>d.source===defectSourceFilter);
+
+  const countEl = document.getElementById('defect-count');
+  if (countEl) {
+    const openN    = visible.filter(d=>d.status==='open').length;
+    const repliedN = visible.filter(d=>d.status==='replied').length;
+    const recheckN = visible.filter(d=>d.status==='recheck').length;
+    const closedN  = visible.filter(d=>d.status==='closed').length;
+    countEl.innerHTML = `<span style="font-size:11px;color:var(--text-muted);">共 ${visible.length} 筆　</span>
+      ${openN?`<span class="d-chip d-chip-open">未結案 ${openN}</span>`:''}
+      ${repliedN?`<span class="d-chip d-chip-replied">已回覆 ${repliedN}</span>`:''}
+      ${recheckN?`<span class="d-chip d-chip-recheck">複驗中 ${recheckN}</span>`:''}
+      ${closedN?`<span class="d-chip d-chip-closed">已結案 ${closedN}</span>`:''}`;
+  }
+
+  const today = todayStr();
+  const sMap  = { open:'未結案', replied:'承商已回覆', recheck:'複驗中', closed:'已結案' };
+  const rMap  = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
+  const srcMap = { supervisor:'📝 監造紙本', utility:'💻 台電電子系統' };
+  const sorted = visible.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  const rows = sorted.map(d => {
+    const daysLeft = d.deadline ? Math.ceil((new Date(d.deadline)-new Date(today))/86400000) : null;
+    let deadlineCell = d.deadline||'—', deadlineStyle='';
+    if (d.deadline && d.status!=='closed') {
+      if (daysLeft<0) { deadlineCell=d.deadline+` <span class="d-overdue">逾期 ${Math.abs(daysLeft)} 天</span>`; deadlineStyle='color:var(--c-red);font-weight:600;'; }
+      else if (daysLeft<=(d.remindDays||5)) { deadlineCell=d.deadline+` <span class="d-soon">剩 ${daysLeft} 天</span>`; deadlineStyle='color:var(--c-amber);font-weight:600;'; }
+    }
+    const statusCls = { open:'d-st-open', replied:'d-st-replied', recheck:'d-st-recheck', closed:'d-st-closed' }[d.status]||'d-st-open';
+    const doneMark  = d.status==='closed' ? '<span style="color:var(--c-green);font-size:16px;">☑</span>' : '<span style="color:var(--border);font-size:16px;">☐</span>';
+
+    return `<tr class="d-row${d.status==='closed'?' d-row-closed':''}" onclick="toggleDefectDetail('${d.id}')" style="cursor:pointer;">
+      <td class="d-cell" style="font-family:monospace;font-size:11px;white-space:nowrap;color:var(--text-muted);">${esc(d.no||'—')}</td>
+      <td class="d-cell" style="font-weight:600;font-size:13px;max-width:420px;">${esc(d.title)}${d.occasion==='checkpoint'?'<span class="d-tag-checkpoint">停留點</span>':''}<span class="d-src-tag d-src-${d.source||'supervisor'}">${srcMap[d.source]||srcMap.supervisor}</span></td>
+      <td class="d-cell" style="white-space:nowrap;font-size:12px;">${d.date||'—'}</td>
+      <td class="d-cell" style="white-space:nowrap;font-size:12px;${deadlineStyle}">${deadlineCell}</td>
+      <td class="d-cell" style="text-align:center;"><span class="${statusCls}">${sMap[d.status]||d.status}</span></td>
+      <td class="d-cell" style="text-align:center;">${doneMark}</td>
+      <td class="d-cell" style="font-size:11px;color:var(--text-muted);max-width:200px;">${esc((d.result?rMap[d.result]+'　':'')+(d.notes||'').slice(0,30)+(d.notes&&d.notes.length>30?'…':''))}</td>
+    </tr>
+    <tr id="d-detail-${d.id}" style="display:none;">
+      <td colspan="7" style="padding:0;border-bottom:2px solid var(--c-blue-border);">
+        <div class="d-detail-panel">
+          <div class="d-detail-section">
+            <div class="d-detail-label">狀態</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <button class="btn-status${d.status==='open'?' active-open':''}" data-id="${d.id}" data-status="open" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">未結案</button>
+              <button class="btn-status${d.status==='replied'?' active-replied':''}" data-id="${d.id}" data-status="replied" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">承商已回覆</button>
+              <button class="btn-status${d.status==='recheck'?' active-recheck':''}" data-id="${d.id}" data-status="recheck" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">複驗中</button>
+              <button class="btn-status${d.status==='closed'?' active-closed':''}" data-id="${d.id}" data-status="closed" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">已結案</button>
+              <button class="btn-sm edit" style="margin-left:auto;" data-id="${d.id}" onclick="event.stopPropagation();openEditDefectModal(this.dataset.id)">✏️ 編輯完整資訊</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="d-detail-section"><div class="d-detail-label">改善事項說明</div><div class="d-detail-content">${esc(d.title)}</div></div>
+            ${d.progress?`<div class="d-detail-section"><div class="d-detail-label">改善經過</div><div class="d-detail-content">${esc(d.progress).split('\n').join('<br>')}</div></div>`:'<div></div>'}
+          </div>
+          ${(d.result||d.notes)?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            ${d.result?`<div class="d-detail-section"><div class="d-detail-label">改善結果判定</div><div style="font-size:13px;font-weight:700;">${esc(rMap[d.result]||d.result)}</div></div>`:'<div></div>'}
+            ${d.notes?`<div class="d-detail-section"><div class="d-detail-label">監造備註</div><div class="d-detail-content">${esc(d.notes).split('\n').join('<br>')}</div></div>`:'<div></div>'}
+          </div>`:''}
+          <div class="d-detail-section" onclick="event.stopPropagation();" style="position:relative;">
+            <div class="d-detail-label">快速備註（即時儲存）</div>
+            <textarea class="d-notes-area" data-id="${d.id}" oninput="saveDefectNotes(this.dataset.id,this.value)" placeholder="監造追蹤備註…">${esc(d.notes||'')}</textarea>
+            <span class="notes-saved-hint" id="hint-${d.id}">已儲存 ✓</span>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('defects-list').innerHTML = sorted.length
+    ? `<table class="d-table"><thead><tr>
+        <th class="d-th" style="width:130px;">通知單標號</th>
+        <th class="d-th">改善事項說明</th>
+        <th class="d-th" style="width:100px;">開立日期</th>
+        <th class="d-th" style="width:130px;">改善期限</th>
+        <th class="d-th" style="width:90px;text-align:center;">狀態</th>
+        <th class="d-th" style="width:50px;text-align:center;">完成</th>
+        <th class="d-th" style="width:200px;">備註</th>
+      </tr></thead><tbody>${rows}</tbody></table>`
+    : `<div class="empty">${defectSourceFilter==='all'?'目前沒有改善事項通知單記錄':'此分類目前沒有記錄'}</div>`;
+}
+
+function toggleDefectDetail(id) {
+  const row = document.getElementById('d-detail-'+id); if (!row) return;
+  const isOpen = row.style.display!=='none';
+  defects.forEach(d => { const r=document.getElementById('d-detail-'+d.id); if(r) r.style.display='none'; });
+  if (!isOpen) row.style.display='table-row';
+}
+
+function updateRemindBanner() {
+  const today = todayStr();
+  const ba = document.getElementById('defect-remind-banner'); if (!ba) return;
+  const items = defects.filter(d => {
+    if (d.status==='closed'||!d.deadline||!d.remind) return false;
+    return Math.ceil((new Date(d.deadline)-new Date(today))/86400000) <= (d.remindDays||5);
+  });
+  ba.innerHTML = items.map(d => {
+    const dl = Math.ceil((new Date(d.deadline)-new Date(today))/86400000);
+    const icon = dl<0?'🔴':dl<=3?'🟡':'🟠';
+    const msg  = dl<0?`逾期 ${Math.abs(dl)} 天`:dl===0?'今天到期！':`還剩 ${dl} 天`;
+    const srcTag = d.source==='utility' ? '<span class="d-src-tag d-src-utility">💻 台電</span>' : '<span class="d-src-tag d-src-supervisor">📝 監造</span>';
+    return `<div class="remind-banner">🔔
+      <div style="flex:1;min-width:0;"><strong>${esc(d.no||'—')}</strong>${srcTag}　${esc(d.title.slice(0,40))}${d.title.length>40?'…':''}<br>
+      <span style="font-size:11px;">期限：${d.deadline}　${icon} <strong>${msg}</strong></span></div>
+      <button class="btn-sm edit" data-id="${d.id}" onclick="openEditDefectModal(this.dataset.id)">查看</button>
+    </div>`;
+  }).join('');
+}
+
+function setDefectStatus(id, status) {
+  const d = defects.find(x=>x.id===id); if (!d) return;
+  d.status = status;
+  defectSave(); renderDefects();
+}
+function saveDefectNotes(id, val) {
+  const d = defects.find(x=>x.id===id); if (!d) return;
+  d.notes = val; defectSave();
+  const hint = document.getElementById('hint-'+id);
+  if (hint) { hint.style.display='block'; clearTimeout(hint._t); hint._t=setTimeout(()=>{hint.style.display='none';},1500); }
+}
+
+// Modal
+function openAddDefectModal() {
+  editingDefectId = null;
+  document.getElementById('dm-modal-title').textContent = '新增改善事項通知單';
+  ['dm-no','dm-report-no','dm-title','dm-progress','dm-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dm-date').value     = todayStr();
+  document.getElementById('dm-source').value   = defectSourceFilter==='utility' ? 'utility' : 'supervisor';
+  document.getElementById('dm-occasion').value = 'random';
+  document.getElementById('dm-deadline').value = '';
+  document.getElementById('dm-status').value   = 'open';
+  document.getElementById('dm-result').value   = '';
+  document.getElementById('dm-remind').checked = true;
+  document.getElementById('dm-remind-days').value = '5';
+  document.getElementById('dm-delete-btn').style.display = 'none';
+  document.getElementById('defect-modal').style.display = 'flex';
+}
+function openEditDefectModal(id) {
+  const d = defects.find(x=>x.id===id); if (!d) return;
+  editingDefectId = id;
+  document.getElementById('dm-modal-title').textContent = '編輯改善事項通知單';
+  document.getElementById('dm-no').value          = d.no||'';
+  document.getElementById('dm-date').value        = d.date||'';
+  document.getElementById('dm-source').value      = d.source||'supervisor';
+  document.getElementById('dm-occasion').value    = d.occasion||'random';
+  document.getElementById('dm-report-no').value   = d.reportNo||'';
+  document.getElementById('dm-deadline').value    = d.deadline||'';
+  document.getElementById('dm-title').value       = d.title||'';
+  document.getElementById('dm-status').value      = d.status||'open';
+  document.getElementById('dm-progress').value    = d.progress||'';
+  document.getElementById('dm-result').value      = d.result||'';
+  document.getElementById('dm-notes').value       = d.notes||'';
+  document.getElementById('dm-remind').checked    = d.remind!==false;
+  document.getElementById('dm-remind-days').value = d.remindDays||'5';
+  document.getElementById('dm-delete-btn').style.display = 'block';
+  document.getElementById('defect-modal').style.display = 'flex';
+}
+function closeDefectModal() { document.getElementById('defect-modal').style.display='none'; }
+async function deleteDefectFromModal() {
+  if (!editingDefectId) return;
+  if (!await toastConfirm('確定要刪除此改善事項通知單？')) return;
+  defects = defects.filter(d=>d.id!==editingDefectId);
+  defectSave(); closeDefectModal(); renderDefects();
+}
+function saveDefect() {
+  const title = document.getElementById('dm-title').value.trim();
+  if (!title) { alert('請填寫改善事項說明'); return; }
+  const payload = {
+    no:         document.getElementById('dm-no').value.trim(),
+    date:       document.getElementById('dm-date').value,
+    source:     document.getElementById('dm-source').value,
+    occasion:   document.getElementById('dm-occasion').value,
+    reportNo:   document.getElementById('dm-report-no').value.trim(),
+    deadline:   document.getElementById('dm-deadline').value,
+    title,
+    status:     document.getElementById('dm-status').value,
+    progress:   document.getElementById('dm-progress').value.trim(),
+    result:     document.getElementById('dm-result').value,
+    notes:      document.getElementById('dm-notes').value.trim(),
+    remind:     document.getElementById('dm-remind').checked,
+    remindDays: parseInt(document.getElementById('dm-remind-days').value)||5,
+  };
+  if (editingDefectId) {
+    const idx = defects.findIndex(d=>d.id===editingDefectId);
+    if (idx!==-1) defects[idx] = { ...defects[idx], ...payload };
+  } else {
+    defects.push({ id:uid(), ...payload });
+  }
+  defectSave(); closeDefectModal(); renderDefects();
+}
+
+init();
+</script>
+</body>
+</html>
