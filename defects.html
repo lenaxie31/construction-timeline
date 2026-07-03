@@ -52,6 +52,20 @@
 /* Modal extra */
 .modal-section { background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light); }
 .modal-section-title { font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px; }
+/* 台電紀錄詳細資訊 */
+.d-ut-badge { font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:#E0E7FF;color:#3730A3;margin-left:6px; }
+/* 照片上傳 */
+.d-photo-group { margin-bottom:10px; }
+.d-photo-group-title { font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:6px; }
+.d-photo-grid { display:flex;flex-wrap:wrap;gap:8px; }
+.d-photo-thumb { position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg); }
+.d-photo-thumb img { width:100%;height:100%;object-fit:cover;cursor:pointer; }
+.d-photo-thumb .d-photo-del { position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;line-height:18px;text-align:center;cursor:pointer;padding:0; }
+.d-photo-thumb .d-photo-status { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);font-size:10px;color:var(--text-muted); }
+.d-photo-add-btn { width:76px;height:76px;border-radius:8px;border:1.5px dashed var(--border);background:var(--bg);color:var(--text-muted);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s; }
+.d-photo-add-btn:hover { background:var(--border-light); }
+.d-photo-view-grid { display:flex;flex-wrap:wrap;gap:6px;margin-top:4px; }
+.d-photo-view-grid img { width:56px;height:56px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--border); }
 @media(max-width:767px) {
   .d-table { min-width:600px;font-size:11px; }
   .d-th,.d-cell { padding:8px 8px; }
@@ -100,7 +114,7 @@
         </div>
         <div class="field-row">
           <div class="field"><label>開立方式</label>
-            <select id="dm-source"><option value="supervisor">📝 監造紙本開立</option><option value="utility">💻 台電電子系統</option></select>
+            <select id="dm-source" onchange="toggleUtilitySection()"><option value="supervisor">📝 監造紙本開立</option><option value="utility">💻 台電電子系統</option></select>
           </div>
           <div class="field"><label>開立時機</label>
             <select id="dm-occasion"><option value="random">隨機抽查</option><option value="checkpoint">檢驗停留點</option></select>
@@ -108,6 +122,37 @@
         </div>
         <div class="field"><label>查驗報告編號（選填）</label><input type="text" id="dm-report-no" placeholder="停留點才需填寫"></div>
         <div class="field"><label>改善期限</label><input type="date" id="dm-deadline"></div>
+      </div>
+      <div class="modal-section" id="dm-utility-section" style="display:none;">
+        <div class="modal-section-title">台電紀錄詳細資訊<span class="d-ut-badge">💻 台電電子系統</span></div>
+        <div class="field-row">
+          <div class="field"><label>督導/陪同督導人員</label><input type="text" id="dm-ut-supervisors" placeholder="例：涂閔祥、蔡家榮、張瑞麟"></div>
+          <div class="field"><label>會同人員</label><input type="text" id="dm-ut-companion" placeholder="例：碳集公司 蔡正偉主任"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>督導地點</label><input type="text" id="dm-ut-site" placeholder="例：台中減碳技術園區(A標)工地"></div>
+          <div class="field"><label>標案名稱</label><input type="text" id="dm-ut-bidname" placeholder="標案全名"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>缺失類別</label><input type="text" id="dm-ut-category" placeholder="例：施工單位"></div>
+          <div class="field"><label>缺失項目</label><input type="text" id="dm-ut-item" placeholder="例：環境生態保育"></div>
+        </div>
+        <div class="field"><label>缺失編號</label><input type="text" id="dm-ut-code" placeholder="例：5.05.09 垃圾及廢棄物未清理…"></div>
+        <div class="field"><label>建議事項（選填）</label><textarea id="dm-ut-suggestion" style="min-height:44px;"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label>改善部門</label><input type="text" id="dm-ut-dept" placeholder="例：委外監造及工安協助-機械第一分隊"></div>
+          <div class="field"><label>實際完成日期</label><input type="date" id="dm-ut-complete-date"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>改善人員</label><input type="text" id="dm-ut-improver" placeholder="改善負責人"></div>
+          <div class="field"><label>審查人員</label><input type="text" id="dm-ut-reviewer" placeholder="審查負責人"></div>
+        </div>
+        <div class="field"><label>管考追蹤狀態</label>
+          <select id="dm-ut-track">
+            <option value="tracking">追蹤中</option>
+            <option value="released">解除追蹤</option>
+          </select>
+        </div>
       </div>
       <div class="modal-section">
         <div class="modal-section-title">改善事項說明</div>
@@ -124,6 +169,15 @@
           </select>
         </div>
         <div class="field"><label>改善經過</label><textarea id="dm-progress" style="min-height:56px;" placeholder="承商說明改善過程…"></textarea></div>
+        <div class="field">
+          <label>改善前後照片</label>
+          <div id="dm-photo-before" class="d-photo-group"></div>
+          <div id="dm-photo-during" class="d-photo-group"></div>
+          <div id="dm-photo-after" class="d-photo-group"></div>
+          <input type="file" id="dm-photo-file-before" accept="image/*" multiple style="display:none;" onchange="handlePhotoFileSelect('before',this.files)">
+          <input type="file" id="dm-photo-file-during" accept="image/*" multiple style="display:none;" onchange="handlePhotoFileSelect('during',this.files)">
+          <input type="file" id="dm-photo-file-after"  accept="image/*" multiple style="display:none;" onchange="handlePhotoFileSelect('after',this.files)">
+        </div>
         <div class="field"><label>改善結果判定</label>
           <select id="dm-result">
             <option value="">—（尚未判定）</option>
@@ -172,6 +226,7 @@ if (!requireAuth()) throw new Error('not auth');
 let defects = [];
 let editingDefectId = null;
 let defectSourceFilter = 'all'; // all | supervisor | utility
+let modalPhotos = { before:[], during:[], after:[] };
 const defectSaveTimer = { t:null };
 
 const defectSave = makeModuleSave('construction_defects_v1','defects',()=>defects);
@@ -198,6 +253,83 @@ function migrateDefects() {
 function setDefectSourceFilter(f) {
   defectSourceFilter = f;
   renderDefects();
+}
+
+function toggleUtilitySection() {
+  const isUtility = document.getElementById('dm-source').value === 'utility';
+  document.getElementById('dm-utility-section').style.display = isUtility ? 'block' : 'none';
+}
+
+// ── 照片上傳（改善前/中/後）──
+function compressImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('圖片讀取失敗'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('檔案讀取失敗'));
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadPhotoToCloud(dataUrl, filename) {
+  if (!IMAGE_API_URL) throw new Error('尚未設定照片雲端網址，請先完成 Apps Script 部署');
+  const base64 = dataUrl.split(',')[1];
+  const res  = await fetch(IMAGE_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ data: base64, mimeType: 'image/jpeg', filename })
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || '上傳失敗');
+  return json.url;
+}
+async function handlePhotoFileSelect(category, files) {
+  const arr = Array.from(files);
+  for (const file of arr) {
+    const tempId = uid();
+    modalPhotos[category].push({ id: tempId, url: '', uploading: true });
+    renderPhotoGroups();
+    try {
+      const dataUrl = await compressImage(file, 1200, 0.7);
+      const url = await uploadPhotoToCloud(dataUrl, category + '_' + Date.now() + '.jpg');
+      const item = modalPhotos[category].find(p => p.id === tempId);
+      if (item) { item.url = url; item.uploading = false; }
+    } catch (err) {
+      modalPhotos[category] = modalPhotos[category].filter(p => p.id !== tempId);
+      alert('照片上傳失敗：' + err.message);
+    }
+    renderPhotoGroups();
+  }
+  document.getElementById('dm-photo-file-' + category).value = '';
+}
+function deletePhoto(category, idx) {
+  modalPhotos[category].splice(idx, 1);
+  renderPhotoGroups();
+}
+function renderPhotoGroups() {
+  const labels = { before:'📷 改善前', during:'📷 改善中', after:'📷 改善後' };
+  ['before','during','after'].forEach(cat => {
+    const el = document.getElementById('dm-photo-' + cat);
+    if (!el) return;
+    const thumbs = modalPhotos[cat].map((p, idx) => {
+      if (p.uploading) return `<div class="d-photo-thumb"><div class="d-photo-status">上傳中…</div></div>`;
+      return `<div class="d-photo-thumb"><img src="${p.url}" onclick="window.open('${p.url}','_blank')" alt=""><button type="button" class="d-photo-del" onclick="deletePhoto('${cat}',${idx})">×</button></div>`;
+    }).join('');
+    el.innerHTML = `<div class="d-photo-group-title">${labels[cat]}</div><div class="d-photo-grid">${thumbs}<button type="button" class="d-photo-add-btn" onclick="document.getElementById('dm-photo-file-${cat}').click()">＋</button></div>`;
+  });
 }
 
 function renderDefects() {
@@ -275,6 +407,7 @@ function renderDefects() {
             ${d.result?`<div class="d-detail-section"><div class="d-detail-label">改善結果判定</div><div style="font-size:13px;font-weight:700;">${esc(rMap[d.result]||d.result)}</div></div>`:'<div></div>'}
             ${d.notes?`<div class="d-detail-section"><div class="d-detail-label">監造備註</div><div class="d-detail-content">${esc(d.notes).split('\n').join('<br>')}</div></div>`:'<div></div>'}
           </div>`:''}
+          ${buildPhotoDetailHtml(d)}
           <div class="d-detail-section" onclick="event.stopPropagation();" style="position:relative;">
             <div class="d-detail-label">快速備註（即時儲存）</div>
             <textarea class="d-notes-area" data-id="${d.id}" oninput="saveDefectNotes(this.dataset.id,this.value)" placeholder="監造追蹤備註…">${esc(d.notes||'')}</textarea>
@@ -296,6 +429,36 @@ function renderDefects() {
         <th class="d-th" style="width:200px;">備註</th>
       </tr></thead><tbody>${rows}</tbody></table>`
     : `<div class="empty">${defectSourceFilter==='all'?'目前沒有改善事項通知單記錄':'此分類目前沒有記錄'}</div>`;
+}
+
+function buildPhotoDetailHtml(d) {
+  const groups = [
+    { key:'photosBefore', label:'📷 改善前' },
+    { key:'photosDuring', label:'📷 改善中' },
+    { key:'photosAfter',  label:'📷 改善後' },
+  ].filter(g => Array.isArray(d[g.key]) && d[g.key].length);
+  const utFields = [
+    ['督導/陪同督導人員', d.utSupervisors], ['會同人員', d.utCompanion],
+    ['督導地點', d.utSite], ['標案名稱', d.utBidName],
+    ['缺失類別', d.utCategory], ['缺失項目', d.utItem], ['缺失編號', d.utCode],
+    ['建議事項', d.utSuggestion], ['改善部門', d.utDept],
+    ['實際完成日期', d.utCompleteDate], ['改善人員', d.utImprover], ['審查人員', d.utReviewer],
+    ['管考追蹤', d.utTrack==='released'?'✅ 解除追蹤':(d.utTrack?'🔵 追蹤中':'')],
+  ].filter(([,v]) => v);
+  let html = '';
+  if (d.source==='utility' && utFields.length) {
+    html += `<div class="d-detail-section"><div class="d-detail-label">台電紀錄詳細資訊</div>
+      <div class="d-detail-content" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;">
+        ${utFields.map(([k,v])=>`<div><span style="color:var(--text-muted);">${k}：</span>${esc(v)}</div>`).join('')}
+      </div></div>`;
+  }
+  if (groups.length) {
+    html += `<div class="d-detail-section">
+      ${groups.map(g => `<div style="margin-bottom:6px;"><div class="d-detail-label">${g.label}</div>
+        <div class="d-photo-view-grid">${d[g.key].map(p=>`<img src="${p.url}" onclick="window.open('${p.url}','_blank')" alt="">`).join('')}</div></div>`).join('')}
+    </div>`;
+  }
+  return html;
 }
 
 function toggleDefectDetail(id) {
@@ -341,16 +504,23 @@ function saveDefectNotes(id, val) {
 function openAddDefectModal() {
   editingDefectId = null;
   document.getElementById('dm-modal-title').textContent = '新增改善事項通知單';
-  ['dm-no','dm-report-no','dm-title','dm-progress','dm-notes'].forEach(id=>document.getElementById(id).value='');
+  ['dm-no','dm-report-no','dm-title','dm-progress','dm-notes',
+   'dm-ut-supervisors','dm-ut-companion','dm-ut-site','dm-ut-bidname','dm-ut-category','dm-ut-item','dm-ut-code','dm-ut-suggestion','dm-ut-dept','dm-ut-improver','dm-ut-reviewer'
+  ].forEach(id=>document.getElementById(id).value='');
   document.getElementById('dm-date').value     = todayStr();
   document.getElementById('dm-source').value   = defectSourceFilter==='utility' ? 'utility' : 'supervisor';
   document.getElementById('dm-occasion').value = 'random';
   document.getElementById('dm-deadline').value = '';
   document.getElementById('dm-status').value   = 'open';
   document.getElementById('dm-result').value   = '';
+  document.getElementById('dm-ut-complete-date').value = '';
+  document.getElementById('dm-ut-track').value = 'tracking';
   document.getElementById('dm-remind').checked = true;
   document.getElementById('dm-remind-days').value = '5';
   document.getElementById('dm-delete-btn').style.display = 'none';
+  modalPhotos = { before:[], during:[], after:[] };
+  renderPhotoGroups();
+  toggleUtilitySection();
   document.getElementById('defect-modal').style.display = 'flex';
 }
 function openEditDefectModal(id) {
@@ -370,7 +540,27 @@ function openEditDefectModal(id) {
   document.getElementById('dm-notes').value       = d.notes||'';
   document.getElementById('dm-remind').checked    = d.remind!==false;
   document.getElementById('dm-remind-days').value = d.remindDays||'5';
+  document.getElementById('dm-ut-supervisors').value    = d.utSupervisors||'';
+  document.getElementById('dm-ut-companion').value      = d.utCompanion||'';
+  document.getElementById('dm-ut-site').value            = d.utSite||'';
+  document.getElementById('dm-ut-bidname').value         = d.utBidName||'';
+  document.getElementById('dm-ut-category').value        = d.utCategory||'';
+  document.getElementById('dm-ut-item').value             = d.utItem||'';
+  document.getElementById('dm-ut-code').value             = d.utCode||'';
+  document.getElementById('dm-ut-suggestion').value       = d.utSuggestion||'';
+  document.getElementById('dm-ut-dept').value             = d.utDept||'';
+  document.getElementById('dm-ut-complete-date').value    = d.utCompleteDate||'';
+  document.getElementById('dm-ut-improver').value         = d.utImprover||'';
+  document.getElementById('dm-ut-reviewer').value         = d.utReviewer||'';
+  document.getElementById('dm-ut-track').value             = d.utTrack||'tracking';
   document.getElementById('dm-delete-btn').style.display = 'block';
+  modalPhotos = {
+    before: (d.photosBefore||[]).slice(),
+    during: (d.photosDuring||[]).slice(),
+    after:  (d.photosAfter||[]).slice(),
+  };
+  renderPhotoGroups();
+  toggleUtilitySection();
   document.getElementById('defect-modal').style.display = 'flex';
 }
 function closeDefectModal() { document.getElementById('defect-modal').style.display='none'; }
@@ -397,6 +587,22 @@ function saveDefect() {
     notes:      document.getElementById('dm-notes').value.trim(),
     remind:     document.getElementById('dm-remind').checked,
     remindDays: parseInt(document.getElementById('dm-remind-days').value)||5,
+    utSupervisors:  document.getElementById('dm-ut-supervisors').value.trim(),
+    utCompanion:    document.getElementById('dm-ut-companion').value.trim(),
+    utSite:         document.getElementById('dm-ut-site').value.trim(),
+    utBidName:      document.getElementById('dm-ut-bidname').value.trim(),
+    utCategory:     document.getElementById('dm-ut-category').value.trim(),
+    utItem:         document.getElementById('dm-ut-item').value.trim(),
+    utCode:         document.getElementById('dm-ut-code').value.trim(),
+    utSuggestion:   document.getElementById('dm-ut-suggestion').value.trim(),
+    utDept:         document.getElementById('dm-ut-dept').value.trim(),
+    utCompleteDate: document.getElementById('dm-ut-complete-date').value,
+    utImprover:     document.getElementById('dm-ut-improver').value.trim(),
+    utReviewer:     document.getElementById('dm-ut-reviewer').value.trim(),
+    utTrack:        document.getElementById('dm-ut-track').value,
+    photosBefore:   modalPhotos.before.filter(p=>!p.uploading),
+    photosDuring:   modalPhotos.during.filter(p=>!p.uploading),
+    photosAfter:    modalPhotos.after.filter(p=>!p.uploading),
   };
   if (editingDefectId) {
     const idx = defects.findIndex(d=>d.id===editingDefectId);
@@ -406,7 +612,6 @@ function saveDefect() {
   }
   defectSave(); closeDefectModal(); renderDefects();
 }
-  
 
 init();
 </script>
