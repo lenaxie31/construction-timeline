@@ -33,6 +33,10 @@
 .d-src-tab:hover { background:var(--border-light); }
 .d-src-tab.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
 .d-src-tab .cnt { opacity:.75;font-weight:500;margin-left:2px; }
+.d-cat-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;white-space:nowrap; }
+.d-cat-env     { background:#DCFCE7;color:#166534; }
+.d-cat-safety  { background:#FFEDD5;color:#9A3412; }
+.d-cat-quality { background:#E0E7FF;color:#3730A3; }
 /* 展開詳細面板 */
 .d-detail-panel { background:linear-gradient(135deg,#f8faff 0%,#f4f3ef 100%);border-top:2px solid var(--c-blue-border);padding:16px 20px;display:flex;flex-direction:column;gap:12px;animation:slideDown .18s ease; }
 @keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
@@ -114,45 +118,23 @@
         </div>
         <div class="field-row">
           <div class="field"><label>開立方式</label>
-            <select id="dm-source" onchange="toggleUtilitySection()"><option value="supervisor">📝 監造紙本開立</option><option value="utility">💻 台電電子系統</option></select>
+            <select id="dm-source"><option value="supervisor">📝 監造紙本開立</option><option value="utility">💻 台電電子系統</option></select>
           </div>
+          <div class="field"><label>分類</label>
+            <select id="dm-category">
+              <option value="env">🌱 環保</option>
+              <option value="safety">⛑️ 工安</option>
+              <option value="quality">🔍 品質</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
           <div class="field"><label>開立時機</label>
             <select id="dm-occasion"><option value="random">隨機抽查</option><option value="checkpoint">檢驗停留點</option></select>
           </div>
+          <div class="field"><label>查驗報告編號（選填）</label><input type="text" id="dm-report-no" placeholder="停留點才需填寫"></div>
         </div>
-        <div class="field"><label>查驗報告編號（選填）</label><input type="text" id="dm-report-no" placeholder="停留點才需填寫"></div>
         <div class="field"><label>改善期限</label><input type="date" id="dm-deadline"></div>
-      </div>
-      <div class="modal-section" id="dm-utility-section" style="display:none;">
-        <div class="modal-section-title">台電紀錄詳細資訊<span class="d-ut-badge">💻 台電電子系統</span></div>
-        <div class="field-row">
-          <div class="field"><label>督導/陪同督導人員</label><input type="text" id="dm-ut-supervisors" placeholder="例：涂閔祥、蔡家榮、張瑞麟"></div>
-          <div class="field"><label>會同人員</label><input type="text" id="dm-ut-companion" placeholder="例：碳集公司 蔡正偉主任"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>督導地點</label><input type="text" id="dm-ut-site" placeholder="例：台中減碳技術園區(A標)工地"></div>
-          <div class="field"><label>標案名稱</label><input type="text" id="dm-ut-bidname" placeholder="標案全名"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>缺失類別</label><input type="text" id="dm-ut-category" placeholder="例：施工單位"></div>
-          <div class="field"><label>缺失項目</label><input type="text" id="dm-ut-item" placeholder="例：環境生態保育"></div>
-        </div>
-        <div class="field"><label>缺失編號</label><input type="text" id="dm-ut-code" placeholder="例：5.05.09 垃圾及廢棄物未清理…"></div>
-        <div class="field"><label>建議事項（選填）</label><textarea id="dm-ut-suggestion" style="min-height:44px;"></textarea></div>
-        <div class="field-row">
-          <div class="field"><label>改善部門</label><input type="text" id="dm-ut-dept" placeholder="例：委外監造及工安協助-機械第一分隊"></div>
-          <div class="field"><label>實際完成日期</label><input type="date" id="dm-ut-complete-date"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>改善人員</label><input type="text" id="dm-ut-improver" placeholder="改善負責人"></div>
-          <div class="field"><label>審查人員</label><input type="text" id="dm-ut-reviewer" placeholder="審查負責人"></div>
-        </div>
-        <div class="field"><label>管考追蹤狀態</label>
-          <select id="dm-ut-track">
-            <option value="tracking">追蹤中</option>
-            <option value="released">解除追蹤</option>
-          </select>
-        </div>
       </div>
       <div class="modal-section">
         <div class="modal-section-title">改善事項說明</div>
@@ -247,17 +229,13 @@ function migrateDefects() {
     if (d.remind===undefined) d.remind = true;
     if (!d.remindDays) d.remindDays = 5;
     if (!d.source) d.source = 'supervisor'; // 舊資料預設為監造紙本開立
+    if (!d.category) d.category = 'env'; // 舊資料預設為環保
   });
 }
 
 function setDefectSourceFilter(f) {
   defectSourceFilter = f;
   renderDefects();
-}
-
-function toggleUtilitySection() {
-  const isUtility = document.getElementById('dm-source').value === 'utility';
-  document.getElementById('dm-utility-section').style.display = isUtility ? 'block' : 'none';
 }
 
 // ── 照片上傳（改善前/中/後）──
@@ -365,6 +343,7 @@ function renderDefects() {
   const sMap  = { open:'未結案', replied:'承商已回覆', recheck:'複驗中', closed:'已結案' };
   const rMap  = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
   const srcMap = { supervisor:'📝 監造紙本', utility:'💻 台電電子系統' };
+  const catMap = { env:'🌱 環保', safety:'⛑️ 工安', quality:'🔍 品質' };
   const sorted = visible.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
   const rows = sorted.map(d => {
@@ -379,7 +358,7 @@ function renderDefects() {
 
     return `<tr class="d-row${d.status==='closed'?' d-row-closed':''}" onclick="toggleDefectDetail('${d.id}')" style="cursor:pointer;">
       <td class="d-cell" style="font-family:monospace;font-size:11px;white-space:nowrap;color:var(--text-muted);">${esc(d.no||'—')}</td>
-      <td class="d-cell" style="font-weight:600;font-size:13px;max-width:420px;">${esc(d.title)}${d.occasion==='checkpoint'?'<span class="d-tag-checkpoint">停留點</span>':''}<span class="d-src-tag d-src-${d.source||'supervisor'}">${srcMap[d.source]||srcMap.supervisor}</span></td>
+      <td class="d-cell" style="font-weight:600;font-size:13px;max-width:420px;">${esc(d.title)}${d.occasion==='checkpoint'?'<span class="d-tag-checkpoint">停留點</span>':''}<span class="d-src-tag d-src-${d.source||'supervisor'}">${srcMap[d.source]||srcMap.supervisor}</span><span class="d-cat-tag d-cat-${d.category||'env'}">${catMap[d.category]||catMap.env}</span></td>
       <td class="d-cell" style="white-space:nowrap;font-size:12px;">${d.date||'—'}</td>
       <td class="d-cell" style="white-space:nowrap;font-size:12px;${deadlineStyle}">${deadlineCell}</td>
       <td class="d-cell" style="text-align:center;"><span class="${statusCls}">${sMap[d.status]||d.status}</span></td>
@@ -437,21 +416,7 @@ function buildPhotoDetailHtml(d) {
     { key:'photosDuring', label:'📷 改善中' },
     { key:'photosAfter',  label:'📷 改善後' },
   ].filter(g => Array.isArray(d[g.key]) && d[g.key].length);
-  const utFields = [
-    ['督導/陪同督導人員', d.utSupervisors], ['會同人員', d.utCompanion],
-    ['督導地點', d.utSite], ['標案名稱', d.utBidName],
-    ['缺失類別', d.utCategory], ['缺失項目', d.utItem], ['缺失編號', d.utCode],
-    ['建議事項', d.utSuggestion], ['改善部門', d.utDept],
-    ['實際完成日期', d.utCompleteDate], ['改善人員', d.utImprover], ['審查人員', d.utReviewer],
-    ['管考追蹤', d.utTrack==='released'?'✅ 解除追蹤':(d.utTrack?'🔵 追蹤中':'')],
-  ].filter(([,v]) => v);
   let html = '';
-  if (d.source==='utility' && utFields.length) {
-    html += `<div class="d-detail-section"><div class="d-detail-label">台電紀錄詳細資訊</div>
-      <div class="d-detail-content" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;">
-        ${utFields.map(([k,v])=>`<div><span style="color:var(--text-muted);">${k}：</span>${esc(v)}</div>`).join('')}
-      </div></div>`;
-  }
   if (groups.length) {
     html += `<div class="d-detail-section">
       ${groups.map(g => `<div style="margin-bottom:6px;"><div class="d-detail-label">${g.label}</div>
@@ -504,23 +469,19 @@ function saveDefectNotes(id, val) {
 function openAddDefectModal() {
   editingDefectId = null;
   document.getElementById('dm-modal-title').textContent = '新增改善事項通知單';
-  ['dm-no','dm-report-no','dm-title','dm-progress','dm-notes',
-   'dm-ut-supervisors','dm-ut-companion','dm-ut-site','dm-ut-bidname','dm-ut-category','dm-ut-item','dm-ut-code','dm-ut-suggestion','dm-ut-dept','dm-ut-improver','dm-ut-reviewer'
-  ].forEach(id=>document.getElementById(id).value='');
+  ['dm-no','dm-report-no','dm-title','dm-progress','dm-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('dm-date').value     = todayStr();
   document.getElementById('dm-source').value   = defectSourceFilter==='utility' ? 'utility' : 'supervisor';
   document.getElementById('dm-occasion').value = 'random';
   document.getElementById('dm-deadline').value = '';
   document.getElementById('dm-status').value   = 'open';
   document.getElementById('dm-result').value   = '';
-  document.getElementById('dm-ut-complete-date').value = '';
-  document.getElementById('dm-ut-track').value = 'tracking';
+  document.getElementById('dm-category').value = 'env';
   document.getElementById('dm-remind').checked = true;
   document.getElementById('dm-remind-days').value = '5';
   document.getElementById('dm-delete-btn').style.display = 'none';
   modalPhotos = { before:[], during:[], after:[] };
   renderPhotoGroups();
-  toggleUtilitySection();
   document.getElementById('defect-modal').style.display = 'flex';
 }
 function openEditDefectModal(id) {
@@ -530,6 +491,7 @@ function openEditDefectModal(id) {
   document.getElementById('dm-no').value          = d.no||'';
   document.getElementById('dm-date').value        = d.date||'';
   document.getElementById('dm-source').value      = d.source||'supervisor';
+  document.getElementById('dm-category').value    = d.category||'env';
   document.getElementById('dm-occasion').value    = d.occasion||'random';
   document.getElementById('dm-report-no').value   = d.reportNo||'';
   document.getElementById('dm-deadline').value    = d.deadline||'';
@@ -540,19 +502,6 @@ function openEditDefectModal(id) {
   document.getElementById('dm-notes').value       = d.notes||'';
   document.getElementById('dm-remind').checked    = d.remind!==false;
   document.getElementById('dm-remind-days').value = d.remindDays||'5';
-  document.getElementById('dm-ut-supervisors').value    = d.utSupervisors||'';
-  document.getElementById('dm-ut-companion').value      = d.utCompanion||'';
-  document.getElementById('dm-ut-site').value            = d.utSite||'';
-  document.getElementById('dm-ut-bidname').value         = d.utBidName||'';
-  document.getElementById('dm-ut-category').value        = d.utCategory||'';
-  document.getElementById('dm-ut-item').value             = d.utItem||'';
-  document.getElementById('dm-ut-code').value             = d.utCode||'';
-  document.getElementById('dm-ut-suggestion').value       = d.utSuggestion||'';
-  document.getElementById('dm-ut-dept').value             = d.utDept||'';
-  document.getElementById('dm-ut-complete-date').value    = d.utCompleteDate||'';
-  document.getElementById('dm-ut-improver').value         = d.utImprover||'';
-  document.getElementById('dm-ut-reviewer').value         = d.utReviewer||'';
-  document.getElementById('dm-ut-track').value             = d.utTrack||'tracking';
   document.getElementById('dm-delete-btn').style.display = 'block';
   modalPhotos = {
     before: (d.photosBefore||[]).slice(),
@@ -560,7 +509,6 @@ function openEditDefectModal(id) {
     after:  (d.photosAfter||[]).slice(),
   };
   renderPhotoGroups();
-  toggleUtilitySection();
   document.getElementById('defect-modal').style.display = 'flex';
 }
 function closeDefectModal() { document.getElementById('defect-modal').style.display='none'; }
@@ -577,6 +525,7 @@ function saveDefect() {
     no:         document.getElementById('dm-no').value.trim(),
     date:       document.getElementById('dm-date').value,
     source:     document.getElementById('dm-source').value,
+    category:   document.getElementById('dm-category').value,
     occasion:   document.getElementById('dm-occasion').value,
     reportNo:   document.getElementById('dm-report-no').value.trim(),
     deadline:   document.getElementById('dm-deadline').value,
@@ -587,19 +536,6 @@ function saveDefect() {
     notes:      document.getElementById('dm-notes').value.trim(),
     remind:     document.getElementById('dm-remind').checked,
     remindDays: parseInt(document.getElementById('dm-remind-days').value)||5,
-    utSupervisors:  document.getElementById('dm-ut-supervisors').value.trim(),
-    utCompanion:    document.getElementById('dm-ut-companion').value.trim(),
-    utSite:         document.getElementById('dm-ut-site').value.trim(),
-    utBidName:      document.getElementById('dm-ut-bidname').value.trim(),
-    utCategory:     document.getElementById('dm-ut-category').value.trim(),
-    utItem:         document.getElementById('dm-ut-item').value.trim(),
-    utCode:         document.getElementById('dm-ut-code').value.trim(),
-    utSuggestion:   document.getElementById('dm-ut-suggestion').value.trim(),
-    utDept:         document.getElementById('dm-ut-dept').value.trim(),
-    utCompleteDate: document.getElementById('dm-ut-complete-date').value,
-    utImprover:     document.getElementById('dm-ut-improver').value.trim(),
-    utReviewer:     document.getElementById('dm-ut-reviewer').value.trim(),
-    utTrack:        document.getElementById('dm-ut-track').value,
     photosBefore:   modalPhotos.before.filter(p=>!p.uploading),
     photosDuring:   modalPhotos.during.filter(p=>!p.uploading),
     photosAfter:    modalPhotos.after.filter(p=>!p.uploading),
