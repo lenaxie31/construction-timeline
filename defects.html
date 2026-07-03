@@ -24,6 +24,15 @@
 .d-chip-replied { background:#FEF3C7;color:#92400E; }
 .d-chip-recheck { background:#DBEAFE;color:#1E40AF; }
 .d-chip-closed  { background:#DCFCE7;color:#166534; }
+/* 開立方式 標籤/頁籤 */
+.d-src-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;white-space:nowrap; }
+.d-src-utility    { background:#E0E7FF;color:#3730A3; }
+.d-src-supervisor { background:#FCE7F3;color:#9D174D; }
+.d-src-tabs { display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap; }
+.d-src-tab { font-family:inherit;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
+.d-src-tab:hover { background:var(--border-light); }
+.d-src-tab.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
+.d-src-tab .cnt { opacity:.75;font-weight:500;margin-left:2px; }
 /* 展開詳細面板 */
 .d-detail-panel { background:linear-gradient(135deg,#f8faff 0%,#f4f3ef 100%);border-top:2px solid var(--c-blue-border);padding:16px 20px;display:flex;flex-direction:column;gap:12px;animation:slideDown .18s ease; }
 @keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
@@ -70,6 +79,7 @@
         <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:12px;" onclick="openAddDefectModal()">＋ 新增改善事項通知單</button>
       </div>
       <div id="defect-remind-banner"></div>
+      <div id="defect-src-tabs" class="d-src-tabs"></div>
       <div id="defect-count" style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;"></div>
       <div style="overflow-x:auto;"><div id="defects-list"></div></div>
     </div>
@@ -89,11 +99,14 @@
           <div class="field"><label>開立日期</label><input type="date" id="dm-date"></div>
         </div>
         <div class="field-row">
+          <div class="field"><label>開立方式</label>
+            <select id="dm-source"><option value="supervisor">📝 監造紙本開立</option><option value="utility">💻 台電電子系統</option></select>
+          </div>
           <div class="field"><label>開立時機</label>
             <select id="dm-occasion"><option value="random">隨機抽查</option><option value="checkpoint">檢驗停留點</option></select>
           </div>
-          <div class="field"><label>查驗報告編號（選填）</label><input type="text" id="dm-report-no" placeholder="停留點才需填寫"></div>
         </div>
+        <div class="field"><label>查驗報告編號（選填）</label><input type="text" id="dm-report-no" placeholder="停留點才需填寫"></div>
         <div class="field"><label>改善期限</label><input type="date" id="dm-deadline"></div>
       </div>
       <div class="modal-section">
@@ -158,6 +171,7 @@ if (!requireAuth()) throw new Error('not auth');
 
 let defects = [];
 let editingDefectId = null;
+let defectSourceFilter = 'all'; // all | supervisor | utility
 const defectSaveTimer = { t:null };
 
 const defectSave = makeModuleSave('construction_defects_v1','defects',()=>defects);
@@ -177,18 +191,38 @@ function migrateDefects() {
     if (!d.occasion) d.occasion = 'random';
     if (d.remind===undefined) d.remind = true;
     if (!d.remindDays) d.remindDays = 5;
+    if (!d.source) d.source = 'supervisor'; // 舊資料預設為監造紙本開立
   });
+}
+
+function setDefectSourceFilter(f) {
+  defectSourceFilter = f;
+  renderDefects();
 }
 
 function renderDefects() {
   updateRemindBanner();
+
+  const srcTabsEl = document.getElementById('defect-src-tabs');
+  if (srcTabsEl) {
+    const allN  = defects.length;
+    const supN  = defects.filter(d=>d.source==='supervisor').length;
+    const utiN  = defects.filter(d=>d.source==='utility').length;
+    srcTabsEl.innerHTML = `
+      <button class="d-src-tab${defectSourceFilter==='all'?' active':''}" onclick="setDefectSourceFilter('all')">全部合併檢視<span class="cnt">(${allN})</span></button>
+      <button class="d-src-tab${defectSourceFilter==='supervisor'?' active':''}" onclick="setDefectSourceFilter('supervisor')">📝 監造紙本開立<span class="cnt">(${supN})</span></button>
+      <button class="d-src-tab${defectSourceFilter==='utility'?' active':''}" onclick="setDefectSourceFilter('utility')">💻 台電電子系統<span class="cnt">(${utiN})</span></button>`;
+  }
+
+  const visible = defectSourceFilter==='all' ? defects : defects.filter(d=>d.source===defectSourceFilter);
+
   const countEl = document.getElementById('defect-count');
   if (countEl) {
-    const openN    = defects.filter(d=>d.status==='open').length;
-    const repliedN = defects.filter(d=>d.status==='replied').length;
-    const recheckN = defects.filter(d=>d.status==='recheck').length;
-    const closedN  = defects.filter(d=>d.status==='closed').length;
-    countEl.innerHTML = `<span style="font-size:11px;color:var(--text-muted);">共 ${defects.length} 筆　</span>
+    const openN    = visible.filter(d=>d.status==='open').length;
+    const repliedN = visible.filter(d=>d.status==='replied').length;
+    const recheckN = visible.filter(d=>d.status==='recheck').length;
+    const closedN  = visible.filter(d=>d.status==='closed').length;
+    countEl.innerHTML = `<span style="font-size:11px;color:var(--text-muted);">共 ${visible.length} 筆　</span>
       ${openN?`<span class="d-chip d-chip-open">未結案 ${openN}</span>`:''}
       ${repliedN?`<span class="d-chip d-chip-replied">已回覆 ${repliedN}</span>`:''}
       ${recheckN?`<span class="d-chip d-chip-recheck">複驗中 ${recheckN}</span>`:''}
@@ -198,7 +232,8 @@ function renderDefects() {
   const today = todayStr();
   const sMap  = { open:'未結案', replied:'承商已回覆', recheck:'複驗中', closed:'已結案' };
   const rMap  = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
-  const sorted = defects.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const srcMap = { supervisor:'📝 監造紙本', utility:'💻 台電電子系統' };
+  const sorted = visible.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
   const rows = sorted.map(d => {
     const daysLeft = d.deadline ? Math.ceil((new Date(d.deadline)-new Date(today))/86400000) : null;
@@ -212,7 +247,7 @@ function renderDefects() {
 
     return `<tr class="d-row${d.status==='closed'?' d-row-closed':''}" onclick="toggleDefectDetail('${d.id}')" style="cursor:pointer;">
       <td class="d-cell" style="font-family:monospace;font-size:11px;white-space:nowrap;color:var(--text-muted);">${esc(d.no||'—')}</td>
-      <td class="d-cell" style="font-weight:600;font-size:13px;max-width:420px;">${esc(d.title)}${d.occasion==='checkpoint'?'<span class="d-tag-checkpoint">停留點</span>':''}</td>
+      <td class="d-cell" style="font-weight:600;font-size:13px;max-width:420px;">${esc(d.title)}${d.occasion==='checkpoint'?'<span class="d-tag-checkpoint">停留點</span>':''}<span class="d-src-tag d-src-${d.source||'supervisor'}">${srcMap[d.source]||srcMap.supervisor}</span></td>
       <td class="d-cell" style="white-space:nowrap;font-size:12px;">${d.date||'—'}</td>
       <td class="d-cell" style="white-space:nowrap;font-size:12px;${deadlineStyle}">${deadlineCell}</td>
       <td class="d-cell" style="text-align:center;"><span class="${statusCls}">${sMap[d.status]||d.status}</span></td>
@@ -250,7 +285,7 @@ function renderDefects() {
     </tr>`;
   }).join('');
 
-  document.getElementById('defects-list').innerHTML = defects.length
+  document.getElementById('defects-list').innerHTML = sorted.length
     ? `<table class="d-table"><thead><tr>
         <th class="d-th" style="width:130px;">通知單標號</th>
         <th class="d-th">改善事項說明</th>
@@ -260,7 +295,7 @@ function renderDefects() {
         <th class="d-th" style="width:50px;text-align:center;">完成</th>
         <th class="d-th" style="width:200px;">備註</th>
       </tr></thead><tbody>${rows}</tbody></table>`
-    : '<div class="empty">目前沒有改善事項通知單記錄</div>';
+    : `<div class="empty">${defectSourceFilter==='all'?'目前沒有改善事項通知單記錄':'此分類目前沒有記錄'}</div>`;
 }
 
 function toggleDefectDetail(id) {
@@ -281,8 +316,9 @@ function updateRemindBanner() {
     const dl = Math.ceil((new Date(d.deadline)-new Date(today))/86400000);
     const icon = dl<0?'🔴':dl<=3?'🟡':'🟠';
     const msg  = dl<0?`逾期 ${Math.abs(dl)} 天`:dl===0?'今天到期！':`還剩 ${dl} 天`;
+    const srcTag = d.source==='utility' ? '<span class="d-src-tag d-src-utility">💻 台電</span>' : '<span class="d-src-tag d-src-supervisor">📝 監造</span>';
     return `<div class="remind-banner">🔔
-      <div style="flex:1;min-width:0;"><strong>${esc(d.no||'—')}</strong>　${esc(d.title.slice(0,40))}${d.title.length>40?'…':''}<br>
+      <div style="flex:1;min-width:0;"><strong>${esc(d.no||'—')}</strong>${srcTag}　${esc(d.title.slice(0,40))}${d.title.length>40?'…':''}<br>
       <span style="font-size:11px;">期限：${d.deadline}　${icon} <strong>${msg}</strong></span></div>
       <button class="btn-sm edit" data-id="${d.id}" onclick="openEditDefectModal(this.dataset.id)">查看</button>
     </div>`;
@@ -307,6 +343,7 @@ function openAddDefectModal() {
   document.getElementById('dm-modal-title').textContent = '新增改善事項通知單';
   ['dm-no','dm-report-no','dm-title','dm-progress','dm-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('dm-date').value     = todayStr();
+  document.getElementById('dm-source').value   = defectSourceFilter==='utility' ? 'utility' : 'supervisor';
   document.getElementById('dm-occasion').value = 'random';
   document.getElementById('dm-deadline').value = '';
   document.getElementById('dm-status').value   = 'open';
@@ -322,6 +359,7 @@ function openEditDefectModal(id) {
   document.getElementById('dm-modal-title').textContent = '編輯改善事項通知單';
   document.getElementById('dm-no').value          = d.no||'';
   document.getElementById('dm-date').value        = d.date||'';
+  document.getElementById('dm-source').value      = d.source||'supervisor';
   document.getElementById('dm-occasion').value    = d.occasion||'random';
   document.getElementById('dm-report-no').value   = d.reportNo||'';
   document.getElementById('dm-deadline').value    = d.deadline||'';
@@ -348,6 +386,7 @@ function saveDefect() {
   const payload = {
     no:         document.getElementById('dm-no').value.trim(),
     date:       document.getElementById('dm-date').value,
+    source:     document.getElementById('dm-source').value,
     occasion:   document.getElementById('dm-occasion').value,
     reportNo:   document.getElementById('dm-report-no').value.trim(),
     deadline:   document.getElementById('dm-deadline').value,
