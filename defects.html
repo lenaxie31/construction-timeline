@@ -37,6 +37,21 @@
 .d-cat-env     { background:#DCFCE7;color:#166534; }
 .d-cat-safety  { background:#FFEDD5;color:#9A3412; }
 .d-cat-quality { background:#E0E7FF;color:#3730A3; }
+/* 篩選 / 排序列 */
+.d-filter-bar-wrap { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px; }
+.d-filter-row { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
+.d-filter-label { font-size:11px;font-weight:700;color:var(--text-muted);white-space:nowrap; }
+.d-filter-chip { font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
+.d-filter-chip:hover { background:var(--border-light); }
+.d-filter-chip.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
+.d-filter-date { font-family:inherit;font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary); }
+.d-filter-clear { font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer; }
+.d-filter-clear:hover { background:var(--border-light); }
+.d-filter-sort { font-family:inherit;font-size:12px;font-weight:600;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary);cursor:pointer; }
+@media(max-width:767px) {
+  .d-filter-row { gap:4px; }
+  .d-filter-sort { margin-left:0!important; }
+}
 /* 展開詳細面板 */
 .d-detail-panel { background:linear-gradient(135deg,#f8faff 0%,#f4f3ef 100%);border-top:2px solid var(--c-blue-border);padding:16px 20px;display:flex;flex-direction:column;gap:12px;animation:slideDown .18s ease; }
 @keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
@@ -98,6 +113,7 @@
       </div>
       <div id="defect-remind-banner"></div>
       <div id="defect-src-tabs" class="d-src-tabs"></div>
+      <div id="defect-filter-bar" class="d-filter-bar-wrap"></div>
       <div id="defect-count" style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:4px;"></div>
       <div style="overflow-x:auto;"><div id="defects-list"></div></div>
     </div>
@@ -208,6 +224,11 @@ if (!requireAuth()) throw new Error('not auth');
 let defects = [];
 let editingDefectId = null;
 let defectSourceFilter = 'all'; // all | supervisor | utility
+let defectStatusFilter = [];   // 空陣列 = 不篩選（顯示全部狀態）
+let defectCategoryFilter = []; // 空陣列 = 不篩選（顯示全部分類）
+let defectDateFrom = '';
+let defectDateTo = '';
+let defectSortBy = 'date-desc'; // date-desc | date-asc | status
 let modalPhotos = { before:[], during:[], after:[] };
 const defectSaveTimer = { t:null };
 
@@ -237,6 +258,27 @@ function setDefectSourceFilter(f) {
   defectSourceFilter = f;
   renderDefects();
 }
+
+function toggleDefectStatusFilter(s) {
+  if (s === 'all') { defectStatusFilter = []; }
+  else {
+    const idx = defectStatusFilter.indexOf(s);
+    if (idx > -1) defectStatusFilter.splice(idx, 1); else defectStatusFilter.push(s);
+  }
+  renderDefects();
+}
+function toggleDefectCategoryFilter(c) {
+  if (c === 'all') { defectCategoryFilter = []; }
+  else {
+    const idx = defectCategoryFilter.indexOf(c);
+    if (idx > -1) defectCategoryFilter.splice(idx, 1); else defectCategoryFilter.push(c);
+  }
+  renderDefects();
+}
+function setDefectDateFrom(v) { defectDateFrom = v; renderDefects(); }
+function setDefectDateTo(v) { defectDateTo = v; renderDefects(); }
+function clearDefectDateFilter() { defectDateFrom = ''; defectDateTo = ''; renderDefects(); }
+function setDefectSort(v) { defectSortBy = v; renderDefects(); }
 
 // ── 照片上傳（改善前/中/後）──
 function compressImage(file, maxDim, quality) {
@@ -324,7 +366,39 @@ function renderDefects() {
       <button class="d-src-tab${defectSourceFilter==='utility'?' active':''}" onclick="setDefectSourceFilter('utility')">💻 台電電子系統<span class="cnt">(${utiN})</span></button>`;
   }
 
-  const visible = defectSourceFilter==='all' ? defects : defects.filter(d=>d.source===defectSourceFilter);
+  let visible = defectSourceFilter==='all' ? defects.slice() : defects.filter(d=>d.source===defectSourceFilter);
+  if (defectStatusFilter.length)   visible = visible.filter(d => defectStatusFilter.includes(d.status));
+  if (defectCategoryFilter.length) visible = visible.filter(d => defectCategoryFilter.includes(d.category||'env'));
+  if (defectDateFrom) visible = visible.filter(d => d.date && d.date >= defectDateFrom);
+  if (defectDateTo)   visible = visible.filter(d => d.date && d.date <= defectDateTo);
+
+  const filterBarEl = document.getElementById('defect-filter-bar');
+  if (filterBarEl) {
+    const statusList = [['open','未結案'],['replied','已回覆'],['recheck','複驗中'],['closed','已結案']];
+    const catList    = [['env','🌱 環保'],['safety','⛑️ 工安'],['quality','🔍 品質']];
+    filterBarEl.innerHTML = `
+      <div class="d-filter-row">
+        <span class="d-filter-label">狀態篩選</span>
+        <button class="d-filter-chip${defectStatusFilter.length===0?' active':''}" onclick="toggleDefectStatusFilter('all')">全部</button>
+        ${statusList.map(([k,label])=>`<button class="d-filter-chip${defectStatusFilter.includes(k)?' active':''}" onclick="toggleDefectStatusFilter('${k}')">${label}</button>`).join('')}
+        <span class="d-filter-label" style="margin-left:14px;">分類篩選</span>
+        <button class="d-filter-chip${defectCategoryFilter.length===0?' active':''}" onclick="toggleDefectCategoryFilter('all')">全部</button>
+        ${catList.map(([k,label])=>`<button class="d-filter-chip${defectCategoryFilter.includes(k)?' active':''}" onclick="toggleDefectCategoryFilter('${k}')">${label}</button>`).join('')}
+      </div>
+      <div class="d-filter-row">
+        <span class="d-filter-label">開立日期</span>
+        <input type="date" class="d-filter-date" value="${defectDateFrom}" onchange="setDefectDateFrom(this.value)">
+        <span style="color:var(--text-muted);font-size:12px;">～</span>
+        <input type="date" class="d-filter-date" value="${defectDateTo}" onchange="setDefectDateTo(this.value)">
+        ${(defectDateFrom||defectDateTo)?`<button class="d-filter-clear" onclick="clearDefectDateFilter()">清除日期</button>`:''}
+        <span class="d-filter-label" style="margin-left:auto;">排序方式</span>
+        <select class="d-filter-sort" onchange="setDefectSort(this.value)">
+          <option value="date-desc"${defectSortBy==='date-desc'?' selected':''}>開立日期（新→舊）</option>
+          <option value="date-asc"${defectSortBy==='date-asc'?' selected':''}>開立日期（舊→新）</option>
+          <option value="status"${defectSortBy==='status'?' selected':''}>狀態排序（未結案優先）</option>
+        </select>
+      </div>`;
+  }
 
   const countEl = document.getElementById('defect-count');
   if (countEl) {
@@ -344,7 +418,18 @@ function renderDefects() {
   const rMap  = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
   const srcMap = { supervisor:'📝 監造紙本', utility:'💻 台電電子系統' };
   const catMap = { env:'🌱 環保', safety:'⛑️ 工安', quality:'🔍 品質' };
-  const sorted = visible.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const statusOrder = { open:0, replied:1, recheck:2, closed:3 };
+  let sorted;
+  if (defectSortBy === 'date-asc') {
+    sorted = visible.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  } else if (defectSortBy === 'status') {
+    sorted = visible.slice().sort((a,b)=>{
+      const so = (statusOrder[a.status]??9) - (statusOrder[b.status]??9);
+      return so !== 0 ? so : (b.date||'').localeCompare(a.date||'');
+    });
+  } else {
+    sorted = visible.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  }
 
   const rows = sorted.map(d => {
     const daysLeft = d.deadline ? Math.ceil((new Date(d.deadline)-new Date(today))/86400000) : null;
@@ -407,7 +492,7 @@ function renderDefects() {
         <th class="d-th" style="width:50px;text-align:center;">完成</th>
         <th class="d-th" style="width:200px;">備註</th>
       </tr></thead><tbody>${rows}</tbody></table>`
-    : `<div class="empty">${defectSourceFilter==='all'?'目前沒有改善事項通知單記錄':'此分類目前沒有記錄'}</div>`;
+    : `<div class="empty">${defects.length===0?'目前沒有改善事項通知單記錄':'目前篩選條件下沒有符合的記錄'}</div>`;
 }
 
 function buildPhotoDetailHtml(d) {
