@@ -75,6 +75,47 @@
 /* ── 工項新增側欄 ── */
 .sidebar-inner .field label { font-size:11px;font-weight:600;color:var(--text-secondary); }
 #f-cats { display:flex;flex-wrap:wrap;gap:5px;padding:6px 0;min-height:30px; }
+/* ── 首頁小卡 ── */
+.home-card {
+  background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;
+}
+.home-card-head {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border-light);background:var(--bg);
+}
+.home-card-title { font-size:12.5px;font-weight:700;color:var(--text-primary);letter-spacing:.02em; }
+.home-card-updated { font-size:10.5px;color:var(--text-muted); }
+.home-card-toggle {
+  background:none;border:1px solid var(--border);border-radius:6px;width:22px;height:22px;
+  font-size:14px;line-height:1;color:var(--text-muted);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:background var(--transition);
+}
+.home-card-toggle:hover { background:var(--border-light);color:var(--text-primary); }
+.home-card-body {
+  display:flex;flex-wrap:wrap;gap:10px;padding:14px 16px;
+}
+.home-card.collapsed .home-card-body { display:none; }
+.home-pill {
+  flex:1;min-width:140px;display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:var(--radius);text-decoration:none;
+  border:1px solid;transition:transform .1s,box-shadow var(--transition);
+}
+.home-pill:hover { transform:translateY(-1px);box-shadow:var(--shadow); }
+.home-pill-val { font-family:'DM Mono',monospace;font-size:20px;font-weight:700;line-height:1;min-width:20px; }
+.home-pill-label { font-size:11px;color:var(--text-secondary);line-height:1.4; }
+.home-pill.red   { background:var(--c-red-bg);border-color:var(--c-red-border); }
+.home-pill.red   .home-pill-val { color:var(--c-red); }
+.home-pill.amber { background:var(--c-amber-bg);border-color:var(--c-amber-border); }
+.home-pill.amber .home-pill-val { color:var(--c-amber); }
+.home-pill.blue  { background:var(--c-blue-bg);border-color:var(--c-blue-border); }
+.home-pill.blue  .home-pill-val { color:var(--c-blue); }
+.home-pill.teal  { background:var(--c-purple-bg);border-color:var(--c-purple-border); }
+.home-pill.teal  .home-pill-val { color:var(--c-purple); }
+.home-pill.green { background:var(--c-green-bg);border-color:var(--c-green-border); }
+.home-pill.green .home-pill-val { color:var(--c-green); }
+@media(max-width:599px) { .home-pill { min-width:100%; } }
+
 /* Mobile */
 @media(max-width:599px) {
   .htl-track { flex-direction:column!important;padding:16px!important;gap:0!important;min-width:unset!important;align-items:stretch!important; }
@@ -139,6 +180,7 @@
     <button class="sidebar-float-btn" id="sidebar-float-btn" onclick="toggleSidebarCollapse()">＋</button>
     <div class="tab-panel">
       <div id="alert-banner-area"></div>
+      <div id="home-card-mount"></div>
       <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:var(--c-green)"></div>里程碑</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--c-blue)"></div>正常施工</div>
@@ -213,6 +255,64 @@ async function init() {
   defects = data.defects;
   populateMonthFilter();
   render();
+  renderHomeCard(data);
+}
+
+// ── 首頁小卡（取代原儀表板，僅顯示跨模組重點數字）──
+const HOME_CARD_KEY = 'construction_home_card_collapsed_v1';
+
+function renderHomeCard(data) {
+  const mount = document.getElementById('home-card-mount');
+  if (!mount) return;
+
+  const openDefects = (data.defects || []).filter(d => d.status !== 'closed').length;
+  const qiOpen      = (data.qualityItems || []).filter(q => q.progress !== 'Completed').length;
+
+  const monthPrefix = todayStr().slice(0, 7);
+  const attThisMonth = (data.attRecords || []).filter(r => (r.date || '').startsWith(monthPrefix));
+  const attAbnormal  = attThisMonth.filter(r => r.status === 'late' || r.status === 'absent' || r.status === 'leave').length;
+
+  const sortedEntries = (data.entries || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const lastDate = sortedEntries.length ? sortedEntries[0].date : '';
+  const updatedLabel = lastDate ? `最近工程日誌：${lastDate.replace(/-/g, '/')}` : '尚無工程日誌記錄';
+
+  const collapsed = localStorage.getItem(HOME_CARD_KEY) === '1';
+
+  mount.innerHTML = `
+    <div class="home-card${collapsed ? ' collapsed' : ''}" id="home-card">
+      <div class="home-card-head">
+        <span class="home-card-title">📌 今日重點</span>
+        <span class="home-card-updated">${esc(updatedLabel)}</span>
+        <button class="home-card-toggle" id="home-card-toggle" onclick="toggleHomeCard()" title="收合／展開">${collapsed ? '▾' : '▴'}</button>
+      </div>
+      <div class="home-card-body">
+        <a href="defects.html" class="home-pill red">
+          <span class="home-pill-val">${openDefects}</span>
+          <span class="home-pill-label">未結案<br>改善事項</span>
+        </a>
+        <a href="quality.html" class="home-pill amber">
+          <span class="home-pill-val">${qiOpen}</span>
+          <span class="home-pill-label">監造查驗<br>未完成</span>
+        </a>
+        <a href="attendance.html" class="home-pill blue">
+          <span class="home-pill-val">${attAbnormal}</span>
+          <span class="home-pill-label">本月出勤<br>異常（遲到／缺勤／請假）</span>
+        </a>
+        <a href="guide.html" class="home-pill teal">
+          <span class="home-pill-val">📘</span>
+          <span class="home-pill-label">送審須知<br>01330 速查</span>
+        </a>
+      </div>
+    </div>`;
+}
+
+function toggleHomeCard() {
+  const card = document.getElementById('home-card');
+  const btn  = document.getElementById('home-card-toggle');
+  const nowCollapsed = !card.classList.contains('collapsed');
+  card.classList.toggle('collapsed', nowCollapsed);
+  btn.textContent = nowCollapsed ? '▾' : '▴';
+  localStorage.setItem(HOME_CARD_KEY, nowCollapsed ? '1' : '0');
 }
 
 function onStatusChange() {
