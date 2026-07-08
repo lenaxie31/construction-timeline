@@ -18,11 +18,10 @@ const TW_HOLIDAYS_KEY = 'construction_tw_holidays_v1';
 
 // ── 頁面導覽定義 ──
 const NAV_PAGES = [
-  { id:'dashboard',  label:'儀表板',        href:'dashboard.html',  badge:null },
   { id:'timeline',   label:'時間軸',         href:'timeline.html',   badge:null },
   { id:'defects',    label:'改善事項追蹤',   href:'defects.html',    badge:'open-count' },
-  { id:'docs',       label:'文件送審',        href:'docs.html',       badge:'doc-pending-count' },
   { id:'quality',    label:'監造查驗',        href:'quality.html',    badge:'qi-fail-count' },
+  { id:'guide',      label:'📘 送審須知',    href:'guide.html',      badge:null },
   { id:'attendance', label:'👷 出勤管理',    href:'attendance.html', badge:null },
   { id:'export',     label:'⬇ 匯出',         href:'export.html',     badge:null },
 ];
@@ -206,16 +205,10 @@ function renderNav(activePage) {
   // 讀取 badge 計數（從 localStorage）
   const defects = storageLoad(DEFECT_KEY, []);
   const qualityItems = storageLoad(QI_KEY, []);
-  const docs = storageLoad(DOCS_KEY, []);
   const openDef  = Array.isArray(defects)      ? defects.filter(d => d.status !== 'closed').length : 0;
   const qiFail   = Array.isArray(qualityItems)  ? qualityItems.filter(q => q.progress !== 'Completed').length : 0;
-  const docSent  = Array.isArray(docs)          ? docs.filter(d => {
-    if (!d.versions || !d.versions.length) return false;
-    const APPROVED = {approved:1,approved_mod:1,approved_after:1};
-    return !APPROVED[d.versions[d.versions.length-1].result];
-  }).length : 0;
 
-  const badgeVals = { 'open-count': openDef, 'qi-fail-count': qiFail, 'doc-pending-count': docSent };
+  const badgeVals = { 'open-count': openDef, 'qi-fail-count': qiFail };
 
   tabsEl.innerHTML = NAV_PAGES.map(function(p) {
     const isActive = p.id === activePage;
@@ -459,9 +452,8 @@ function fmtMinutes(min) {
   return Math.floor(min/60) + 'h' + (min%60 ? String(min%60).padStart(2,'0')+'m' : '');
 }
 
-// ── DOCS Preload 資料（簡化版，完整資料見 docs.html）──
-// 此處只存 ID 供其他模組引用；完整 preload 放在 docs.html 的 DOCS_PRELOAD 變數中
-const DOCS_PRELOAD = []; // docs.html 自行定義完整 preload
+// ── DOCS Preload 資料（文件送審頁面已移除，保留空陣列以維持既有資料相容性）──
+const DOCS_PRELOAD = [];
 const QI_PRELOAD   = []; // quality.html 自行定義完整 preload
 
 // ── 通用 Header HTML ──

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>送審須知 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── 頁內導覽 ── */
+.guide-toc {
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:22px;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius);box-shadow:var(--shadow);
+}
+.guide-toc a {
+  font-size:11.5px;font-weight:600;color:var(--dnv-sea-blue);background:var(--c-blue-bg);
+  padding:6px 12px;border-radius:20px;text-decoration:none;border:1px solid var(--c-blue-border);
+  transition:background var(--transition),transform .1s;white-space:nowrap;
+}
+.guide-toc a:hover { background:var(--dnv-sea-blue);color:#fff;transform:translateY(-1px); }
+
+/* ── 區塊卡片 ── */
+.g-section {
+  background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-lg);
+  padding:20px 22px;margin-bottom:18px;box-shadow:var(--shadow);scroll-margin-top:16px;
+}
+.g-section-head { display:flex;align-items:center;gap:10px;margin-bottom:4px; }
+.g-section-num {
+  width:26px;height:26px;border-radius:50%;background:var(--dnv-dark-blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;
+}
+.g-section h2 { font-size:15px;font-weight:700;color:var(--text-primary); }
+.g-section .g-sub { font-size:12px;color:var(--text-muted);margin:2px 0 14px 36px; }
+.g-note {
+  font-size:12px;color:var(--text-secondary);line-height:1.7;background:var(--bg);
+  border-left:3px solid var(--dnv-sea-blue);border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  padding:10px 14px;margin-top:12px;
+}
+.g-note.warn { border-left-color:var(--c-amber);background:var(--c-amber-bg); }
+.g-note.red  { border-left-color:var(--c-red);background:var(--c-red-bg); }
+
+/* ── 頂部速覽卡 ── */
+.g-stat-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px; }
+
+/* ── 罰則表 ── */
+.fine-table td:nth-child(2) { font-family:'DM Mono',monospace;font-weight:700;color:var(--c-red); }
+
+/* ── 審查結果三態 ── */
+.result-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:4px; }
+.result-card { border-radius:var(--radius);padding:14px 16px;border:1px solid; }
+.result-card.ok    { background:var(--c-green-bg);border-color:var(--c-green-border); }
+.result-card.mod   { background:var(--c-amber-bg);border-color:var(--c-amber-border); }
+.result-card.back  { background:var(--c-red-bg);border-color:var(--c-red-border); }
+.result-title { font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px; }
+.result-card.ok   .result-title { color:var(--c-green); }
+.result-card.mod  .result-title { color:var(--c-amber); }
+.result-card.back .result-title { color:var(--c-red); }
+.result-desc { font-size:12px;color:var(--text-secondary);line-height:1.6; }
+
+/* ── 流程圖 ── */
+.flow-wrap { margin-top:6px; }
+.flow-row { display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-bottom:4px; }
+.flow-step {
+  flex:1;min-width:150px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 12px;position:relative;
+}
+.flow-step .fs-role { font-size:9.5px;font-weight:700;letter-spacing:.05em;color:var(--dnv-sea-blue);text-transform:uppercase;margin-bottom:3px; }
+.flow-step .fs-text { font-size:12px;color:var(--text-primary);line-height:1.5;font-weight:600; }
+.flow-step .fs-sub  { font-size:10.5px;color:var(--text-muted);margin-top:2px;line-height:1.4; }
+.flow-arrow { display:flex;align-items:center;justify-content:center;padding:0 6px;color:var(--dnv-sandstone);flex-shrink:0; }
+.flow-arrow svg { width:16px;height:16px; }
+.flow-branch {
+  margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;
+}
+.flow-branch .fb-item {
+  flex:1;min-width:180px;border-radius:var(--radius-sm);padding:9px 12px;font-size:11.5px;line-height:1.6;border:1px dashed;
+}
+.fb-item.ok   { border-color:var(--c-green-border);background:var(--c-green-bg);color:#1f5c1a; }
+.fb-item.back { border-color:var(--c-red-border);background:var(--c-red-bg);color:#7f1d1d; }
+@media(max-width:640px) { .flow-row { flex-direction:column; } .flow-arrow svg { transform:rotate(90deg); } }
+
+/* ── 送審份數大表 ── */
+.g-tbl-wrap { max-height:560px;overflow-y:auto;border-radius:var(--radius-lg); }
+.g-tbl-wrap table { font-size:12px; }
+.g-tbl-wrap th { position:sticky;top:0;z-index:2; }
+.g-tbl-wrap td.units { white-space:pre-line;line-height:1.6;font-size:11.5px; }
+.contract-tag {
+  display:inline-block;font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:8px;
+  background:var(--c-purple-bg);color:var(--c-purple);margin-left:4px;white-space:nowrap;
+}
+
+/* ── checklist ── */
+.g-checklist { list-style:none;display:flex;flex-direction:column;gap:8px; }
+.g-checklist li { display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--text-secondary);line-height:1.6; }
+.g-checklist li::before { content:'✓';color:var(--dnv-digi-green);font-weight:700;flex-shrink:0;margin-top:1px; }
+.g-cols-2 { display:grid;grid-template-columns:1fr 1fr;gap:20px; }
+@media(max-width:640px) { .g-cols-2 { grid-template-columns:1fr; } }
+.g-col-title { font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:8px; }
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+
+<div class="layout">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="收起側欄">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="timeline.html" class="btn-secondary" style="text-decoration:none;text-align:center;">📅 時間軸</a>
+      <a href="defects.html" class="btn-secondary" style="text-decoration:none;text-align:center;">📋 改善事項追蹤</a>
+      <a href="quality.html" class="btn-secondary" style="text-decoration:none;text-align:center;">🔬 監造查驗</a>
+      <a href="export.html"  class="btn-secondary" style="text-decoration:none;text-align:center;">⬇ 匯出報表</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <button class="sidebar-float-btn" id="sidebar-float-btn" onclick="toggleSidebarCollapse()">☰</button>
+    <div class="tab-panel">
+      <div class="page-header">
+        <h2>資料送審須知 — 工程規範第 01330 章</h2>
+      </div>
+      <div class="g-note" style="margin-top:-6px;margin-bottom:18px;">
+        本頁彙整台中減碳技術園區 A 標契約工程規範第 01330 章「資料送審」之送審期限、逾期罰則、審查流程與送審份數規定，供日常監造業務查閱使用。實際權利義務仍以正式契約文件及規範原文為準。
+      </div>
+
+      <!-- 速覽統計 -->
+      <div class="g-stat-grid">
+        <div class="stat-card blue"><div class="stat-label">送審期限管制項目</div><div class="stat-value">13</div><div class="stat-sub">設計 / 計畫階段（1.2.1）</div></div>
+        <div class="stat-card teal"><div class="stat-label">送審資料總項目</div><div class="stat-value">37</div><div class="stat-sub">含份數與主審單位（1.2.4）</div></div>
+        <div class="stat-card amber"><div class="stat-label">修正再送期限</div><div class="stat-value">21<span style="font-size:14px;">天</span></div><div class="stat-sub">自甲方發文日起算</div></div>
+        <div class="stat-card red"><div class="stat-label">退回修正次數</div><div class="stat-value">2<span style="font-size:14px;">次+</span></div><div class="stat-sub">可請求召開會審會議</div></div>
+      </div>
+
+      <!-- 頁內導覽 -->
+      <div class="guide-toc">
+        <a href="#sec-deadline">① 送審期限</a>
+        <a href="#sec-fine">② 逾期罰則</a>
+        <a href="#sec-result">③ 審查結果</a>
+        <a href="#sec-flow">④ 審查流程</a>
+        <a href="#sec-table">⑤ 送審份數清單</a>
+        <a href="#sec-cover">⑥ 封面與版次</a>
+        <a href="#sec-format">⑦ 圖資格式</a>
+        <a href="#sec-monthly">⑧ 工作月報</a>
+        <a href="#sec-diary">⑨ 施工日誌</a>
+      </div>
+
+      <!-- ① 送審期限一覽表 -->
+      <div class="g-section" id="sec-deadline">
+        <div class="g-section-head"><div class="g-section-num">1</div><h2>預定進度表及各項計畫送審期限</h2></div>
+        <div class="g-sub">工程規範 1.2.1 — 送審期限以甲方簽收日為準，遇假日順延</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="width:32px;">#</th><th>項目</th><th>送審期限</th></tr></thead>
+            <tbody id="deadline-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ② 逾期罰則 -->
+      <div class="g-section" id="sec-fine">
+        <div class="g-section-head"><div class="g-section-num">2</div><h2>送審逾期懲罰性違約金</h2></div>
+        <div class="g-sub">工程規範 1.2.2 — 每件每逾期 1 日曆天，依決標金額層級計算</div>
+        <div class="tbl-wrap">
+          <table class="fine-table">
+            <thead><tr><th>決標金額</th><th>每日懲罰性違約金</th></tr></thead>
+            <tbody>
+              <tr><td>未達 100 萬元</td><td>NT$ 500</td></tr>
+              <tr><td>100 萬元以上，未達 2,500 萬元</td><td>NT$ 1,500</td></tr>
+              <tr><td>2,500 萬元以上，未達 5,000 萬元</td><td>NT$ 3,500</td></tr>
+              <tr><td>5,000 萬元以上</td><td>NT$ 5,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="g-note warn">逾規定期限（含逾再次提送期限者）皆計罰。違約金總額上限為契約詳細價目表「文件、紀錄管制費用」項目金額之 2 倍。</div>
+      </div>
+
+      <!-- ③ 審查結果三態 -->
+      <div class="g-section" id="sec-result">
+        <div class="g-section-head"><div class="g-section-num">3</div><h2>審查結果與修正規則</h2></div>
+        <div class="g-sub">工程規範 1.2.6 — 送審資料經審查後蓋印下列其中一種結果章</div>
+        <div class="result-grid">
+          <div class="result-card ok">
+            <div class="result-title">✅ 准予核定</div>
+            <div class="result-desc">乙方接獲後即可據以製造或施工；如有加註處，需依加註內容修正部分後施工。</div>
+          </div>
+          <div class="result-card mod">
+            <div class="result-title">🟡 修正後核定</div>
+            <div class="result-desc">同樣可據以施工，但須按審查意見完成加註之修正事項。</div>
+          </div>
+          <div class="result-card back">
+            <div class="result-title">🔴 退回修正</div>
+            <div class="result-desc">須依審查意見修正，於 <b>21 日曆天內</b>依規定份數重新送審；修正處須明顯標出並註明版次、日期。</div>
+          </div>
+        </div>
+        <div class="g-note red">
+          未經「准予核定」前，乙方如已自行製造或施工，其耗用之工料由乙方自行負責，仍須重新修訂並經核定後方可繼續。<br>
+          送審資料如退回修正達 <b>2 次以上</b>，乙方得請求甲方召開會審會議。
+        </div>
+      </div>
+
+      <!-- ④ 三大審查流程 -->
+      <div class="g-section" id="sec-flow">
+        <div class="g-section-head"><div class="g-section-num">4</div><h2>三類文件審查作業流程</h2></div>
+        <div class="g-sub">附表 1/3～3/3 — 依文件類型分由不同單位擔任「主審單位」並用印「核定」章</div>
+
+        <div style="font-size:13px;font-weight:700;margin:14px 0 6px;color:var(--dnv-sea-blue);">附表(1/3) 設計文件審查流程　<span style="font-weight:400;color:var(--text-muted);font-size:11px;">（細部設計圖說、規範等設計階段文件；主審：營建處）</span></div>
+        <div class="flow-wrap">
+          <div class="flow-row">
+            <div class="flow-step"><div class="fs-role">乙方</div><div class="fs-text">送審（正本＋副本）</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">主審</div><div class="fs-text">營建處 審查</div><div class="fs-sub">副本會辦：綜合施工處／委外監造廠商</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">用印</div><div class="fs-text">加蓋「核定」簽章</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">分發</div><div class="fs-text">函送各單位＋雲端</div><div class="fs-sub">綜合施工處／委外監造廠商／台中電廠、綜合研究所（視需要）</div></div>
+          </div>
+          <div class="flow-branch">
+            <div class="fb-item ok"><b>准予核定</b> → 乙方可據以施工，副本分送相關單位存查。</div>
+            <div class="fb-item back"><b>退回修正</b> → 乙方 21 天內修正後依原份數重新送審。</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:700;margin:20px 0 6px;color:var(--dnv-sea-blue);">附表(2/3) 施工文件審查流程　<span style="font-weight:400;color:var(--text-muted);font-size:11px;">（施工計畫書、品質計畫書、詳細價目表、進度表等；主審：綜合施工處）</span></div>
+        <div class="flow-wrap">
+          <div class="flow-row">
+            <div class="flow-step"><div class="fs-role">乙方</div><div class="fs-text">送審（正本＋副本）</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">主審</div><div class="fs-text">綜合施工處 審查</div><div class="fs-sub">副本會辦：委外監造廠商</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">用印</div><div class="fs-text">加蓋「核定」簽章</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">分發</div><div class="fs-text">函送各單位＋雲端</div><div class="fs-sub">營建處／綜合研究所／台中電廠（視需要）</div></div>
+          </div>
+          <div class="flow-branch">
+            <div class="fb-item ok"><b>准予核定</b> → 乙方可據以施工。</div>
+            <div class="fb-item back"><b>退回修正</b> → 乙方 21 天內修正後重新送審。</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:700;margin:20px 0 6px;color:var(--dnv-sea-blue);">附表(3/3) 技術及測試文件審查流程　<span style="font-weight:400;color:var(--text-muted);font-size:11px;">（溶劑測試計畫、人員訓練計畫、測試比對報告等；主審：綜合研究所）</span></div>
+        <div class="flow-wrap">
+          <div class="flow-row">
+            <div class="flow-step"><div class="fs-role">乙方</div><div class="fs-text">送審（正本＋副本）</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">主審</div><div class="fs-text">綜合研究所 審查</div><div class="fs-sub">副本會辦：綜合施工處／委外監造廠商</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">用印</div><div class="fs-text">加蓋「核定」簽章</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-role">分發</div><div class="fs-text">函送各單位＋雲端</div><div class="fs-sub">營建處／台中電廠（視需要）</div></div>
+          </div>
+          <div class="flow-branch">
+            <div class="fb-item ok"><b>准予核定</b> → 乙方可據以進行相關技術／測試工作。</div>
+            <div class="fb-item back"><b>退回修正</b> → 乙方 21 天內修正後重新送審。</div>
+          </div>
+        </div>
+        <div class="g-note">三種流程共通邏輯一致：乙方送審 → 主審單位審查 → 核定用印 → 分送相關單位並上傳雲端平台。差異僅在「主審單位」與「分送對象」不同。</div>
+      </div>
+
+      <!-- ⑤ 送審份數清單 -->
+      <div class="g-section" id="sec-table">
+        <div class="g-section-head"><div class="g-section-num">5</div><h2>各項資料送交單位及份數</h2></div>
+        <div class="g-sub">工程規範 1.2.4 — 共 37 項；所有設計階段文件送交時均須另附 PDF 電子檔光碟一份</div>
+        <div class="filter-bar">
+          <input type="search" id="g-search" placeholder="搜尋項目名稱…" oninput="renderDocsTable()">
+          <select class="filter-select" id="g-contract-filter" onchange="renderDocsTable()">
+            <option value="">全部合約</option>
+            <option value="合約一">合約一</option>
+            <option value="合約二">合約二</option>
+          </select>
+          <span class="filter-count" id="g-count"></span>
+        </div>
+        <div class="tbl-wrap g-tbl-wrap">
+          <table>
+            <thead><tr><th style="width:32px;">#</th><th style="width:22%;">項目</th><th>送交單位及份數</th><th style="width:15%;">主審／函覆單位</th></tr></thead>
+            <tbody id="docs-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ⑥ 封面與版次 -->
+      <div class="g-section" id="sec-cover">
+        <div class="g-section-head"><div class="g-section-num">6</div><h2>送審文件封面標示與版次規則</h2></div>
+        <div class="g-sub">工程規範 1.2.7、1.3.6、1.3.7</div>
+        <div class="g-cols-2">
+          <div>
+            <div class="g-col-title">封面應註明</div>
+            <ul class="g-checklist">
+              <li>本案名稱</li>
+              <li>資料名稱</li>
+              <li>送審日期</li>
+              <li>送審版次（第 1 次送審為 A 版，核定後為 0 版）</li>
+            </ul>
+          </div>
+          <div>
+            <div class="g-col-title">次頁應註明</div>
+            <ul class="g-checklist">
+              <li>承攬商名稱</li>
+              <li>技師、工地主任及相關人員簽名欄</li>
+            </ul>
+          </div>
+        </div>
+        <div class="g-note">
+          版次規則：第一次送審為 <b>A 版</b>；如退回修正，依序編為 <b>B 版、C 版…</b>；審查無需修正者，可核蓋「核定修正為 0 版」直接進版為 <b>0 版（核定版）</b>。<br>
+          核定後如仍需配合變更再送審，依序編為 <b>1 版、2 版…</b>，並依原程序辦理審查及核定。
+        </div>
+      </div>
+
+      <!-- ⑦ 圖資格式 -->
+      <div class="g-section" id="sec-format">
+        <div class="g-section-head"><div class="g-section-num">7</div><h2>送審圖資格式規定</h2></div>
+        <div class="g-sub">工程規範 1.3.5</div>
+        <ul class="g-checklist">
+          <li>圖面尺寸：除甲方另行認可外，須為 A1 及其 A3 縮圖；報告與紀錄文件須為 A4 或 A3。</li>
+          <li>檔案格式：設計圖面為 <b>CAD</b> 檔；計畫書、計算書、操作手冊等為 <b>WORD</b> 可編輯格式；型錄或原廠文件可為 <b>PDF</b>（色彩同原件）。</li>
+          <li>所有文件須以中文提供，特殊技術或材料圖文資料得使用英文。</li>
+          <li>設計圖須由執業技師／建築師本人逐張簽署並加蓋執業圖記。</li>
+          <li>結構計算書須由技師本人於封面或首頁簽署並加蓋執業圖記，全份裝訂成冊、編目錄頁碼並加蓋騎縫章。</li>
+          <li>竣工圖資電子檔（CAD／WORD／PDF）光碟片 <b>9 份</b>送甲方。</li>
+        </ul>
+      </div>
+
+      <!-- ⑧ 工作月報 -->
+      <div class="g-section" id="sec-monthly">
+        <div class="g-section-head"><div class="g-section-num">8</div><h2>工作月報應載明事項</h2></div>
+        <div class="g-sub">工程規範 1.3.11 — 自開工日之當月即開始按月填寫至竣工當月止</div>
+        <ul class="g-checklist">
+          <li>本月份工作進度：整體及分項工作進度（%）及累進進度（%）</li>
+          <li>洽辦事項一覽表（含辦理情形、結論及建議）</li>
+          <li>本月份工作說明：設計、備料、加工、製造、試驗及現場施工安裝情形</li>
+          <li>安全衛生及環保工作等事項之管理措施與辦理情形</li>
+          <li>本月份工作會議重要決議事項</li>
+          <li>下個月工作進度：預定項目及進度（%）</li>
+          <li>送審資料進度、情況（含已送審、退回修正、認可）及雙方來往文件一覽表</li>
+          <li>本月份施工及檢（試）驗照片（500 萬像素以上，竣工後 10 日曆天內彙總燒錄光碟）</li>
+          <li>施工階段進度表（以 A3 規格列印，每月更新）</li>
+          <li>本月份檢驗進度、檢驗報告（含不符合部分之因應措施）</li>
+          <li>材料設備送審／檢（試）驗管制總表</li>
+          <li>下個月檢驗進度</li>
+        </ul>
+      </div>
+
+      <!-- ⑨ 施工日誌 -->
+      <div class="g-section" id="sec-diary">
+        <div class="g-section-head"><div class="g-section-num">9</div><h2>施工日誌填寫重點</h2></div>
+        <div class="g-sub">工程規範 1.3.13</div>
+        <ul class="g-checklist">
+          <li>自開工日起每日按實填寫至竣工當日止，由工地負責人簽名</li>
+          <li>應於次日送甲方現場檢驗員簽章（假日、休息日得順延），簽章後一份送還乙方</li>
+          <li>應註明進場材料規格與數量、每日完成工作數量，作為估驗付款依據</li>
+          <li>甲方如有不同意見或記載出入，乙方應即澄清或更正並留存正式資料</li>
+          <li>影響工作進度情事須於當日日誌詳載；日誌未送達或未記載者，甲方得拒絕核延工期</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+const DEADLINES = [
+  { n:1,  item:'工作開工報告表', due:'甲方指定開工日當天' },
+  { n:2,  item:'設計階段計畫', due:'決標日之次日起 30 日曆天內' },
+  { n:3,  item:'設計階段進度表', due:'決標日之次日起 30 日曆天內' },
+  { n:4,  item:'總工程預定進度表（含施工網狀圖）', due:'決標日之次日起 90 日曆天內' },
+  { n:5,  item:'整體施工計畫', due:'決標日之次日起 90 日曆天內（依工程會「建築工程施工計畫書製作綱要手冊」編寫）' },
+  { n:6,  item:'整體品質計畫', due:'決標日之次日起 90 日曆天內（依工程會「品質計畫製作綱要」編寫）' },
+  { n:7,  item:'環境保護計畫', due:'決標日之次日起 90 日曆天內（依工程規範第 01572 章編寫）' },
+  { n:8,  item:'職業安全衛生管理計畫', due:'決標日之次日起 90 日曆天內（依工程規範第 01574 章編寫）' },
+  { n:9,  item:'溶劑測試計畫', due:'建築許可取得後之次日起 60 日曆天內' },
+  { n:10, item:'前期評估報告', due:'決標日起 90 日曆天內' },
+  { n:11, item:'模擬平台建立計畫', due:'建築許可取得後之次日起 120 日曆天內' },
+  { n:12, item:'人員訓練計畫', due:'試運轉測試前 180 日曆天內' },
+  { n:13, item:'試運轉及性能測試計畫（含小規模碳捕集廠及其模擬平台）', due:'試運轉測試前 60 日曆天內' },
+];
+
+const DOCS = [
+  { n:1,  item:'設計階段計畫', units:'營建處 5份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)\n綜合研究所 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:2,  item:'設計階段進度表', units:'營建處 5份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)\n綜合研究所 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:3,  item:'建築相關設計圖、碳捕集廠細部設計圖面', units:'營建處 5份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)\n綜合研究所 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:4,  item:'結構計算書', units:'營建處 3份(正本)\n綜合施工處 1份(副本)\n委外監造廠商 1份(副本)\n綜合研究所 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:5,  item:'風險評估報告書', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(副本)\n營建處 3份(副本)', main:'委外監造廠商', contract:'合約一' },
+  { n:6,  item:'地質鑽探施工計畫', units:'營建處 3份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:7,  item:'測量及地質調查（鑽探）報告書', units:'營建處 3份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:8,  item:'地質承載力評估報告書', units:'營建處 3份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:9,  item:'詳細價目表', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(正本)\n營建處 3份(副本)', main:'委外監造廠商', contract:'合約一' },
+  { n:10, item:'施工預定進度表（含施工網狀圖）', units:'委外監造廠商 1份(正本)\n綜合施工處 6份(正本)\n綜合研究所 1份(副本)', main:'委外監造廠商', contract:'合約一' },
+  { n:11, item:'整體施工計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 6份(正本)', main:'委外監造廠商', contract:'合約一' },
+  { n:12, item:'整體品質計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 6份(正本)', main:'委外監造廠商', contract:'合約一' },
+  { n:13, item:'環境保護計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 6份(正本)', main:'委外監造廠商', contract:'合約一' },
+  { n:14, item:'職業安全衛生管理計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 6份(正本)', main:'委外監造廠商', contract:'合約一' },
+  { n:15, item:'分項施工計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 6份(正本)', main:'委外監造廠商', contract:'合約一' },
+  { n:16, item:'前期評估報告', units:'綜合研究所 2份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)\n營建處 1份(副本)', main:'綜合研究所', contract:'合約一' },
+  { n:17, item:'材料/設備送審資料', units:'委外監造廠商 1份(正本)\n綜合研究所 3份(正本)\n綜合施工處 2份(副本)\n營建處 1份(副本)', main:'委外監造廠商', contract:'合約一' },
+  { n:18, item:'工作月報', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(副本)\n營建處 1份(副本)', main:'委外監造廠商', contract:'合約一、二' },
+  { n:19, item:'施工日誌', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(副本)', main:'委外監造廠商', contract:'合約一、二' },
+  { n:20, item:'工廠檢驗及試驗計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(副本)\n綜合研究所 2份(副本)\n營建處 1份(副本)', main:'委外監造廠商', contract:'合約一' },
+  { n:21, item:'營建工地逕流廢水削減計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(副本)\n營建處 3份(副本)\n綜合研究所 1份(副本)', main:'委外監造廠商', contract:'合約一' },
+  { n:22, item:'吊裝計畫', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(副本)\n營建處 3份(副本)\n綜合研究所 1份(副本)', main:'委外監造廠商', contract:'合約一' },
+  { n:23, item:'定期（預防性）保養計畫及表單程序書', units:'委外監造廠商 1份(正本)\n綜合施工處 3份(副本)\n營建處 1份(副本)\n台中電廠 3份(副本)\n綜合研究所 1份(副本)\n光碟 9份', main:'委外監造廠商', contract:'合約二' },
+  { n:24, item:'色彩計畫', units:'營建處 3份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)\n綜合研究所 1份(副本)\n台中發電廠 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:25, item:'模擬平台建立計畫', units:'綜合研究所 1份(正本)\n營建處 1份(副本)\n綜合施工處 1份(副本)\n委外監造廠商 1份(副本)', main:'綜合研究所', contract:'合約一' },
+  { n:26, item:'試運轉及性能測試計畫', units:'綜合研究所 1份(正本)\n營建處 1份(副本)\n綜合施工處 5份(副本)\n委外監造廠商 1份(副本)\n台中電廠 3份(副本)', main:'綜合研究所', contract:'合約一' },
+  { n:27, item:'竣工圖（含認可圖面、資料及計算書彙整、運轉操作及維護手冊）', units:'委外監造廠商 1份(正本)\n綜合施工處 5份(正本)\n營建處 1份(副本)\n台中電廠 3份(副本)\n綜合研究所 1份(副本)\n光碟 11份', main:'委外監造廠商', contract:'合約一、二' },
+  { n:28, item:'性能測試結果報告', units:'綜合研究所 2份(正本)\n營建處 1份(副本)\n綜合施工處 1份(副本)\n委外監造廠商 1份(副本)\n台中電廠 2份(副本)', main:'綜合研究所', contract:'合約一' },
+  { n:29, item:'BIM 工作執行計畫書、BIM 竣工模型、成果報告書及簡報', units:'營建處 4份(正本)\n綜合施工處 3份(副本)\n委外監造廠商 1份(副本)\n綜合研究所 1份(副本)\n台中發電廠 1份(副本)', main:'營建處', contract:'合約一' },
+  { n:30, item:'溶劑測試計畫', units:'綜合研究所 3份(正本)\n營建處 1份(副本)\n綜合施工處 1份(副本)\n委外監造廠商 1份(副本)', main:'綜合研究所', contract:'合約一' },
+  { n:31, item:'人員訓練計畫', units:'綜合研究所 2份(正本)\n營建處 1份(副本)\n台中電廠 2份(副本)\n綜合施工處 1份(副本)\n委外監造廠商 1份(副本)', main:'綜合研究所', contract:'合約一' },
+  { n:32, item:'各項測試報告（長期溶劑測試、參數測試、溶劑壓力測試、負載跟隨試驗）', units:'綜合研究所 3份(正本)', main:'綜合研究所', contract:'合約二' },
+  { n:33, item:'第一年度測試結果報告', units:'綜合研究所 3份(正本)\n營建處 1份(副本)', main:'綜合研究所', contract:'合約二' },
+  { n:34, item:'教展中心細部設計圖說（含細部設計圖面、設備規格及多媒體影音設計）', units:'綜合研究所 3份(正本)\n營建處 1份(副本)\n台中電廠 1份(副本)', main:'綜合研究所', contract:'合約二' },
+  { n:35, item:'兩年測試結果報告（含測試數據、品保品管紀錄、操作維修手冊、訓練紀錄等）', units:'綜合研究所 2份(正本)\n營建處 1份(副本)\n台中電廠 2份(副本)', main:'綜合研究所', contract:'合約二' },
+  { n:36, item:'測試比對報告（與至少 1 個國際同規模碳捕集廠比對）', units:'綜合研究所 3份(正本)', main:'綜合研究所', contract:'合約二' },
+  { n:37, item:'測試日報／測試月報／測試年報', units:'綜合研究所 3份(正本)', main:'綜合研究所', contract:'合約二' },
+];
+
+function renderDeadlineTable() {
+  const tb = document.getElementById('deadline-tbody');
+  tb.innerHTML = DEADLINES.map(d => `<tr><td>${d.n}</td><td>${esc(d.item)}</td><td>${esc(d.due)}</td></tr>`).join('');
+}
+
+function renderDocsTable() {
+  const q = document.getElementById('g-search').value.trim().toLowerCase();
+  const c = document.getElementById('g-contract-filter').value;
+  const filtered = DOCS.filter(d => {
+    if (c && !d.contract.includes(c)) return false;
+    if (q && !d.item.toLowerCase().includes(q) && !d.main.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('docs-tbody').innerHTML = filtered.map(d => `
+    <tr>
+      <td>${d.n}</td>
+      <td>${esc(d.item)}<span class="contract-tag">${esc(d.contract)}</span></td>
+      <td class="units">${esc(d.units)}</td>
+      <td>${esc(d.main)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">查無符合項目</td></tr>';
+  document.getElementById('g-count').textContent = `共 ${filtered.length} / ${DOCS.length} 項`;
+}
+
+function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('送審須知');
+  initSidebarState();
+  renderNav('guide');
+  renderDeadlineTable();
+  renderDocsTable();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -58,7 +58,7 @@ body { display:flex;align-items:center;justify-content:center;min-height:100vh; 
 
 // 若已登入直接跳轉
 if (isLoggedIn()) {
-  window.location.href = 'dashboard.html';
+  window.location.href = 'timeline.html';
 }
 
 async function checkPw() {
@@ -73,7 +73,7 @@ async function checkPw() {
   try {
     const result = await doLogin(val);
     if (result.ok) {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'timeline.html';
     } else {
       errEl.textContent = result.error || '密碼錯誤，請再試一次';
       inp.classList.add('error');
