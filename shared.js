@@ -197,10 +197,10 @@ function toastResolve(result) {
   if (_toastResolve) { _toastResolve(result); _toastResolve = null; }
 }
 
-// ── 導覽列渲染 ──
+// ── 導覽選單渲染（漢堡選單內容）──
 function renderNav(activePage) {
-  const tabsEl = document.getElementById('main-tabs');
-  if (!tabsEl) return;
+  const listEl = document.getElementById('nav-list');
+  if (!listEl) return;
 
   // 讀取 badge 計數（從 localStorage）
   const defects = storageLoad(DEFECT_KEY, []);
@@ -210,14 +210,37 @@ function renderNav(activePage) {
 
   const badgeVals = { 'open-count': openDef, 'qi-fail-count': qiFail };
 
-  tabsEl.innerHTML = NAV_PAGES.map(function(p) {
+  listEl.innerHTML = NAV_PAGES.map(function(p, i) {
     const isActive = p.id === activePage;
     const bKey = p.badge;
     const bVal = bKey ? (badgeVals[bKey] || 0) : 0;
-    const badgeHtml = bKey && bVal > 0 ? `<span class="tab-badge">${bVal}</span>` : '';
-    return `<a href="${p.href}" class="tab-btn${isActive?' active':''}">${p.label}${badgeHtml}</a>`;
+    const badgeHtml = bKey && bVal > 0 ? `<span class="nav-link-badge">${bVal}</span>` : '';
+    const num = String(i + 1).padStart(2, '0');
+    const label = p.label.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, ''); // 去除舊版 icon 符號前綴
+    return `<li><a href="${p.href}" class="nav-link${isActive?' active':''}">
+      <span class="nav-link-num">${num}</span>
+      <span class="nav-link-label">${label}</span>
+      ${badgeHtml}
+    </a></li>`;
   }).join('');
 }
+
+// ── 漢堡選單開關 ──
+function toggleNavMenu() {
+  const overlay = document.getElementById('nav-overlay');
+  const btn     = document.getElementById('hamburger-btn');
+  if (!overlay) return;
+  const willOpen = !overlay.classList.contains('open');
+  overlay.classList.toggle('open', willOpen);
+  if (btn) btn.classList.toggle('active', willOpen);
+}
+function closeNavMenu() {
+  const overlay = document.getElementById('nav-overlay');
+  const btn     = document.getElementById('hamburger-btn');
+  if (overlay) overlay.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeNavMenu(); });
 
 // ── Sidebar collapse ──
 let _sidebarCollapsed = false;
@@ -460,6 +483,9 @@ const QI_PRELOAD   = []; // quality.html 自行定義完整 preload
 function buildHeader(pageTitle) {
   return `
   <div class="header">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleNavMenu()" title="選單" aria-label="選單">
+      <span></span><span></span><span></span>
+    </button>
     <div class="header-logo">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </div>
@@ -481,6 +507,17 @@ function buildHeader(pageTitle) {
     </div>
   </div>
   <nav class="tabs" id="main-tabs"></nav>
+  <div class="nav-overlay" id="nav-overlay">
+    <div class="nav-overlay-bg" onclick="closeNavMenu()"></div>
+    <div class="nav-overlay-panel">
+      <div class="nav-overlay-head">
+        <span>MENU</span>
+        <button class="nav-overlay-close" onclick="closeNavMenu()" aria-label="關閉選單"></button>
+      </div>
+      <ul class="nav-list" id="nav-list"></ul>
+      <div class="nav-overlay-foot">DNV AS　減碳A標施工監造回報系統</div>
+    </div>
+  </div>
   <div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>`;
 }
 
