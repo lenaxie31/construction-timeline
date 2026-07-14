@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文件管理 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── 工具列 ── */
+.dt-toolbar { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px; }
+.dt-toolbar-row { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.dt-toolbar-label { font-size:11.5px;font-weight:700;color:var(--text-muted);white-space:nowrap;letter-spacing:.04em; }
+.dt-chip { font-family:inherit;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s,border-color .12s;display:inline-flex;align-items:center;gap:6px; }
+.dt-chip:hover { background:var(--border-light); }
+.dt-chip.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
+.dt-chip .dt-dot { width:7px;height:7px;flex-shrink:0; }
+.dt-chip.overdue-chip.active { background:var(--c-red);border-color:var(--c-red); }
+.dt-sort-select { font-family:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;cursor:pointer; }
+.dt-expand-btn { font-family:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:border-color .12s,color .12s; }
+.dt-expand-btn:hover { border-color:var(--dnv-sea-blue);color:var(--dnv-sea-blue); }
+.dt-view-toggle { display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden; }
+.dt-view-btn { font-family:inherit;font-size:13px;font-weight:600;padding:8px 16px;border:none;background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
+.dt-view-btn.active { background:var(--dnv-dark-blue);color:#fff; }
+
+/* ── 逾期提醒 ── */
+.dt-overdue-banner { background:var(--c-red-bg);border:1px solid var(--c-red-border);border-radius:var(--radius);padding:11px 16px;margin-bottom:16px;font-size:13.5px;color:#8A1A20;display:flex;align-items:center;gap:10px;flex-wrap:wrap; }
+
+/* ── 分類群組 ── */
+.dt-cat-group { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden; }
+.dt-cat-header { display:flex;align-items:center;gap:11px;padding:14px 18px;cursor:pointer;user-select:none;transition:background .12s;border-left:4px solid var(--dnv-cyan); }
+.dt-cat-header:hover { background:var(--bg); }
+.dt-cat-chevron { color:var(--text-muted);font-size:11px;transition:transform .2s;flex-shrink:0; }
+.dt-cat-group.open .dt-cat-chevron { transform:rotate(90deg); }
+.dt-cat-name { font-size:15.5px;font-weight:700;flex:1;min-width:0; }
+.dt-cat-count { font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text-muted);flex-shrink:0; }
+.dt-cat-mini { font-size:11.5px;color:var(--text-muted);flex-shrink:0;white-space:nowrap; }
+.dt-cat-mini .od { color:var(--c-red);font-weight:700; }
+.dt-cat-body { display:none;border-top:1px solid var(--border-light); }
+.dt-cat-group.open .dt-cat-body { display:block; }
+
+/* ── 文件列 ── */
+.dt-row { border-bottom:1px solid var(--border-light); }
+.dt-row:last-child { border-bottom:none; }
+.dt-row-head { display:flex;align-items:center;gap:12px;padding:13px 18px 13px 30px;cursor:pointer;user-select:none;transition:background .12s; }
+.dt-row-head:hover { background:#F8F9FB; }
+.dt-row-chevron { color:var(--text-muted);font-size:10px;transition:transform .2s;flex-shrink:0;width:10px; }
+.dt-row.open .dt-row-chevron { transform:rotate(90deg); }
+.dt-row-main { flex:1;min-width:0; }
+.dt-row-name { font-size:14.5px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.dt-row-docno { font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.dt-holder-chip { font-size:12.5px;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:4px; }
+.dt-holder-chip.empty { color:var(--text-muted); }
+.dt-efile { font-size:11.5px;white-space:nowrap;flex-shrink:0; }
+.dt-efile.yes { color:var(--c-green); }
+.dt-efile.no  { color:var(--text-muted); }
+.dt-st { font-size:11px;font-weight:700;padding:3px 10px;border-radius:9px;white-space:nowrap;flex-shrink:0;letter-spacing:.02em; }
+.dt-st-pending    { background:var(--border-light);color:var(--text-secondary); }
+.dt-st-processing { background:var(--c-amber-bg);color:var(--c-amber); }
+.dt-st-sent       { background:var(--c-blue-bg);color:var(--c-blue); }
+.dt-st-returned   { background:var(--c-teal-bg);color:var(--c-teal); }
+.dt-st-done       { background:var(--c-green-bg);color:var(--c-green); }
+.dt-overdue-tag { font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--c-red-bg);color:var(--c-red);white-space:nowrap;flex-shrink:0; }
+
+/* ── 展開詳細 ── */
+.dt-detail { background:var(--bg);border-top:1px solid var(--border-light);padding:16px 20px 16px 42px;animation:dtSlide .18s ease; }
+@keyframes dtSlide { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+.dt-detail-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 20px;margin-bottom:12px; }
+.dt-detail-item .lbl { font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px; }
+.dt-detail-item .val { font-size:13.5px;color:var(--text-primary); }
+.dt-detail-item .val.red { color:var(--c-red);font-weight:700; }
+.dt-detail-notes { font-size:13.5px;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;line-height:1.6; }
+.dt-detail-actions { display:flex;gap:8px; }
+
+/* ── 時間軸 ── */
+.dt-timeline-empty { text-align:center;padding:60px 20px;color:var(--text-muted);font-size:14px; }
+.dt-tl-month { margin-bottom:22px; }
+.dt-tl-month-label { font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--dnv-dark-blue);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--dnv-dark-blue);display:inline-block; }
+.dt-tl-items { position:relative;padding-left:22px;border-left:2px solid var(--border-light);margin-left:6px;display:flex;flex-direction:column;gap:12px; }
+.dt-tl-item { position:relative; }
+.dt-tl-dot { position:absolute;left:-28px;top:14px;width:11px;height:11px;border-radius:50%;background:var(--dnv-cyan);box-shadow:0 0 0 3px var(--bg); }
+.dt-tl-card { background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--dnv-cyan);border-radius:var(--radius-sm);padding:11px 16px;cursor:pointer;transition:box-shadow .12s; display:flex;align-items:center;gap:12px;flex-wrap:wrap; }
+.dt-tl-card:hover { box-shadow:var(--shadow); }
+.dt-tl-date { font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;width:52px; }
+.dt-tl-cat { font-size:10.5px;font-weight:700;white-space:nowrap;flex-shrink:0; }
+.dt-tl-name { font-size:13.5px;font-weight:600;flex:1;min-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+
+@media(max-width:767px) {
+  .dt-toolbar { padding:12px 12px; }
+  .dt-row-head { padding:11px 12px 11px 22px;flex-wrap:wrap; }
+  .dt-cat-header { padding:12px 14px; }
+  .dt-detail { padding:14px 14px 14px 26px; }
+  .dt-detail-grid { grid-template-columns:1fr 1fr; }
+  .dt-tl-card { padding:10px 12px; }
+  .dt-tl-name { min-width:100%;order:1; }
+}
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+<div class="layout">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="collapse-icon"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="timeline.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 時間軸</a>
+      <div class="sidebar-section-title" style="margin-top:10px;">分類色彩</div>
+      <div id="dt-cat-legend" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="tab-panel">
+      <div class="page-header">
+        <h2>文件管理</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="dt-view-toggle">
+            <button class="dt-view-btn active" id="dt-view-list-btn" onclick="setDocView('list')">📋 清單</button>
+            <button class="dt-view-btn" id="dt-view-tl-btn" onclick="setDocView('timeline')">🕐 時間軸</button>
+          </div>
+          <button class="btn-primary" style="width:auto;padding:9px 16px;font-size:13.5px;" onclick="openAddDocModal()">＋ 新增文件</button>
+        </div>
+      </div>
+
+      <div id="dt-overdue-banner"></div>
+      <div class="stat-grid" id="dt-stat-grid"></div>
+      <div class="dt-toolbar" id="dt-toolbar"></div>
+
+      <div id="dt-list-view">
+        <div id="dt-cat-groups"></div>
+      </div>
+      <div id="dt-timeline-view" style="display:none;">
+        <div id="dt-timeline-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+
+<!-- 新增/編輯文件 Modal -->
+<div class="modal-overlay" id="doc-modal" style="display:none">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header"><h3 id="dm-modal-title">新增文件</h3><button class="modal-close" onclick="closeDocModal()">×</button></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>分類</label>
+          <input type="text" id="dm-category" list="dt-cat-datalist" placeholder="例：材料抽驗">
+          <datalist id="dt-cat-datalist"></datalist>
+        </div>
+        <div class="field"><label>進度狀態</label>
+          <select id="dm-progress">
+            <option value="pending">待處理</option>
+            <option value="processing">處理中</option>
+            <option value="sent">已送出</option>
+            <option value="returned">已歸還</option>
+            <option value="done">已完成</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>文件名稱</label><input type="text" id="dm-name" placeholder="例：材料抽驗_甲種圍籬進場"></div>
+      <div class="field"><label>文件編號（選填）</label><input type="text" id="dm-docno" placeholder="例：MCCT-10490817_001"></div>
+      <div class="field"><label>目前位置／負責人</label><input type="text" id="dm-holder" placeholder="正本現在在誰手上、在哪個單位"></div>
+      <div class="field-row">
+        <div class="field"><label>建檔日期</label><input type="date" id="dm-create-date"></div>
+        <div class="field"><label>送出日期</label><input type="date" id="dm-sent-date"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>應歸還日期</label><input type="date" id="dm-due-date"></div>
+        <div class="field"><label>實際歸還日期</label><input type="date" id="dm-return-date"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>紙本狀態</label>
+          <input type="text" id="dm-paper-status" list="dt-paper-datalist" placeholder="例：已簽核">
+          <datalist id="dt-paper-datalist">
+            <option value="已簽核"><option value="已發文"><option value="未歸檔"><option value="簽收中"><option value="未簽核">
+          </datalist>
+        </div>
+        <div class="field"><label>電子檔歸檔</label>
+          <label style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:14px;cursor:pointer;">
+            <input type="checkbox" id="dm-efiled" style="width:17px;height:17px;accent-color:var(--dnv-sea-blue);">
+            已歸檔電子檔
+          </label>
+        </div>
+      </div>
+      <div class="field"><label>備註（選填）</label><textarea id="dm-notes" placeholder="其他追蹤記錄…" style="min-height:56px;"></textarea></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn-modal" id="dm-delete-btn" style="display:none;color:var(--c-red);border-color:var(--c-red-border);background:var(--c-red-bg);" onclick="deleteDocFromModal()">刪除</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-modal" onclick="closeDocModal()">取消</button>
+        <button class="btn-modal primary" onclick="saveDoc()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-confirm" id="toast-confirm">
+  <span id="toast-msg">確定要刪除？</span>
+  <div style="display:flex;gap:8px;">
+    <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+let docTrackItems = [];
+let editingDocId = null;
+let docSearchTerm = '';
+let docStatusFilter = [];   // 複選：pending/processing/sent/returned/done
+let docOverdueOnly = false;
+let docCategoryFilter = []; // 複選分類
+let docSortBy = 'create-desc';
+let docViewMode = 'list';
+let docGroupCollapsed = {}; // category -> bool
+let docRowExpanded = {};    // id -> bool
+
+const CATEGORY_ORDER = ['材料抽驗','施工抽查','隨機抽查','改善事項','工安管理','監造報表','審查意見','人員名冊','契約價目','其他'];
+const CATEGORY_COLORS = {
+  '材料抽驗': '#004F9F',
+  '施工抽查': '#64B33B',
+  '隨機抽查': '#15C2BB',
+  '改善事項': '#EB2A34',
+  '工安管理': '#B56700',
+  '監造報表': '#A1AAE6',
+  '審查意見': '#2B6173',
+  '人員名冊': '#988F86',
+  '契約價目': '#009FE3',
+  '其他': '#9C9A92'
+};
+const STATUS_LABELS = { pending:'待處理', processing:'處理中', sent:'已送出', returned:'已歸還', done:'已完成' };
+const STATUS_ORDER  = ['pending','processing','sent','returned','done'];
+
+function catColor(cat) { return CATEGORY_COLORS[cat] || '#009FE3'; }
+function isOverdue(d) {
+  return !!(d.dueDate && !d.returnDate && d.progress !== 'done' && d.dueDate < todayStr());
+}
+
+const docSave = makeModuleSave(DOCTRACK_KEY, 'doctrack', () => docTrackItems);
+
+async function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('文件管理');
+  initSidebarState();
+  renderNav('doctrack');
+  const data = await loadAllData();
+  docTrackItems = data.docTrack;
+  renderCatLegend();
+  renderAll();
+}
+
+function renderCatLegend() {
+  const cats = allCategoriesInUse();
+  document.getElementById('dt-cat-legend').innerHTML = cats.map(c =>
+    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
+      <span style="width:9px;height:9px;flex-shrink:0;background:${catColor(c)};"></span>${esc(c)}
+    </div>`
+  ).join('');
+}
+
+function allCategoriesInUse() {
+  const set = new Set(docTrackItems.map(d => d.category).filter(Boolean));
+  const ordered = CATEGORY_ORDER.filter(c => set.has(c));
+  const extra = [...set].filter(c => !CATEGORY_ORDER.includes(c)).sort();
+  return ordered.concat(extra);
+}
+
+function renderAll() {
+  renderStats();
+  renderOverdueBanner();
+  renderToolbar();
+  document.getElementById('dt-list-view').style.display     = docViewMode === 'list' ? '' : 'none';
+  document.getElementById('dt-timeline-view').style.display  = docViewMode === 'timeline' ? '' : 'none';
+  if (docViewMode === 'list') renderCatGroups(); else renderTimeline();
+}
+
+function setDocView(mode) {
+  docViewMode = mode;
+  document.getElementById('dt-view-list-btn').classList.toggle('active', mode === 'list');
+  document.getElementById('dt-view-tl-btn').classList.toggle('active', mode === 'timeline');
+  renderAll();
+}
+
+// ── 統計卡 ──
+function renderStats() {
+  const counts = { pending:0, processing:0, sent:0, returned:0, done:0 };
+  let overdue = 0;
+  docTrackItems.forEach(d => {
+    if (counts[d.progress] !== undefined) counts[d.progress]++;
+    if (isOverdue(d)) overdue++;
+  });
+  const cards = [
+    { label:'待處理', value:counts.pending, cls:'' },
+    { label:'處理中', value:counts.processing, cls:'amber' },
+    { label:'已送出', value:counts.sent, cls:'blue' },
+    { label:'已歸還', value:counts.returned, cls:'teal' },
+    { label:'已完成', value:counts.done, cls:'green' },
+    { label:'逾期未還', value:overdue, cls:'red' },
+  ];
+  document.getElementById('dt-stat-grid').innerHTML = cards.map(c =>
+    `<div class="stat-card ${c.cls}"><div class="stat-label">${c.label}</div><div class="stat-value">${c.value}</div></div>`
+  ).join('');
+}
+
+function renderOverdueBanner() {
+  const items = docTrackItems.filter(isOverdue);
+  const el = document.getElementById('dt-overdue-banner');
+  if (!items.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="dt-overdue-banner">🔔 <strong>${items.length}</strong> 份文件已逾期未歸還：
+    ${items.slice(0,5).map(d => `<span style="text-decoration:underline;cursor:pointer;" onclick="openEditDocModal('${d.id}')">${esc(d.name)}</span>`).join('、')}
+    ${items.length > 5 ? `等 ${items.length} 項` : ''}
+  </div>`;
+}
+
+// ── 工具列（搜尋／狀態篩選／分類篩選／排序／展開收合）──
+function renderToolbar() {
+  const cats = allCategoriesInUse();
+  const statusChips = STATUS_ORDER.map(s =>
+    `<button class="dt-chip${docStatusFilter.includes(s)?' active':''}" onclick="toggleDocStatusFilter('${s}')">${STATUS_LABELS[s]}</button>`
+  ).join('');
+  const catChips = cats.map(c =>
+    `<button class="dt-chip${docCategoryFilter.includes(c)?' active':''}" onclick="toggleDocCategoryFilter('${esc(c)}')"><span class="dt-dot" style="background:${catColor(c)}"></span>${esc(c)}</button>`
+  ).join('');
+
+  document.getElementById('dt-toolbar').innerHTML = `
+    <div class="dt-toolbar-row">
+      <input type="search" placeholder="搜尋文件名稱、編號、負責人、備註…" value="${esc(docSearchTerm)}"
+        oninput="setDocSearch(this.value)" style="flex:1;min-width:200px;">
+      <select class="dt-sort-select" onchange="setDocSort(this.value)">
+        <option value="create-desc" ${docSortBy==='create-desc'?'selected':''}>建檔日期（新→舊）</option>
+        <option value="create-asc"  ${docSortBy==='create-asc'?'selected':''}>建檔日期（舊→新）</option>
+        <option value="due-asc"     ${docSortBy==='due-asc'?'selected':''}>應歸還日期（最快到期優先）</option>
+        <option value="status"     ${docSortBy==='status'?'selected':''}>依進度狀態</option>
+      </select>
+      <button class="dt-expand-btn" onclick="setAllGroupsCollapsed(false)">展開全部</button>
+      <button class="dt-expand-btn" onclick="setAllGroupsCollapsed(true)">收合全部</button>
+    </div>
+    <div class="dt-toolbar-row">
+      <span class="dt-toolbar-label">狀態</span>
+      ${statusChips}
+      <button class="dt-chip overdue-chip${docOverdueOnly?' active':''}" onclick="toggleDocOverdueOnly()">⚠ 只看逾期</button>
+    </div>
+    <div class="dt-toolbar-row">
+      <span class="dt-toolbar-label">分類</span>
+      ${catChips}
+    </div>
+  `;
+  document.getElementById('dt-cat-datalist').innerHTML =
+    allCategoriesInUse().concat(CATEGORY_ORDER).filter((v,i,a)=>a.indexOf(v)===i)
+    .map(c => `<option value="${esc(c)}">`).join('');
+}
+
+function setDocSearch(v) { docSearchTerm = v; if (v.trim() && docViewMode==='list') { allCategoriesInUse().forEach(c=>docGroupCollapsed[c]=false); } renderAll(); }
+function toggleDocStatusFilter(s) {
+  const i = docStatusFilter.indexOf(s);
+  if (i > -1) docStatusFilter.splice(i,1); else docStatusFilter.push(s);
+  renderAll();
+}
+function toggleDocOverdueOnly() { docOverdueOnly = !docOverdueOnly; renderAll(); }
+function toggleDocCategoryFilter(c) {
+  const i = docCategoryFilter.indexOf(c);
+  if (i > -1) docCategoryFilter.splice(i,1); else docCategoryFilter.push(c);
+  renderAll();
+}
+function setDocSort(v) { docSortBy = v; renderAll(); }
+function setAllGroupsCollapsed(collapsed) {
+  allCategoriesInUse().forEach(c => docGroupCollapsed[c] = collapsed);
+  renderCatGroups();
+}
+function toggleCatGroup(cat) { docGroupCollapsed[cat] = !docGroupCollapsed[cat]; renderCatGroups(); }
+function toggleDocRow(id) { docRowExpanded[id] = !docRowExpanded[id]; renderCatGroups(); }
+
+// ── 篩選＋排序 ──
+function getComparator(sortBy) {
+  if (sortBy === 'create-asc')  return (a,b) => (a.createDate||'').localeCompare(b.createDate||'');
+  if (sortBy === 'due-asc')     return (a,b) => (a.dueDate||'9999').localeCompare(b.dueDate||'9999');
+  if (sortBy === 'status')      return (a,b) => STATUS_ORDER.indexOf(a.progress) - STATUS_ORDER.indexOf(b.progress);
+  return (a,b) => (b.createDate||'').localeCompare(a.createDate||''); // create-desc 預設
+}
+function getFilteredItems() {
+  const term = docSearchTerm.trim().toLowerCase();
+  return docTrackItems.filter(d => {
+    if (docStatusFilter.length && !docStatusFilter.includes(d.progress)) return false;
+    if (docOverdueOnly && !isOverdue(d)) return false;
+    if (docCategoryFilter.length && !docCategoryFilter.includes(d.category)) return false;
+    if (term) {
+      const hay = [d.name,d.docNo,d.holder,d.notes,d.category].join(' ').toLowerCase();
+      if (!hay.includes(term)) return false;
+    }
+    return true;
+  });
+}
+
+// ── 清單檢視（分類樹狀展開）──
+function renderCatGroups() {
+  const items = getFilteredItems().sort(getComparator(docSortBy));
+  const groups = {};
+  items.forEach(d => { (groups[d.category] = groups[d.category] || []).push(d); });
+  const keys = Object.keys(groups);
+  keys.sort((a,b) => {
+    const ia = CATEGORY_ORDER.indexOf(a), ib = CATEGORY_ORDER.indexOf(b);
+    const va = ia===-1?999:ia, vb = ib===-1?999:ib;
+    return va !== vb ? va-vb : a.localeCompare(b);
+  });
+
+  const el = document.getElementById('dt-cat-groups');
+  if (!keys.length) { el.innerHTML = '<div class="empty">沒有符合條件的文件</div>'; return; }
+
+  el.innerHTML = keys.map(cat => {
+    const docs = groups[cat];
+    const overdueCount = docs.filter(isOverdue).length;
+    const doneCount = docs.filter(d=>d.progress==='done').length;
+    const collapsed = !!docGroupCollapsed[cat];
+    const miniParts = [];
+    if (overdueCount) miniParts.push(`<span class="od">${overdueCount} 逾期</span>`);
+    if (doneCount) miniParts.push(`${doneCount} 已完成`);
+    return `<div class="dt-cat-group${collapsed?'':' open'}">
+      <div class="dt-cat-header" onclick="toggleCatGroup('${esc(cat)}')" style="border-left-color:${catColor(cat)}">
+        <span class="dt-cat-chevron">▶</span>
+        <span class="dt-cat-name">${esc(cat)}</span>
+        <span class="dt-cat-mini">${miniParts.join(' · ')}</span>
+        <span class="dt-cat-count">${docs.length} 筆</span>
+      </div>
+      <div class="dt-cat-body">${docs.map(renderDocRow).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDocRow(d) {
+  const open = !!docRowExpanded[d.id];
+  const overdue = isOverdue(d);
+  const holderHtml = d.holder ? `📍 ${esc(d.holder)}` : '—';
+  return `<div class="dt-row${open?' open':''}">
+    <div class="dt-row-head" onclick="toggleDocRow('${d.id}')">
+      <span class="dt-row-chevron">▶</span>
+      <div class="dt-row-main">
+        <div class="dt-row-name">${esc(d.name)}</div>
+        ${d.docNo ? `<div class="dt-row-docno">${esc(d.docNo)}</div>` : ''}
+      </div>
+      <span class="dt-st dt-st-${d.progress}">${STATUS_LABELS[d.progress]||d.progress}</span>
+      ${overdue ? '<span class="dt-overdue-tag">⚠ 逾期</span>' : ''}
+      <span class="dt-holder-chip${d.holder?'':' empty'}">${holderHtml}</span>
+      <span class="dt-efile ${d.efiled?'yes':'no'}">${d.efiled?'☑ 電子檔':'— 未歸檔'}</span>
+    </div>
+    ${open ? renderDocDetail(d) : ''}
+  </div>`;
+}
+
+function renderDocDetail(d) {
+  return `<div class="dt-detail">
+    <div class="dt-detail-grid">
+      <div class="dt-detail-item"><div class="lbl">建檔日期</div><div class="val">${d.createDate||'—'}</div></div>
+      <div class="dt-detail-item"><div class="lbl">送出日期</div><div class="val">${d.sentDate||'—'}</div></div>
+      <div class="dt-detail-item"><div class="lbl">應歸還日期</div><div class="val${isOverdue(d)?' red':''}">${d.dueDate||'—'}</div></div>
+      <div class="dt-detail-item"><div class="lbl">實際歸還日期</div><div class="val">${d.returnDate||'—'}</div></div>
+      <div class="dt-detail-item"><div class="lbl">紙本狀態</div><div class="val">${esc(d.paperStatus)||'—'}</div></div>
+      <div class="dt-detail-item"><div class="lbl">分類</div><div class="val">${esc(d.category)||'—'}</div></div>
+    </div>
+    <div class="dt-detail-notes">${d.notes ? esc(d.notes) : '（無備註）'}</div>
+    <div class="dt-detail-actions">
+      <button class="btn-sm edit" onclick="event.stopPropagation();openEditDocModal('${d.id}')">編輯</button>
+    </div>
+  </div>`;
+}
+
+// ── 時間軸檢視 ──
+function renderTimeline() {
+  const items = getFilteredItems().filter(d => d.createDate).sort((a,b) => a.createDate.localeCompare(b.createDate));
+  const el = document.getElementById('dt-timeline-body');
+  if (!items.length) { el.innerHTML = '<div class="dt-timeline-empty">沒有符合條件、且有建檔日期的文件</div>'; return; }
+
+  const months = {};
+  items.forEach(d => {
+    const m = d.createDate.slice(0,7);
+    (months[m] = months[m] || []).push(d);
+  });
+  const keys = Object.keys(months).sort();
+
+  el.innerHTML = keys.map(m => {
+    const [y,mm] = m.split('-');
+    return `<div class="dt-tl-month">
+      <div class="dt-tl-month-label">${y}年${mm}月</div>
+      <div class="dt-tl-items">
+        ${months[m].map(d => `
+          <div class="dt-tl-item">
+            <div class="dt-tl-dot" style="background:${catColor(d.category)};"></div>
+            <div class="dt-tl-card" onclick="openEditDocModal('${d.id}')" style="border-left-color:${catColor(d.category)};">
+              <span class="dt-tl-date">${d.createDate.slice(5)}</span>
+              <span class="dt-tl-cat" style="color:${catColor(d.category)};">${esc(d.category)}</span>
+              <span class="dt-tl-name">${esc(d.name)}</span>
+              <span class="dt-st dt-st-${d.progress}">${STATUS_LABELS[d.progress]||d.progress}</span>
+              ${isOverdue(d) ? '<span class="dt-overdue-tag">⚠ 逾期</span>' : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 新增／編輯 Modal ──
+function openAddDocModal() {
+  editingDocId = null;
+  document.getElementById('dm-modal-title').textContent = '新增文件';
+  document.getElementById('dm-category').value    = '';
+  document.getElementById('dm-progress').value    = 'pending';
+  document.getElementById('dm-name').value         = '';
+  document.getElementById('dm-docno').value        = '';
+  document.getElementById('dm-holder').value       = '';
+  document.getElementById('dm-create-date').value  = todayStr();
+  document.getElementById('dm-sent-date').value    = '';
+  document.getElementById('dm-due-date').value     = '';
+  document.getElementById('dm-return-date').value  = '';
+  document.getElementById('dm-paper-status').value = '';
+  document.getElementById('dm-efiled').checked     = false;
+  document.getElementById('dm-notes').value        = '';
+  document.getElementById('dm-delete-btn').style.display = 'none';
+  document.getElementById('doc-modal').style.display = 'flex';
+}
+function openEditDocModal(id) {
+  const d = docTrackItems.find(x => x.id === id); if (!d) return;
+  editingDocId = id;
+  document.getElementById('dm-modal-title').textContent = '編輯文件';
+  document.getElementById('dm-category').value     = d.category || '';
+  document.getElementById('dm-progress').value     = d.progress || 'pending';
+  document.getElementById('dm-name').value         = d.name || '';
+  document.getElementById('dm-docno').value        = d.docNo || '';
+  document.getElementById('dm-holder').value       = d.holder || '';
+  document.getElementById('dm-create-date').value  = d.createDate || '';
+  document.getElementById('dm-sent-date').value    = d.sentDate || '';
+  document.getElementById('dm-due-date').value     = d.dueDate || '';
+  document.getElementById('dm-return-date').value  = d.returnDate || '';
+  document.getElementById('dm-paper-status').value = d.paperStatus || '';
+  document.getElementById('dm-efiled').checked     = !!d.efiled;
+  document.getElementById('dm-notes').value        = d.notes || '';
+  document.getElementById('dm-delete-btn').style.display = 'block';
+  document.getElementById('doc-modal').style.display = 'flex';
+}
+function closeDocModal() { document.getElementById('doc-modal').style.display = 'none'; }
+async function deleteDocFromModal() {
+  if (!editingDocId) return;
+  if (!await toastConfirm('確定要刪除此文件記錄？')) return;
+  docTrackItems = docTrackItems.filter(d => d.id !== editingDocId);
+  docSave(); closeDocModal(); renderCatLegend(); renderAll();
+}
+function saveDoc() {
+  const name = document.getElementById('dm-name').value.trim();
+  if (!name) { alert('請填寫文件名稱'); return; }
+  const category = document.getElementById('dm-category').value.trim() || '其他';
+  const payload = {
+    category,
+    progress:    document.getElementById('dm-progress').value,
+    name,
+    docNo:       document.getElementById('dm-docno').value.trim(),
+    holder:      document.getElementById('dm-holder').value.trim(),
+    createDate:  document.getElementById('dm-create-date').value,
+    sentDate:    document.getElementById('dm-sent-date').value,
+    dueDate:     document.getElementById('dm-due-date').value,
+    returnDate:  document.getElementById('dm-return-date').value,
+    paperStatus: document.getElementById('dm-paper-status').value.trim(),
+    efiled:      document.getElementById('dm-efiled').checked,
+    notes:       document.getElementById('dm-notes').value.trim(),
+  };
+  if (editingDocId) {
+    const idx = docTrackItems.findIndex(d => d.id === editingDocId);
+    if (idx !== -1) docTrackItems[idx] = { ...docTrackItems[idx], ...payload };
+  } else {
+    docTrackItems.push({ id: uid(), ...payload });
+  }
+  docSave(); closeDocModal(); renderCatLegend(); renderAll();
+}
+
+init();
+</script>
+</body>
+</html>

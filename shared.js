@@ -15,12 +15,14 @@ const PROGRESS_KEY= 'construction_progress_v1';
 const SCHEDULE_KEY= 'construction_schedule_v1';
 const CAT_KEY     = 'construction_cats_v1';
 const TW_HOLIDAYS_KEY = 'construction_tw_holidays_v1';
+const DOCTRACK_KEY = 'construction_doctrack_v1';
 
 // ── 頁面導覽定義 ──
 const NAV_PAGES = [
   { id:'timeline',   label:'時間軸',         href:'timeline.html',   badge:null },
   { id:'defects',    label:'改善事項追蹤',   href:'defects.html',    badge:'open-count' },
   { id:'quality',    label:'監造查驗',        href:'quality.html',    badge:'qi-fail-count' },
+  { id:'doctrack',   label:'文件管理',        href:'doctrack.html',   badge:'doc-overdue-count' },
   { id:'guide',      label:'📘 送審須知',    href:'guide.html',      badge:null },
   { id:'attendance', label:'👷 出勤管理',    href:'attendance.html', badge:null },
   { id:'export',     label:'⬇ 匯出',         href:'export.html',     badge:null },
@@ -205,10 +207,15 @@ function renderNav(activePage) {
   // 讀取 badge 計數（從 localStorage）
   const defects = storageLoad(DEFECT_KEY, []);
   const qualityItems = storageLoad(QI_KEY, []);
+  const docTrack = storageLoad(DOCTRACK_KEY, []);
   const openDef  = Array.isArray(defects)      ? defects.filter(d => d.status !== 'closed').length : 0;
   const qiFail   = Array.isArray(qualityItems)  ? qualityItems.filter(q => q.progress !== 'Completed').length : 0;
+  const today    = todayStr();
+  const docOverdue = Array.isArray(docTrack) ? docTrack.filter(d =>
+    d.dueDate && !d.returnDate && d.progress !== 'done' && d.dueDate < today
+  ).length : 0;
 
-  const badgeVals = { 'open-count': openDef, 'qi-fail-count': qiFail };
+  const badgeVals = { 'open-count': openDef, 'qi-fail-count': qiFail, 'doc-overdue-count': docOverdue };
 
   listEl.innerHTML = NAV_PAGES.map(function(p, i) {
     const isActive = p.id === activePage;
@@ -294,11 +301,13 @@ async function loadAllData() {
     qualityItems: storageLoad(QI_KEY, []),
     attRecords:   storageLoad(ATT_KEY, []),
     members:      storageLoad(MEMBER_KEY, getDefaultMembers()),
+    docTrack:     storageLoad(DOCTRACK_KEY, []),
   };
 
   if (!Array.isArray(result.docs)         || !result.docs.length)         result.docs         = DOCS_PRELOAD.slice();
   if (!Array.isArray(result.qualityItems) || !result.qualityItems.length) result.qualityItems = QI_PRELOAD.slice();
   if (!Array.isArray(result.members)      || !result.members.length)       result.members      = getDefaultMembers();
+  if (!Array.isArray(result.docTrack)     || !result.docTrack.length)      result.docTrack     = DOCTRACK_PRELOAD.slice();
 
   if (!API_URL) return result;
 
@@ -309,9 +318,9 @@ async function loadAllData() {
     result.entries = raw.map(sanitizeEntry).filter(e => e.date);
     localSave(result.entries);
 
-    const modules = ['defects','docs','qi','att','members'];
-    const keys    = [DEFECT_KEY, DOCS_KEY, QI_KEY, ATT_KEY, MEMBER_KEY];
-    const props   = ['defects','docs','qualityItems','attRecords','members'];
+    const modules = ['defects','docs','qi','att','members','doctrack'];
+    const keys    = [DEFECT_KEY, DOCS_KEY, QI_KEY, ATT_KEY, MEMBER_KEY, DOCTRACK_KEY];
+    const props   = ['defects','docs','qualityItems','attRecords','members','docTrack'];
     // att 和 members 本機有資料就用本機（避免雲端舊資料覆蓋剛匯入的內容）
     const localFirst = new Set(['att','members']);
 
@@ -478,6 +487,56 @@ function fmtMinutes(min) {
 // ── DOCS Preload 資料（文件送審頁面已移除，保留空陣列以維持既有資料相容性）──
 const DOCS_PRELOAD = [];
 const QI_PRELOAD   = []; // quality.html 自行定義完整 preload
+
+// ── 文件管理 Preload（由使用者原始 Excel 文件正本追蹤表匯入）──
+const DOCTRACK_PRELOAD = [
+  {id:'seed01',category:'材料抽驗',name:'材料抽驗 甲種圍籬進場',docNo:'MCCT-10490817_001',progress:'done',holder:'',createDate:'2026-01-19',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'簽核後紙本正本在Claire那邊'},
+  {id:'seed02',category:'工安管理',name:'工安抽查紀錄表 20260126-20260208',docNo:'',progress:'done',holder:'Lena',createDate:'2026-01-26',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:''},
+  {id:'seed03',category:'工安管理',name:'工安抽查紀錄表 20260209-20260222',docNo:'',progress:'done',holder:'Claire',createDate:'2026-02-09',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'簽核後紙本正本在Claire那邊'},
+  {id:'seed04',category:'工安管理',name:'工安抽查紀錄表 20260223-20260315',docNo:'',progress:'done',holder:'Lena',createDate:'2026-02-23',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:''},
+  {id:'seed05',category:'工安管理',name:'工安抽查紀錄表 20260316-20260531',docNo:'',progress:'done',holder:'Claire',createDate:'2026-03-16',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'簽核後紙本正本在Claire那邊'},
+  {id:'seed06',category:'改善事項',name:'減碳A標 督導改善對策及結果表 20260522',docNo:'',progress:'sent',holder:'綜施處',createDate:'2026-05-08',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已發文',efiled:true,notes:''},
+  {id:'seed07',category:'人員名冊',name:'承攬商施工人員進廠申請名冊',docNo:'DNV 0516 0518~22 號加班_監造+施工處用印',progress:'done',holder:'綜施處',createDate:'2026-05-12',sentDate:'2026-05-12',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'核定文件給台電了，雲端只有未簽核版本'},
+  {id:'seed08',category:'改善事項',name:'工程抽查驗改善事項通知單 沉砂池鋼筋',docNo:'10490817_0004',progress:'done',holder:'Claire',createDate:'2026-05-12',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'第二聯和改善前中後照片已複印給廠商留存'},
+  {id:'seed09',category:'材料抽驗',name:'材料抽驗 沉沙池灌漿',docNo:'EA-1150513-1',progress:'done',holder:'Claire',createDate:'2026-05-13',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'已複印給廠商(監造主管簽名後的正本那幾頁在Claire那邊)'},
+  {id:'seed10',category:'人員名冊',name:'承攬商施工人員進廠申請名冊',docNo:'監造_1150530加班',progress:'done',holder:'綜施處',createDate:'2026-05-28',sentDate:'2026-05-28',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'核定文件給台電了'},
+  {id:'seed11',category:'工安管理',name:'職業安全衛生管理計畫0A版審查意見',docNo:'OPR-10490817_003.1a',progress:'sent',holder:'Claire',createDate:'2026-06-05',sentDate:'2026-06-05',dueDate:'',returnDate:'',paperStatus:'已發文',efiled:true,notes:'已寄抽換紙本'},
+  {id:'seed12',category:'審查意見',name:'詳細價目表(0版)審查結果',docNo:'函_DNV-10490817-0137_檢送詳細價目表0版審查結果准予核定_20250605',progress:'sent',holder:'Lena',createDate:'2026-06-05',sentDate:'2026-06-05',dueDate:'',returnDate:'',paperStatus:'已發文',efiled:true,notes:''},
+  {id:'seed13',category:'人員名冊',name:'工作人員名冊(美錡林育任、楊月芬2員)',docNo:'MRM-10490817_031.1a',progress:'done',holder:'Lena',createDate:'2026-06-09',sentDate:'2026-06-01',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'准予核定'},
+  {id:'seed14',category:'監造報表',name:'0871-0885 監造報表 1150610',docNo:'',progress:'done',holder:'Claire',createDate:'2026-06-10',sentDate:'2026-06-10',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:''},
+  {id:'seed15',category:'工安管理',name:'承攬商安全衛生16專卷/現檢員現場工安抽差紀錄抽查表/承攬商作業人員保險投保情形...',docNo:'',progress:'done',holder:'Claire',createDate:'2026-06-10',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'監造主管簽核後的正本在Claire那邊'},
+  {id:'seed16',category:'監造報表',name:'0886-0900 監造報表 1150615',docNo:'',progress:'done',holder:'Claire',createDate:'2026-06-15',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'監造主管簽核後的正本在Claire那邊'},
+  {id:'seed17',category:'施工抽查',name:'施工抽查 沉沙池模板組立',docNo:'MCCT-10490817_025',progress:'done',holder:'',createDate:'2026-06-24',sentDate:'2026-06-25',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'監造主管簽核後的正本在Claire那邊'},
+  {id:'seed18',category:'改善事項',name:'改善通知單 沉砂池外側牆模保護層不足設計值',docNo:'10490817_0006',progress:'processing',holder:'',createDate:'2026-06-24',sentDate:'',dueDate:'',returnDate:'',paperStatus:'',efiled:true,notes:'改善中，第一聯已歸檔'},
+  {id:'seed19',category:'材料抽驗',name:'材料抽驗 滅火器',docNo:'EA-1150626',progress:'done',holder:'Claire,Lena',createDate:'2026-06-29',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'監造主管簽核後的正本在Claire那邊'},
+  {id:'seed20',category:'改善事項',name:'減碳A標 督導改善對策及結果表 20260522',docNo:'',progress:'sent',holder:'綜施處',createDate:'',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已發文',efiled:true,notes:''},
+  {id:'seed21',category:'審查意見',name:'基礎施工計畫B版審查意見/審查重點表',docNo:'SCQPR-10490817_005.2a/SCQPR-10490817_005.2b',progress:'done',holder:'Claire',createDate:'',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'函文跟審查意見電子檔都歸檔了'},
+  {id:'seed22',category:'施工抽查',name:'施工抽查 圍籬放樣',docNo:'MCCT-10490817_002',progress:'done',holder:'Claire',createDate:'2026-03-11',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed23',category:'施工抽查',name:'施工抽查 圍籬防溢座尺寸',docNo:'MCCT-10490817_003',progress:'done',holder:'Claire',createDate:'2026-03-11',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed24',category:'施工抽查',name:'施工抽查 洗車台底座模板組立',docNo:'MCCT-10490817_004',progress:'done',holder:'Claire',createDate:'2026-03-27',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed25',category:'材料抽驗',name:'材料抽驗 臨時辦公室材料進場查驗',docNo:'MCCT-10490817_005',progress:'done',holder:'Claire',createDate:'2026-04-20',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed26',category:'施工抽查',name:'施工抽查 工程告示牌尺寸',docNo:'MCCT-10490817_006',progress:'done',holder:'Claire',createDate:'2026-03-25',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed27',category:'材料抽驗',name:'材料抽驗 臨時用水、用電材料',docNo:'MCCT-10490817_007',progress:'done',holder:'Claire',createDate:'2026-04-08',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed28',category:'材料抽驗',name:'材料抽驗 組合屋點焊鋼線網材料',docNo:'MCCT-10490817_008',progress:'done',holder:'Claire',createDate:'2026-04-16',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed29',category:'材料抽驗',name:'材料抽驗 臨時辦公室組合屋C型鋼',docNo:'MCCT-10490817_009',progress:'done',holder:'Claire',createDate:'2026-04-16',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed30',category:'施工抽查',name:'施工抽查 組合屋測量放樣',docNo:'MCCT-10490817_010',progress:'done',holder:'Claire',createDate:'2026-04-10',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed31',category:'材料抽驗',name:'材料抽驗 圍籬大小門',docNo:'MCCT-10490817_011',progress:'done',holder:'Claire',createDate:'2026-03-02',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed32',category:'施工抽查',name:'施工抽查 圍籬柱坑',docNo:'MCCT-10490817_012',progress:'done',holder:'Claire',createDate:'2026-03-02',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed33',category:'施工抽查',name:'施工抽查 工程告示牌挖坑',docNo:'MCCT-10490817_013',progress:'done',holder:'Claire',createDate:'2026-03-03',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed34',category:'材料抽驗',name:'材料抽驗 圍籬防溢座灌漿',docNo:'MCCT-10490817_014',progress:'done',holder:'Claire',createDate:'2026-03-13',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed35',category:'材料抽驗',name:'材料抽驗 圍籬防溢座灌漿',docNo:'MCCT-10490817_015',progress:'done',holder:'Claire',createDate:'2026-03-17',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed36',category:'材料抽驗',name:'材料抽驗 沉砂池鋼筋材料',docNo:'MCCT-10490817_016',progress:'done',holder:'Claire',createDate:'2026-04-08',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed37',category:'施工抽查',name:'施工抽查 混凝土墊層鋪設',docNo:'MCCT-10490817_017',progress:'done',holder:'Claire',createDate:'2026-04-27',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed38',category:'施工抽查',name:'施工抽查 水電系統埋設',docNo:'MCCT-10490817_018',progress:'done',holder:'Claire',createDate:'2026-04-10',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed39',category:'材料抽驗',name:'材料抽驗 告示牌材料',docNo:'MCCT-10490817_019',progress:'done',holder:'Claire',createDate:'2026-04-10',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed40',category:'材料抽驗',name:'材料抽驗 洗車台材料進場查驗',docNo:'MCCT-10490817_020',progress:'done',holder:'Claire',createDate:'2026-04-27',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed41',category:'材料抽驗',name:'材料抽驗 組合屋基礎土台金鋼沙色粉',docNo:'MCCT-10490817_021',progress:'done',holder:'Claire',createDate:'2026-04-17',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed42',category:'施工抽查',name:'施工抽查 沉砂池鋼筋綁紮',docNo:'MCCT-10490817_022',progress:'done',holder:'Claire',createDate:'2026-05-12',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed43',category:'材料抽驗',name:'材料抽驗 沉砂池底板混凝土',docNo:'MCCT-10490817_023',progress:'done',holder:'Claire',createDate:'2026-05-13',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed44',category:'材料抽驗',name:'材料抽驗 甲乙方臨時辦公室天花板、雙面烤漆鋼板',docNo:'MCCT-10490817_024',progress:'done',holder:'Claire',createDate:'2026-05-12',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed45',category:'隨機抽查',name:'隨機抽查 防溢座尺寸',docNo:'RCT-10490817_001',progress:'done',holder:'Claire',createDate:'2026-03-20',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:'電子檔已給廠商'},
+  {id:'seed46',category:'審查意見',name:'審查意見表 工廠檢驗及試驗計畫(國內設備-冷卻水系統)A版 signed',docNo:'CPR-10490817_011.1a',progress:'done',holder:'Claire',createDate:'2026-07-07',sentDate:'',dueDate:'',returnDate:'',paperStatus:'已簽核',efiled:true,notes:''},
+];
 
 // ── 通用 Header HTML ──
 function buildHeader(pageTitle) {
