@@ -79,7 +79,7 @@
     </button>
     <div class="sidebar-inner">
       <div class="sidebar-section-title">工具</div>
-      <button class="btn-secondary" onclick="openMemberModal()">👷 管理人員</button>
+      <button class="btn-secondary" onclick="openMemberModal()">管理人員</button>
       <button class="btn-secondary" onclick="openHolidayModal()">📅 行事曆設定</button>
       <div class="sidebar-section-title" style="margin-top:12px;">XLS 匯入</div>
       <label style="display:block;">
@@ -92,7 +92,7 @@
         style="font-size:11px;color:var(--c-red);border-color:var(--c-red-border);">🗑 清除本月全部出勤記錄</button>
       <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0 6px;">清除後可重新匯入 Excel</div>
       <button class="btn-secondary" onclick="fixOrphanRecords()"
-        style="font-size:11px;color:var(--c-blue);border-color:var(--c-blue-border);">🔧 修復孤兒出勤記錄</button>
+        style="font-size:11px;color:var(--c-blue);border-color:var(--c-blue-border);">修復孤兒出勤記錄</button>
       <div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:2px 0 6px;">修正 memberId 不一致問題</div>
       <button class="btn-secondary" onclick="purgeHolidayRecords()"
         style="font-size:11px;color:var(--c-amber);border-color:var(--c-amber-border);">🗑 清除假日錯誤記錄</button>
@@ -161,7 +161,7 @@
 <!-- 人員管理 Modal -->
 <div class="modal-overlay" id="member-modal" style="display:none">
   <div class="modal" style="max-width:440px;">
-    <div class="modal-header"><h3>👷 人員管理</h3><button class="modal-close" onclick="document.getElementById('member-modal').style.display='none'">×</button></div>
+    <div class="modal-header"><h3>人員管理</h3><button class="modal-close" onclick="document.getElementById('member-modal').style.display='none'">×</button></div>
     <div class="modal-body">
       <div id="member-list"></div>
       <div style="border-top:1px solid var(--border-light);padding-top:12px;margin-top:4px;">
@@ -416,11 +416,11 @@ function renderAttModalBody() {
     const tmp = attModalTmp[m.id] || { status:'', timeIn:'', timeOut:'', note:'' };
     const statusOpts = [
       { v:'',        l:'— 未記錄 —' },
-      { v:'present', l:'✅ 出勤' },
+      { v:'present', l:'出勤' },
       { v:'late',    l:'⏰ 遲到' },
-      { v:'absent',  l:'❌ 缺勤' },
+      { v:'absent',  l:'缺勤' },
       { v:'leave',   l:'🏥 請假' },
-      { v:'holiday', l:'📌 公假' },
+      { v:'holiday', l:'公假' },
     ];
     return `<div class="att-member-row">
       <div class="att-member-name">${esc(m.name)}</div>
@@ -586,7 +586,7 @@ function fixOrphanRecords() {
 
   attSave();
   cloudSaveAll('att', attRecords).catch(() => {});
-  alert(`✅ 修復完成\n搬移時間：${fixed} 筆\n刪除孤兒：${removed} 筆\n\n如仍有問題，請用「清除本月記錄」後重新匯入。`);
+  alert(`修復完成\n搬移時間：${fixed} 筆\n刪除孤兒：${removed} 筆\n\n如仍有問題，請用「清除本月記錄」後重新匯入。`);
   renderAll();
 }
 
@@ -603,7 +603,7 @@ function purgeMonthRecords() {
   cloudSaveAll('att', attRecords)
     .then(() => setSync('已同步 ✓','sync-ok'))
     .catch(() => setSync('本機已清除','sync-local'));
-  alert(`✅ 已清除 ${curYear}年${curMonth}月 共 ${removed} 筆出勤記錄\n\n現在可以重新匯入 Excel。`);
+  alert(`已清除 ${curYear}年${curMonth}月 共 ${removed} 筆出勤記錄\n\n現在可以重新匯入 Excel。`);
   renderAll();
 }
 
@@ -620,7 +620,7 @@ function purgeHolidayRecords() {
   const removed = before - attRecords.length;
   if (removed === 0) { alert('沒有找到需要清除的假日記錄'); return; }
   attSave();
-  alert(`✅ 已清除 ${removed} 筆假日出勤記錄`);
+  alert(`已清除 ${removed} 筆假日出勤記錄`);
   renderAll();
 }
 
@@ -796,7 +796,7 @@ function importFromDetailSheets(wb, sheetNames) {
 
   attSave(); membersSave();
   alert([
-    '✅ 打卡時間匯入完成！',
+    '打卡時間匯入完成！',
     `更新：${updated} 筆`,
     skippedHol ? `跳過國定假日：${skippedHol} 筆` : '',
     '',
@@ -881,7 +881,7 @@ function importFromRankingSheet(wb) {
   attSave(); membersSave();
   const peopleCount = raw.length - 4;
   alert([
-    '✅ 排班表匯入完成！',
+    '排班表匯入完成！',
     `人員：${peopleCount} 人`,
     `新增記錄：${added} 筆`,
     `更新記錄：${updated} 筆`,

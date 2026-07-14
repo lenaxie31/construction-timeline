@@ -80,8 +80,8 @@
           <h3>時間軸施工記錄</h3>
           <p>匯出全部施工日誌，含日期、天氣、狀態、工程說明、出工人數、備註，格式化為可列印的 Excel 表格。</p>
           <div class="export-btn-row">
-            <button class="export-btn blue" onclick="exportTimelineXLSX()">⬇ XLSX 匯出</button>
-            <button class="export-btn outline" onclick="window.print()">🖨 列印</button>
+            <button class="export-btn blue" onclick="exportTimelineXLSX()">XLSX 匯出</button>
+            <button class="export-btn outline" onclick="window.print()">列印</button>
           </div>
         </div>
 
@@ -91,7 +91,7 @@
           <h3>改善事項通知單</h3>
           <p>匯出全部改善事項記錄，含通知單標號、開立日期、期限、狀態、改善經過及結果。</p>
           <div class="export-btn-row">
-            <button class="export-btn blue" onclick="exportDefectsXLSX()">⬇ XLSX 匯出</button>
+            <button class="export-btn blue" onclick="exportDefectsXLSX()">XLSX 匯出</button>
           </div>
         </div>
 
@@ -101,13 +101,13 @@
           <h3>監造查驗紀錄</h3>
           <p>匯出全部查驗紀錄，含分類、項目、各步驟完成狀態、查驗日期、查驗人、改善通知單等。</p>
           <div class="export-btn-row">
-            <button class="export-btn teal" onclick="exportQiXLSX()">⬇ XLSX 匯出</button>
+            <button class="export-btn teal" onclick="exportQiXLSX()">XLSX 匯出</button>
           </div>
         </div>
 
         <!-- 出勤月報 -->
         <div class="export-card att">
-          <span class="export-icon">👷</span>
+          <span class="export-icon">ATT</span>
           <h3>出勤月報</h3>
           <p>選擇月份與人員，匯出純黑白「考勤明細表」直式格式，含每日上下班、當日時數、出勤/請假天數與月累計總時數。</p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
@@ -116,7 +116,7 @@
           <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">選擇匯出人員（可複選）</div>
           <div id="att-member-picker" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:120px;overflow-y:auto;padding:2px;"></div>
           <div class="export-btn-row">
-            <button class="export-btn purple" onclick="exportAttXLSX()">⬇ XLSX 月報匯出</button>
+            <button class="export-btn purple" onclick="exportAttXLSX()">XLSX 月報匯出</button>
           </div>
         </div>
 
@@ -124,14 +124,14 @@
 
       <!-- 資料診斷 -->
       <div class="export-card diag" id="diag-card">
-        <span class="export-icon">🔧</span>
+        <span class="export-icon">SYS</span>
         <h3>資料診斷工具</h3>
         <p>檢查各模組資料數量、localStorage 用量，以及手動進行雲端同步操作。</p>
         <div class="export-btn-row" style="margin-bottom:14px;">
-          <button class="export-btn grey" onclick="diagStorage()">📊 診斷資料</button>
+          <button class="export-btn grey" onclick="diagStorage()">診斷資料</button>
           <button class="export-btn grey" onclick="diagAttRecords()">🔍 出勤記錄診斷</button>
           <button class="export-btn grey" onclick="forceReload()">🔄 強制雲端拉取</button>
-          <button class="export-btn outline" onclick="rescueDownload()">💾 備份本機資料</button>
+          <button class="export-btn outline" onclick="rescueDownload()">備份本機資料</button>
           <button class="export-btn outline" onclick="rescueUpload()">⬆ 還原本機資料</button>
           <input type="file" id="rescue-file" accept=".json" style="display:none;" onchange="rescueRestore(this)">
         </div>
@@ -272,7 +272,7 @@ function exportTimelineXLSX() {
 function exportDefectsXLSX() {
   if (!allDefects.length) { alert('目前沒有改善事項記錄可匯出'); return; }
   const STATUS_TW = { open:'未結案（待承商改善）', replied:'承商已回覆改善', recheck:'複驗中', closed:'已結案（複驗合格）' };
-  const RESULT_TW = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
+  const RESULT_TW = { pass:'複驗合格', fail:'複驗不合格', partial:'部分合格' };
   const sorted = allDefects.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const ws_data = [
     ['通知單標號','開立日期','改善期限','改善事項說明','開立時機','狀態','承商回覆改善經過','改善結果判定','監造備註'],
@@ -294,8 +294,8 @@ function exportDefectsXLSX() {
 function exportQiXLSX() {
   if (!allQi.length) { alert('目前沒有查驗紀錄可匯出'); return; }
   const PRG_TW = { 'Completed':'Completed（完成）' };
-  const OS_TW  = { '完成':'✅ 完成', '文件待補':'⚠️ 文件待補', '製作中':'🔄 製作中', '未開始':'○ 未開始' };
-  const chk = v => v=='1'?'✅':'☐';
+  const OS_TW  = { '完成':'完成', '文件待補':'文件待補', '製作中':'製作中', '未開始':'未開始' };
+  const chk = v => v=='1'?'✓':'–';
   const ws_data = [
     ['分類','項目名稱','自檢','自檢日期','申請','申請日期','抽查','查驗日期','辦理進度','整體狀態','查驗人','改善通知單','改善期限','自檢表','申請單','抽查紀錄表','抽查報告','改善單','催件備註','備註'],
     ...allQi.map(q => [
@@ -576,7 +576,7 @@ function diagStorage() {
 
   const sections = diag.map(d =>
     `<div class="diag-row"><span class="diag-key">${d.key}</span>
-     <span class="diag-value ${d.ok?'diag-ok':'diag-warn'}">${d.count} 筆 ${d.ok?'✓':'⚠'}</span></div>`).join('');
+     <span class="diag-value ${d.ok?'diag-ok':'diag-warn'}">${d.count} 筆 ${d.ok?'✓':'!'}</span></div>`).join('');
   const storage = `<div class="diag-row"><span class="diag-key">localStorage 已用量</span>
     <span class="diag-value ${storageUsed>4500000?'diag-err':storageUsed>3000000?'diag-warn':'diag-ok'}">
       ≈ ${(storageUsed/1024).toFixed(1)} KB</span></div>`;
@@ -602,11 +602,11 @@ async function forceReload() {
     allAtt     = data.attRecords;
     allMembers = data.members;
     setSync('已同步 ✓','sync-ok');
-    alert('✅ 已成功從雲端重新載入所有資料');
+    alert('已成功從雲端重新載入所有資料');
     diagStorage();
   } catch(e) {
     setSync('同步失敗','sync-err');
-    alert('❌ 同步失敗：' + e.message);
+    alert('同步失敗：' + e.message);
   }
 }
 
@@ -645,10 +645,10 @@ function rescueRestore(input) {
       if (data.qi)       { storageSave('construction_qi_v2', data.qi); allQi = data.qi; }
       if (data.att)      { storageSave('construction_att_v1', data.att); allAtt = data.att; }
       if (data.members)  { storageSave('construction_members_v1', data.members); allMembers = data.members; }
-      alert('✅ 本機資料已還原，可至各頁面確認。');
+      alert('本機資料已還原，可至各頁面確認。');
       diagStorage();
     } catch(err) {
-      alert('❌ 還原失敗：' + err.message);
+      alert('還原失敗：' + err.message);
     }
     input.value = '';
   };

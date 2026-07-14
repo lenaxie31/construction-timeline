@@ -12,36 +12,36 @@
 .d-cell { padding:10px 12px;border-bottom:1px solid var(--border-light);vertical-align:middle; }
 .d-row:hover .d-cell { background:#F8F9FF; }
 .d-row-closed .d-cell { opacity:.7; }
-.d-st-open    { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEE2E2;color:#991B1B;white-space:nowrap; }
-.d-st-replied { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FEF3C7;color:#92400E;white-space:nowrap; }
-.d-st-recheck { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DBEAFE;color:#1E40AF;white-space:nowrap; }
-.d-st-closed  { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:#DCFCE7;color:#166534;white-space:nowrap; }
-.d-overdue { font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FEE2E2;color:#991B1B;margin-left:4px; }
-.d-soon    { font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FEF3C7;color:#92400E;margin-left:4px; }
-.d-tag-checkpoint { font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--c-purple-bg);color:var(--c-purple);margin-left:6px;vertical-align:middle; }
-.d-chip { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-right:4px; }
-.d-chip-open    { background:#FEE2E2;color:#991B1B; }
-.d-chip-replied { background:#FEF3C7;color:#92400E; }
-.d-chip-recheck { background:#DBEAFE;color:#1E40AF; }
-.d-chip-closed  { background:#DCFCE7;color:#166534; }
+.d-st-open    { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;background:var(--surface);border:1px solid #B0242C;color:#B0242C;white-space:nowrap; }
+.d-st-replied { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;background:var(--surface);border:1px solid #92400E;color:#92400E;white-space:nowrap; }
+.d-st-recheck { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;background:var(--surface);border:1px solid #1E40AF;color:#1E40AF;white-space:nowrap; }
+.d-st-closed  { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;background:var(--surface);border:1px solid #166534;color:#166534;white-space:nowrap; }
+.d-overdue { font-size:10px;font-weight:700;padding:1px 6px;border-radius:0;background:var(--surface);border:1px solid #B0242C;color:#B0242C;margin-left:4px; }
+.d-soon    { font-size:10px;font-weight:700;padding:1px 6px;border-radius:0;background:var(--surface);border:1px solid #92400E;color:#92400E;margin-left:4px; }
+.d-tag-checkpoint { font-size:9px;font-weight:700;padding:1px 5px;border-radius:0;background:var(--surface);border:1px solid var(--c-purple);color:var(--c-purple);margin-left:6px;vertical-align:middle; }
+.d-chip { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;margin-right:4px;background:var(--surface);border:1px solid; }
+.d-chip-open    { color:#B0242C;border-color:#B0242C; }
+.d-chip-replied { color:#92400E;border-color:#92400E; }
+.d-chip-recheck { color:#1E40AF;border-color:#1E40AF; }
+.d-chip-closed  { color:#166534;border-color:#166534; }
 /* 開立方式 標籤/頁籤 */
-.d-src-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;white-space:nowrap; }
-.d-src-utility    { background:#E0E7FF;color:#3730A3; }
-.d-src-supervisor { background:#FCE7F3;color:#9D174D; }
+.d-src-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:0;margin-left:6px;vertical-align:middle;white-space:nowrap;background:var(--surface);border:1px solid; }
+.d-src-utility    { color:#3730A3;border-color:#3730A3; }
+.d-src-supervisor { color:#9D174D;border-color:#9D174D; }
 .d-src-tabs { display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap; }
-.d-src-tab { font-family:inherit;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
+.d-src-tab { font-family:inherit;font-size:12px;font-weight:600;padding:6px 14px;border-radius:0;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
 .d-src-tab:hover { background:var(--border-light); }
 .d-src-tab.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
 .d-src-tab .cnt { opacity:.75;font-weight:500;margin-left:2px; }
-.d-cat-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;white-space:nowrap; }
-.d-cat-env     { background:#DCFCE7;color:#166534; }
-.d-cat-safety  { background:#FFEDD5;color:#9A3412; }
-.d-cat-quality { background:#E0E7FF;color:#3730A3; }
+.d-cat-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:0;margin-left:4px;vertical-align:middle;white-space:nowrap;background:var(--surface);border:1px solid; }
+.d-cat-env     { color:#166534;border-color:#166534; }
+.d-cat-safety  { color:#9A3412;border-color:#9A3412; }
+.d-cat-quality { color:#3730A3;border-color:#3730A3; }
 /* 篩選 / 排序列 */
 .d-filter-bar-wrap { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px; }
 .d-filter-row { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
 .d-filter-label { font-size:11px;font-weight:700;color:var(--text-muted);white-space:nowrap; }
-.d-filter-chip { font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
+.d-filter-chip { font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:0;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s; }
 .d-filter-chip:hover { background:var(--border-light); }
 .d-filter-chip.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
 .d-filter-date { font-family:inherit;font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-primary); }
@@ -64,27 +64,27 @@
 .remind-banner { background:var(--c-amber-bg);border:1px solid var(--c-amber-border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:14px;font-size:13px;color:#78350F;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
 .btn-status { font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s; }
 .btn-status:hover { background:var(--border-light); }
-.btn-status.active-open    { background:#FEE2E2;color:#991B1B;border-color:#fecaca; }
-.btn-status.active-replied { background:#FEF3C7;color:#92400E;border-color:#fde68a; }
-.btn-status.active-recheck { background:#DBEAFE;color:#1E40AF;border-color:#bfdbfe; }
-.btn-status.active-closed  { background:#DCFCE7;color:#166534;border-color:#bbf7d0; }
+.btn-status.active-open    { background:var(--surface);color:#B0242C;border-color:#B0242C; }
+.btn-status.active-replied { background:var(--surface);color:#92400E;border-color:#92400E; }
+.btn-status.active-recheck { background:var(--surface);color:#1E40AF;border-color:#1E40AF; }
+.btn-status.active-closed  { background:var(--surface);color:#166534;border-color:#166534; }
 /* Modal extra */
-.modal-section { background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border-light); }
+.modal-section { background:var(--bg);border-radius:0;padding:12px;border:1px solid var(--border); }
 .modal-section-title { font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px; }
 /* 台電紀錄詳細資訊 */
-.d-ut-badge { font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:#E0E7FF;color:#3730A3;margin-left:6px; }
+.d-ut-badge { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;background:var(--surface);border:1px solid #3730A3;color:#3730A3;margin-left:6px; }
 /* 照片上傳 */
 .d-photo-group { margin-bottom:10px; }
 .d-photo-group-title { font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:6px; }
 .d-photo-grid { display:flex;flex-wrap:wrap;gap:8px; }
-.d-photo-thumb { position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg); }
+.d-photo-thumb { position:relative;width:76px;height:76px;border-radius:0;overflow:hidden;border:1px solid var(--border);background:var(--bg); }
 .d-photo-thumb img { width:100%;height:100%;object-fit:cover;cursor:pointer; }
 .d-photo-thumb .d-photo-del { position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;line-height:18px;text-align:center;cursor:pointer;padding:0; }
 .d-photo-thumb .d-photo-status { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);font-size:10px;color:var(--text-muted); }
-.d-photo-add-btn { width:76px;height:76px;border-radius:8px;border:1.5px dashed var(--border);background:var(--bg);color:var(--text-muted);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s; }
+.d-photo-add-btn { width:76px;height:76px;border-radius:0;border:1.5px dashed var(--border);background:var(--bg);color:var(--text-muted);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s; }
 .d-photo-add-btn:hover { background:var(--border-light); }
 .d-photo-view-grid { display:flex;flex-wrap:wrap;gap:6px;margin-top:4px; }
-.d-photo-view-grid img { width:56px;height:56px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--border); }
+.d-photo-view-grid img { width:56px;height:56px;object-fit:cover;border-radius:0;cursor:pointer;border:1px solid var(--border); }
 @media(max-width:767px) {
   .d-table { min-width:600px;font-size:11px; }
   .d-th,.d-cell { padding:8px 8px; }
@@ -179,15 +179,15 @@
         <div class="field"><label>改善結果判定</label>
           <select id="dm-result">
             <option value="">—（尚未判定）</option>
-            <option value="pass">✅ 複驗合格</option>
-            <option value="fail">❌ 複驗不合格</option>
-            <option value="partial">⚠️ 部分合格</option>
+            <option value="pass">複驗合格</option>
+            <option value="fail">複驗不合格</option>
+            <option value="partial">部分合格</option>
           </select>
         </div>
         <div class="field"><label>監造備註（選填）</label><textarea id="dm-notes" style="min-height:48px;" placeholder="監造追蹤記錄…"></textarea></div>
       </div>
       <div style="background:var(--c-amber-bg);border-radius:8px;padding:10px 12px;border:1px solid var(--c-amber-border);display:flex;align-items:center;gap:10px;">
-        <span style="font-size:14px;">🔔</span>
+        
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#78350F;font-weight:600;flex:1;">
           <input type="checkbox" id="dm-remind" checked style="accent-color:var(--c-amber);">
           改善期限前
@@ -415,7 +415,7 @@ function renderDefects() {
 
   const today = todayStr();
   const sMap  = { open:'未結案', replied:'承商已回覆', recheck:'複驗中', closed:'已結案' };
-  const rMap  = { pass:'✅ 複驗合格', fail:'❌ 複驗不合格', partial:'⚠️ 部分合格' };
+  const rMap  = { pass:'複驗合格', fail:'複驗不合格', partial:'部分合格' };
   const srcMap = { supervisor:'📝 監造紙本', utility:'💻 台電電子系統' };
   const catMap = { env:'🌱 環保', safety:'⛑️ 工安', quality:'🔍 品質' };
   const statusOrder = { open:0, replied:1, recheck:2, closed:3 };
@@ -439,7 +439,7 @@ function renderDefects() {
       else if (daysLeft<=(d.remindDays||5)) { deadlineCell=d.deadline+` <span class="d-soon">剩 ${daysLeft} 天</span>`; deadlineStyle='color:var(--c-amber);font-weight:600;'; }
     }
     const statusCls = { open:'d-st-open', replied:'d-st-replied', recheck:'d-st-recheck', closed:'d-st-closed' }[d.status]||'d-st-open';
-    const doneMark  = d.status==='closed' ? '<span style="color:var(--c-green);font-size:16px;">☑</span>' : '<span style="color:var(--border);font-size:16px;">☐</span>';
+    const doneMark  = d.status==='closed' ? '<span style="color:var(--c-green);font-size:16px;">✓</span>' : '<span style="color:var(--border);font-size:16px;">–</span>';
 
     return `<tr class="d-row${d.status==='closed'?' d-row-closed':''}" onclick="toggleDefectDetail('${d.id}')" style="cursor:pointer;">
       <td class="d-cell" style="font-family:monospace;font-size:11px;white-space:nowrap;color:var(--text-muted);">${esc(d.no||'—')}</td>
@@ -530,7 +530,7 @@ function updateRemindBanner() {
     const icon = dl<0?'🔴':dl<=3?'🟡':'🟠';
     const msg  = dl<0?`逾期 ${Math.abs(dl)} 天`:dl===0?'今天到期！':`還剩 ${dl} 天`;
     const srcTag = d.source==='utility' ? '<span class="d-src-tag d-src-utility">💻 台電</span>' : '<span class="d-src-tag d-src-supervisor">📝 監造</span>';
-    return `<div class="remind-banner">🔔
+    return `<div class="remind-banner">
       <div style="flex:1;min-width:0;"><strong>${esc(d.no||'—')}</strong>${srcTag}　${esc(d.title.slice(0,40))}${d.title.length>40?'…':''}<br>
       <span style="font-size:11px;">期限：${d.deadline}　${icon} <strong>${msg}</strong></span></div>
       <button class="btn-sm edit" data-id="${d.id}" onclick="openEditDefectModal(this.dataset.id)">查看</button>

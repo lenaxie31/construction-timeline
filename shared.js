@@ -27,9 +27,9 @@ const NAV_PAGES = [
   { id:'doctrack',   label:'文件管理',        href:'doctrack.html',   badge:'doc-overdue-count' },
   { id:'docs',       label:'文件送審',        href:'docs.html',       badge:'docs-overdue-count' },
   { id:'correspond', label:'收發函文',        href:'correspond.html', badge:'corr-pending-count' },
-  { id:'guide',      label:'📘 送審須知筆記', href:'guide.html',      badge:null },
-  { id:'attendance', label:'👷 出勤管理',    href:'attendance.html', badge:null },
-  { id:'export',     label:'⬇ 匯出',         href:'export.html',     badge:null },
+  { id:'guide',      label:'送審須知筆記',    href:'guide.html',      badge:null },
+  { id:'attendance', label:'出勤管理',        href:'attendance.html', badge:null },
+  { id:'export',     label:'匯出',            href:'export.html',     badge:null },
 ];
 
 // ── 全域錯誤保護 ──

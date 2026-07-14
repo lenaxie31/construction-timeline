@@ -239,7 +239,7 @@
             ondrop="handleXlsDrop(event)"
             onclick="document.getElementById('xls-input').click()"
             title="點擊或拖放 Excel 檔案以匯入">
-            <span style="font-size:14px;">📊</span>
+            
             <span>匯入 Excel</span>
           </div>
           <span id="xls-status" style="font-size:11px;color:var(--text-muted);max-width:160px;line-height:1.4;"></span>
@@ -253,9 +253,9 @@
       <!-- 快捷篩選 -->
       <div class="qi-quick-bar" id="qi-quick-bar">
         <button class="qi-quick-btn active" data-quick="" onclick="setQuickFilter(this,'')">全部</button>
-        <button class="qi-quick-btn warn"   data-quick="文件待補" onclick="setQuickFilter(this,'文件待補')">⚠️ 文件待補</button>
-        <button class="qi-quick-btn red"    data-quick="已開通知單" onclick="setQuickFilter(this,'已開通知單')">🔴 已開通知單</button>
-        <button class="qi-quick-btn green"  data-quick="完成" onclick="setQuickFilter(this,'完成')">✅ 完成</button>
+        <button class="qi-quick-btn warn"   data-quick="文件待補" onclick="setQuickFilter(this,'文件待補')">文件待補</button>
+        <button class="qi-quick-btn red"    data-quick="已開通知單" onclick="setQuickFilter(this,'已開通知單')">已開通知單</button>
+        <button class="qi-quick-btn green"  data-quick="完成" onclick="setQuickFilter(this,'完成')">完成</button>
         <button class="qi-quick-btn"        data-quick="未開始" onclick="setQuickFilter(this,'未開始')">○ 未開始</button>
       </div>
 
@@ -336,7 +336,7 @@
             <label>自檢完成</label>
             <select id="qi-self-check" onchange="autoFillDate('qi-self-date',this.value)">
               <option value="0">☐ 未完成</option>
-              <option value="1">☑ 已完成</option>
+              <option value="1">已完成</option>
             </select>
           </div>
           <div class="field">
@@ -358,7 +358,7 @@
             <label>申請完成</label>
             <select id="qi-req-check" onchange="autoFillDate('qi-req-date',this.value)">
               <option value="0">☐ 未完成</option>
-              <option value="1">☑ 已完成</option>
+              <option value="1">已完成</option>
             </select>
           </div>
           <div class="field">
@@ -380,7 +380,7 @@
             <label>抽查完成</label>
             <select id="qi-insp-check" onchange="autoFillDate('qi-date',this.value)">
               <option value="0">☐ 未完成</option>
-              <option value="1">☑ 已完成</option>
+              <option value="1">已完成</option>
             </select>
           </div>
           <div class="field">
@@ -432,45 +432,45 @@
           <div class="field" id="doc-field-self-check">
             <label>自檢表</label>
             <select id="qi-doc-self-check" onchange="autoCalcOverall()">
-              <option value="待補">🟡 待補</option><option value="已收">✅ 已收</option>
-              <option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option>
+              <option value="待補">待補</option><option value="已收">已收</option>
+              <option value="不需要">⚫ 不需要</option><option value="改善中">改善中</option>
             </select>
           </div>
           <div class="field" id="doc-field-req-form">
             <label>申請單</label>
             <select id="qi-doc-req-form" onchange="autoCalcOverall()">
-              <option value="待補">🟡 待補</option><option value="已收">✅ 已收</option>
-              <option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option>
+              <option value="待補">待補</option><option value="已收">已收</option>
+              <option value="不需要">⚫ 不需要</option><option value="改善中">改善中</option>
             </select>
           </div>
           <div class="field">
             <label>抽查紀錄表</label>
             <select id="qi-doc-record" onchange="autoCalcOverall()">
-              <option value="待補">🟡 待補</option><option value="已收">✅ 已收</option>
-              <option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option>
+              <option value="待補">待補</option><option value="已收">已收</option>
+              <option value="不需要">⚫ 不需要</option><option value="改善中">改善中</option>
             </select>
           </div>
           <div class="field">
             <label>抽查報告</label>
             <select id="qi-doc-report" onchange="autoCalcOverall()">
-              <option value="待補">🟡 待補</option><option value="已收">✅ 已收</option>
-              <option value="不需要">⚫ 不需要</option><option value="改善中">🔴 改善中</option>
+              <option value="待補">待補</option><option value="已收">已收</option>
+              <option value="不需要">⚫ 不需要</option><option value="改善中">改善中</option>
             </select>
           </div>
           <div class="field">
             <label>改善單</label>
             <select id="qi-doc-improve" onchange="autoCalcOverall()">
-              <option value="不需要">⚫ 不需要</option><option value="待補">🟡 待補</option>
-              <option value="已收">✅ 已收</option><option value="改善中">🔴 改善中</option>
+              <option value="不需要">⚫ 不需要</option><option value="待補">待補</option>
+              <option value="已收">已收</option><option value="改善中">改善中</option>
             </select>
           </div>
           <div class="field">
             <label>整體狀態（自動計算）</label>
             <select id="qi-overall-status">
               <option value="未開始">○ 未開始</option>
-              <option value="文件待補">⚠️ 文件待補</option>
-              <option value="製作中">🔄 製作中</option>
-              <option value="完成">✅ 完成</option>
+              <option value="文件待補">文件待補</option>
+              <option value="製作中">製作中</option>
+              <option value="完成">完成</option>
             </select>
           </div>
         </div>
@@ -535,7 +535,7 @@ function docPill(val) {
 
 function overallBadge(val) {
   const cls  = val==='完成'?'os-done':val==='文件待補'?'os-pend':val==='未開始'?'os-none':'os-wip';
-  const icon = val==='完成'?'✅':val==='文件待補'?'⚠️':val==='未開始'?'○':'🔄';
+  const icon = val==='完成'?'✓':val==='文件待補'?'!':val==='未開始'?'○':'…';
   return `<span class="overall-badge ${cls}">${icon} ${esc(val||'未開始')}</span>`;
 }
 
@@ -543,7 +543,7 @@ function overallBadge(val) {
 function stepCell(checked, date) {
   const ok = checked == '1';
   return `<div class="qi-step">
-    <span class="qi-step-chk ${ok?'qi-check-yes':'qi-check-no'}">${ok?'☑':'☐'}</span>
+    <span class="qi-step-chk ${ok?'qi-check-yes':'qi-check-no'}">${ok?'✓':'–'}</span>
     ${date ? `<span class="qi-step-date">${date.slice(5)}</span>` : ''}
   </div>`;
 }
@@ -757,7 +757,7 @@ async function forceImportCSV() {
   populateQiMonthFilter();
   renderQiStats();
   renderQi();
-  alert('✅ 匯入完成，共 ' + qualityItems.length + ' 筆');
+  alert('匯入完成，共 ' + qualityItems.length + ' 筆');
 }
 
 /* ── 篩選 ── */
@@ -1181,13 +1181,13 @@ function xlsRowToPayload(row) {
 /* 核心：讀取 ArrayBuffer → 解析 → 更新/新增資料 */
 function processXlsBuffer(buffer) {
   const XLSX = window.XLSX;
-  if (!XLSX) { setXlsStatus('❌ SheetJS 未載入，請重新整理', 'red'); return; }
+  if (!XLSX) { setXlsStatus('SheetJS 未載入，請重新整理', 'red'); return; }
 
   const wb   = XLSX.read(buffer, { type:'array', cellDates:false });
   const ws   = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
 
-  if (!rows.length) { setXlsStatus('⚠️ 讀不到資料列', 'orange'); return; }
+  if (!rows.length) { setXlsStatus('讀不到資料列', 'orange'); return; }
 
   let updated = 0, added = 0, skipped = 0;
 
@@ -1222,7 +1222,7 @@ function processXlsBuffer(buffer) {
 
   qiSave();
 
-  const msg = `✅ 匯入完成\n更新 ${updated} 筆　新增 ${added} 筆${skipped?`　略過 ${skipped} 筆`:''}`;
+  const msg = `匯入完成\n更新 ${updated} 筆　新增 ${added} 筆${skipped?`　略過 ${skipped} 筆`:''}`;
   setXlsStatus(msg.replace('\n','　'), 'green');
 
   // 同步雲端
@@ -1251,7 +1251,7 @@ function handleXlsFile(file) {
   setXlsStatus('讀取中…', 'orange');
   const reader = new FileReader();
   reader.onload = e => processXlsBuffer(e.target.result);
-  reader.onerror = () => setXlsStatus('❌ 讀取失敗', 'red');
+  reader.onerror = () => setXlsStatus('讀取失敗', 'red');
   reader.readAsArrayBuffer(file);
   // 清空 input 讓同一檔案可重複選
   document.getElementById('xls-input').value = '';
@@ -1262,7 +1262,7 @@ function handleXlsDrop(event) {
   document.getElementById('xls-upload-btn').classList.remove('drag-over');
   const file = event.dataTransfer.files[0];
   if (!file) return;
-  if (!file.name.match(/\.xlsx?$/i)) { setXlsStatus('⚠️ 請上傳 .xlsx 或 .xls 檔案', 'orange'); return; }
+  if (!file.name.match(/\.xlsx?$/i)) { setXlsStatus('請上傳 .xlsx 或 .xls 檔案', 'orange'); return; }
   handleXlsFile(file);
 }
 

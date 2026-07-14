@@ -336,7 +336,7 @@ function renderOverdueBanner() {
   const items = docTrackItems.filter(isOverdue);
   const el = document.getElementById('dt-overdue-banner');
   if (!items.length) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="dt-overdue-banner">🔔 <strong>${items.length}</strong> 份文件已逾期未歸還：
+  el.innerHTML = `<div class="dt-overdue-banner"><strong>${items.length}</strong> 份文件已逾期未歸還：
     ${items.slice(0,5).map(d => `<span style="text-decoration:underline;cursor:pointer;" onclick="openEditDocModal('${d.id}')">${esc(d.name)}</span>`).join('、')}
     ${items.length > 5 ? `等 ${items.length} 項` : ''}
   </div>`;
@@ -367,12 +367,12 @@ function renderToolbar() {
     <div class="dt-toolbar-row">
       <span class="dt-toolbar-label">狀態</span>
       ${statusChips}
-      <button class="dt-chip overdue-chip${docOverdueOnly?' active':''}" onclick="toggleDocOverdueOnly()">⚠ 只看逾期</button>
+      <button class="dt-chip overdue-chip${docOverdueOnly?' active':''}" onclick="toggleDocOverdueOnly()">只看逾期</button>
     </div>
     <div class="dt-toolbar-row">
       <span class="dt-toolbar-label">分類</span>
       ${catChips}
-      <button class="dt-expand-btn" onclick="openCatManageModal()">⚙ 管理分類</button>
+      <button class="dt-expand-btn" onclick="openCatManageModal()">管理分類</button>
     </div>
   `;
   document.getElementById('dt-cat-datalist').innerHTML =
@@ -459,7 +459,7 @@ function renderCatGroups() {
 function renderDocRow(d) {
   const open = !!docRowExpanded[d.id];
   const overdue = isOverdue(d);
-  const holderHtml = d.holder ? `📍 ${esc(d.holder)}` : '—';
+  const holderHtml = d.holder ? esc(d.holder) : '—';
   return `<div class="dt-row${open?' open':''}">
     <div class="dt-row-head" onclick="toggleDocRow('${d.id}')">
       <span class="dt-row-chevron">▶</span>
@@ -468,9 +468,9 @@ function renderDocRow(d) {
         ${d.docNo ? `<div class="dt-row-docno">${esc(d.docNo)}</div>` : ''}
       </div>
       <span class="dt-st dt-st-${d.progress}">${STATUS_LABELS[d.progress]||d.progress}</span>
-      ${overdue ? '<span class="dt-overdue-tag">⚠ 逾期</span>' : ''}
+      ${overdue ? '<span class="dt-overdue-tag">逾期</span>' : ''}
       <span class="dt-holder-chip${d.holder?'':' empty'}">${holderHtml}</span>
-      <span class="dt-efile ${d.efiled?'yes':'no'}">${d.efiled?'☑ 電子檔':'— 未歸檔'}</span>
+      <span class="dt-efile ${d.efiled?'yes':'no'}">${d.efiled?'電子檔 ✓':'未歸檔 —'}</span>
     </div>
     ${open ? renderDocDetail(d) : ''}
   </div>`;
@@ -519,7 +519,7 @@ function renderTimeline() {
               <span class="dt-tl-cat" style="color:${catColor(d.category)};">${esc(d.category)}</span>
               <span class="dt-tl-name">${esc(d.name)}</span>
               <span class="dt-st dt-st-${d.progress}">${STATUS_LABELS[d.progress]||d.progress}</span>
-              ${isOverdue(d) ? '<span class="dt-overdue-tag">⚠ 逾期</span>' : ''}
+              ${isOverdue(d) ? '<span class="dt-overdue-tag">逾期</span>' : ''}
             </div>
           </div>
         `).join('')}
