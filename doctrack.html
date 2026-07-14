@@ -105,7 +105,10 @@
     <div class="sidebar-inner">
       <div class="sidebar-section-title">快速連結</div>
       <a href="timeline.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 時間軸</a>
-      <div class="sidebar-section-title" style="margin-top:10px;">分類色彩</div>
+      <div class="sidebar-section-title" style="margin-top:10px;">
+        <span style="flex:1;">分類色彩</span>
+        <button class="btn-sm" onclick="openCatManageModal()" style="font-weight:600;">＋ 編輯</button>
+      </div>
       <div id="dt-cat-legend" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
   </div>
@@ -202,6 +205,20 @@
   </div>
 </div>
 
+<!-- 分類管理 Modal -->
+<div class="modal-overlay" id="cat-modal" style="display:none">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header"><h3>管理分類</h3><button class="modal-close" onclick="closeCatManageModal()">×</button></div>
+    <div class="modal-body">
+      <div id="cat-manage-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <button class="btn-secondary" onclick="addCategoryRow()">＋ 新增分類</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal primary" onclick="closeCatManageModal()">完成</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
 <script>
 'use strict';
@@ -218,23 +235,31 @@ let docViewMode = 'list';
 let docGroupCollapsed = {}; // category -> bool
 let docRowExpanded = {};    // id -> bool
 
-const CATEGORY_ORDER = ['材料抽驗','施工抽查','隨機抽查','改善事項','工安管理','監造報表','審查意見','人員名冊','契約價目','其他'];
-const CATEGORY_COLORS = {
-  '材料抽驗': '#004F9F',
-  '施工抽查': '#64B33B',
-  '隨機抽查': '#15C2BB',
-  '改善事項': '#EB2A34',
-  '工安管理': '#B56700',
-  '監造報表': '#A1AAE6',
-  '審查意見': '#2B6173',
-  '人員名冊': '#988F86',
-  '契約價目': '#009FE3',
-  '其他': '#9C9A92'
-};
+const DEFAULT_CATEGORIES = [
+  { name:'材料抽驗', color:'#004F9F' },
+  { name:'施工抽查', color:'#64B33B' },
+  { name:'隨機抽查', color:'#15C2BB' },
+  { name:'改善事項', color:'#EB2A34' },
+  { name:'工安管理', color:'#B56700' },
+  { name:'監造報表', color:'#A1AAE6' },
+  { name:'審查意見', color:'#2B6173' },
+  { name:'人員名冊', color:'#988F86' },
+  { name:'契約價目', color:'#009FE3' },
+  { name:'其他',     color:'#9C9A92' },
+];
+const PALETTE = ['#004F9F','#64B33B','#15C2BB','#EB2A34','#B56700','#A1AAE6','#2B6173','#988F86','#009FE3','#7c3aed','#e07a5f','#3d8b83'];
+let docCategories = []; // {name,color}[]，可由使用者編輯，載入時從 storage 還原
+
+function catColor(cat) {
+  const c = docCategories.find(x => x.name === cat);
+  return c ? c.color : '#9C9A92';
+}
+function saveCategories() { storageSave(CAT_KEY, docCategories); }
+function nextPaletteColor() {
+  return PALETTE[docCategories.length % PALETTE.length];
+}
 const STATUS_LABELS = { pending:'待處理', processing:'處理中', sent:'已送出', returned:'已歸還', done:'已完成' };
 const STATUS_ORDER  = ['pending','processing','sent','returned','done'];
-
-function catColor(cat) { return CATEGORY_COLORS[cat] || '#009FE3'; }
 function isOverdue(d) {
   return !!(d.dueDate && !d.returnDate && d.progress !== 'done' && d.dueDate < todayStr());
 }
@@ -245,6 +270,9 @@ async function init() {
   document.getElementById('header-mount').innerHTML = buildHeader('文件管理');
   initSidebarState();
   renderNav('doctrack');
+  docCategories = storageLoad(CAT_KEY, null);
+  if (!Array.isArray(docCategories) || !docCategories.length) docCategories = DEFAULT_CATEGORIES.map(c => ({...c}));
+  if (!docCategories.some(c => c.name === '其他')) docCategories.push({ name:'其他', color:'#9C9A92' });
   const data = await loadAllData();
   docTrackItems = data.docTrack;
   renderCatLegend();
@@ -252,18 +280,18 @@ async function init() {
 }
 
 function renderCatLegend() {
-  const cats = allCategoriesInUse();
-  document.getElementById('dt-cat-legend').innerHTML = cats.map(c =>
+  document.getElementById('dt-cat-legend').innerHTML = docCategories.map(c =>
     `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
-      <span style="width:9px;height:9px;flex-shrink:0;background:${catColor(c)};"></span>${esc(c)}
+      <span style="width:9px;height:9px;flex-shrink:0;background:${c.color};"></span>${esc(c.name)}
     </div>`
   ).join('');
 }
 
 function allCategoriesInUse() {
   const set = new Set(docTrackItems.map(d => d.category).filter(Boolean));
-  const ordered = CATEGORY_ORDER.filter(c => set.has(c));
-  const extra = [...set].filter(c => !CATEGORY_ORDER.includes(c)).sort();
+  const names = docCategories.map(c => c.name);
+  const ordered = names.filter(c => set.has(c));
+  const extra = [...set].filter(c => !names.includes(c)).sort();
   return ordered.concat(extra);
 }
 
@@ -316,12 +344,11 @@ function renderOverdueBanner() {
 
 // ── 工具列（搜尋／狀態篩選／分類篩選／排序／展開收合）──
 function renderToolbar() {
-  const cats = allCategoriesInUse();
   const statusChips = STATUS_ORDER.map(s =>
     `<button class="dt-chip${docStatusFilter.includes(s)?' active':''}" onclick="toggleDocStatusFilter('${s}')">${STATUS_LABELS[s]}</button>`
   ).join('');
-  const catChips = cats.map(c =>
-    `<button class="dt-chip${docCategoryFilter.includes(c)?' active':''}" onclick="toggleDocCategoryFilter('${esc(c)}')"><span class="dt-dot" style="background:${catColor(c)}"></span>${esc(c)}</button>`
+  const catChips = docCategories.map(c =>
+    `<button class="dt-chip${docCategoryFilter.includes(c.name)?' active':''}" onclick="toggleDocCategoryFilter('${esc(c.name)}')"><span class="dt-dot" style="background:${c.color}"></span>${esc(c.name)}</button>`
   ).join('');
 
   document.getElementById('dt-toolbar').innerHTML = `
@@ -345,11 +372,11 @@ function renderToolbar() {
     <div class="dt-toolbar-row">
       <span class="dt-toolbar-label">分類</span>
       ${catChips}
+      <button class="dt-expand-btn" onclick="openCatManageModal()">⚙ 管理分類</button>
     </div>
   `;
   document.getElementById('dt-cat-datalist').innerHTML =
-    allCategoriesInUse().concat(CATEGORY_ORDER).filter((v,i,a)=>a.indexOf(v)===i)
-    .map(c => `<option value="${esc(c)}">`).join('');
+    docCategories.map(c => `<option value="${esc(c.name)}">`).join('');
 }
 
 function setDocSearch(v) { docSearchTerm = v; if (v.trim() && docViewMode==='list') { allCategoriesInUse().forEach(c=>docGroupCollapsed[c]=false); } renderAll(); }
@@ -400,7 +427,8 @@ function renderCatGroups() {
   items.forEach(d => { (groups[d.category] = groups[d.category] || []).push(d); });
   const keys = Object.keys(groups);
   keys.sort((a,b) => {
-    const ia = CATEGORY_ORDER.indexOf(a), ib = CATEGORY_ORDER.indexOf(b);
+    const names = docCategories.map(c => c.name);
+    const ia = names.indexOf(a), ib = names.indexOf(b);
     const va = ia===-1?999:ia, vb = ib===-1?999:ib;
     return va !== vb ? va-vb : a.localeCompare(b);
   });
@@ -563,6 +591,10 @@ function saveDoc() {
     efiled:      document.getElementById('dm-efiled').checked,
     notes:       document.getElementById('dm-notes').value.trim(),
   };
+  if (!docCategories.some(c => c.name === category)) {
+    docCategories.push({ name: category, color: nextPaletteColor() });
+    saveCategories();
+  }
   if (editingDocId) {
     const idx = docTrackItems.findIndex(d => d.id === editingDocId);
     if (idx !== -1) docTrackItems[idx] = { ...docTrackItems[idx], ...payload };
@@ -572,7 +604,78 @@ function saveDoc() {
   docSave(); closeDocModal(); renderCatLegend(); renderAll();
 }
 
-init();
+// ── 分類管理 ──
+function openCatManageModal() {
+  renderCatManageList();
+  document.getElementById('cat-modal').style.display = 'flex';
+}
+function closeCatManageModal() { document.getElementById('cat-modal').style.display = 'none'; }
+
+function renderCatManageList() {
+  document.getElementById('cat-manage-list').innerHTML = docCategories.map((c, i) => {
+    const count = docTrackItems.filter(d => d.category === c.name).length;
+    const isOther = c.name === '其他';
+    return `<div style="display:flex;align-items:center;gap:8px;">
+      <input type="color" value="${c.color}" onchange="setCategoryColor(${i}, this.value)" style="width:32px;height:32px;padding:0;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;flex-shrink:0;">
+      <input type="text" value="${esc(c.name)}" onchange="renameCategory(${i}, this.value)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:inherit;">
+      <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;width:44px;">${count} 筆</span>
+      <button class="btn-sm del" onclick="deleteCategory(${i})" ${isOther?'disabled title="預設分類無法刪除" style="opacity:.35;cursor:not-allowed;"':''}>刪除</button>
+    </div>`;
+  }).join('');
+}
+
+function addCategoryRow() {
+  let n = 1, name = '新分類';
+  const names = docCategories.map(c => c.name);
+  while (names.includes(name)) { n++; name = '新分類' + n; }
+  docCategories.push({ name, color: nextPaletteColor() });
+  saveCategories();
+  renderCatManageList();
+  renderCatLegend();
+  renderAll();
+}
+
+function renameCategory(i, newNameRaw) {
+  const newName = newNameRaw.trim();
+  const old = docCategories[i];
+  if (!newName || newName === old.name) { renderCatManageList(); return; }
+  if (docCategories.some((c, j) => j !== i && c.name === newName)) {
+    alert('已有相同名稱的分類');
+    renderCatManageList();
+    return;
+  }
+  const oldName = old.name;
+  old.name = newName;
+  docTrackItems.forEach(d => { if (d.category === oldName) d.category = newName; });
+  docCategoryFilter = docCategoryFilter.map(c => c === oldName ? newName : c);
+  if (docGroupCollapsed[oldName] !== undefined) { docGroupCollapsed[newName] = docGroupCollapsed[oldName]; delete docGroupCollapsed[oldName]; }
+  saveCategories(); docSave();
+  renderCatManageList(); renderCatLegend(); renderAll();
+}
+
+function setCategoryColor(i, color) {
+  docCategories[i].color = color;
+  saveCategories();
+  renderCatManageList(); renderCatLegend(); renderAll();
+}
+
+async function deleteCategory(i) {
+  const cat = docCategories[i];
+  if (cat.name === '其他') return;
+  const count = docTrackItems.filter(d => d.category === cat.name).length;
+  const msg = count > 0
+    ? `「${cat.name}」目前有 ${count} 筆文件使用，刪除後這些文件會歸類為「其他」，確定要刪除嗎？`
+    : `確定要刪除分類「${cat.name}」？`;
+  if (!await toastConfirm(msg)) return;
+  docTrackItems.forEach(d => { if (d.category === cat.name) d.category = '其他'; });
+  docCategories.splice(i, 1);
+  docCategoryFilter = docCategoryFilter.filter(c => c !== cat.name);
+  delete docGroupCollapsed[cat.name];
+  saveCategories(); docSave();
+  renderCatManageList(); renderCatLegend(); renderAll();
+}
+
+init().catch(function(e) { showErrBanner && showErrBanner('頁面載入失敗：' + e.message); });
 </script>
 </body>
 </html>

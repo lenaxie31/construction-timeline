@@ -569,7 +569,7 @@ function diagStorage() {
 
   let storageUsed = 0;
   try {
-    [LOCAL_KEY, DEFECT_KEY, DOCS_KEY, QI_KEY, ATT_KEY, MEMBER_KEY, DOCTRACK_KEY].forEach(k => {
+    [LOCAL_KEY, DEFECT_KEY, DOCS_KEY, QI_KEY, ATT_KEY, MEMBER_KEY, DOCTRACK_KEY, GUIDE_KEY].forEach(k => {
       const v = localStorage.getItem(k); if (v) storageUsed += v.length;
     });
   } catch(e) {}
