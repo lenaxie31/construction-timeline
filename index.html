@@ -10,32 +10,32 @@ body { display:flex;align-items:center;justify-content:center;min-height:100vh; 
 .login-wrap {
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
   border-top:2px solid var(--dnv-dark-blue);
-  padding:52px 38px;width:360px;text-align:center;box-shadow:var(--shadow-lg);
+  padding:56px 42px;width:380px;text-align:center;box-shadow:var(--shadow-lg);
 }
 .login-logo {
-  width:52px;height:52px;background:var(--dnv-dark-blue);border-radius:var(--radius-sm);
-  display:flex;align-items:center;justify-content:center;margin:0 auto 24px;
+  width:56px;height:56px;background:var(--dnv-dark-blue);border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 26px;
 }
-.login-logo svg { width:25px;height:25px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round; }
-.login-wrap h1 { font-size:19px;font-weight:700;margin-bottom:5px;color:var(--text-primary);letter-spacing:.05em; }
-.login-wrap p  { font-size:12px;color:var(--text-muted);margin-bottom:30px;letter-spacing:.06em; }
+.login-logo svg { width:27px;height:27px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round; }
+.login-wrap h1 { font-size:21px;font-weight:700;margin-bottom:6px;color:var(--text-primary);letter-spacing:.04em; }
+.login-wrap p  { font-size:13.5px;color:var(--text-muted);margin-bottom:32px;letter-spacing:.05em; }
 .login-wrap input {
-  width:100%;padding:13px 16px;font-family:'DM Mono',monospace;
-  font-size:18px;letter-spacing:5px;border:1px solid var(--border);
+  width:100%;padding:14px 16px;font-family:'DM Mono',monospace;
+  font-size:19px;letter-spacing:5px;border:1px solid var(--border);
   border-radius:var(--radius-sm);outline:none;text-align:center;
   background:var(--bg);transition:border-color .15s,box-shadow .15s;
 }
 .login-wrap input:focus { border-color:var(--dnv-dark-blue);box-shadow:0 0 0 3px rgba(23,23,75,0.08);background:#fff; }
 .login-wrap input.error { border-color:var(--c-red);background:var(--c-red-bg);animation:shake .3s; }
 .login-btn {
-  width:100%;margin-top:14px;padding:13px;font-family:inherit;font-size:13px;font-weight:700;
+  width:100%;margin-top:16px;padding:15px;font-family:inherit;font-size:14.5px;font-weight:700;
   background:var(--dnv-dark-blue);color:#fff;border:none;border-radius:var(--radius-sm);
-  cursor:pointer;transition:background .15s;letter-spacing:.12em;
+  cursor:pointer;transition:background .15s;letter-spacing:.1em;
 }
 .login-btn:hover { background:var(--dnv-sea-blue); }
 .login-btn:disabled { opacity:.45;cursor:not-allowed; }
-.login-err { font-size:12px;color:var(--c-red);margin-top:12px;min-height:18px;font-weight:600; }
-.login-footer { margin-top:30px;font-size:10px;color:var(--text-muted);letter-spacing:.12em; }
+.login-err { font-size:13px;color:var(--c-red);margin-top:14px;min-height:18px;font-weight:600; }
+.login-footer { margin-top:32px;font-size:11px;color:var(--text-muted);letter-spacing:.1em; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
 </style>
 </head>
