@@ -24,6 +24,7 @@ const NAV_PAGES = [
   { id:'defects',    label:'改善事項追蹤',   href:'defects.html',    badge:'open-count' },
   { id:'quality',    label:'監造查驗',        href:'quality.html',    badge:'qi-fail-count' },
   { id:'doctrack',   label:'文件管理',        href:'doctrack.html',   badge:'doc-overdue-count' },
+  { id:'docs',       label:'文件送審',        href:'docs.html',       badge:'docs-overdue-count' },
   { id:'guide',      label:'📘 送審須知筆記', href:'guide.html',      badge:null },
   { id:'attendance', label:'👷 出勤管理',    href:'attendance.html', badge:null },
   { id:'export',     label:'⬇ 匯出',         href:'export.html',     badge:null },
@@ -209,14 +210,23 @@ function renderNav(activePage) {
   const defects = storageLoad(DEFECT_KEY, []);
   const qualityItems = storageLoad(QI_KEY, []);
   const docTrack = storageLoad(DOCTRACK_KEY, []);
+  const docsSubmit = storageLoad(DOCS_KEY, []);
   const openDef  = Array.isArray(defects)      ? defects.filter(d => d.status !== 'closed').length : 0;
   const qiFail   = Array.isArray(qualityItems)  ? qualityItems.filter(q => q.progress !== 'Completed').length : 0;
   const today    = todayStr();
   const docOverdue = Array.isArray(docTrack) ? docTrack.filter(d =>
     d.dueDate && !d.returnDate && d.progress !== 'done' && d.dueDate < today
   ).length : 0;
+  const APPROVED_RESULTS = { approved:1, approved_mod:1, approved_after:1 };
+  const docsOverdue = Array.isArray(docsSubmit) ? docsSubmit.filter(d => {
+    if (!d.versions || !d.versions.length) return false;
+    const last = d.versions[d.versions.length - 1];
+    if (APPROVED_RESULTS[last.result] || !last.date) return false;
+    if (last.result === 'sent' && !last.replyDate) return today > addDays(last.date, d.reviewDays || 14);
+    return false;
+  }).length : 0;
 
-  const badgeVals = { 'open-count': openDef, 'qi-fail-count': qiFail, 'doc-overdue-count': docOverdue };
+  const badgeVals = { 'open-count': openDef, 'qi-fail-count': qiFail, 'doc-overdue-count': docOverdue, 'docs-overdue-count': docsOverdue };
 
   listEl.innerHTML = NAV_PAGES.map(function(p, i) {
     const isActive = p.id === activePage;
