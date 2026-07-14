@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>收發函文 — 施工及監造回報</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.cr-toolbar { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px; }
+.cr-toolbar-row { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.cr-toolbar-label { font-size:11.5px;font-weight:700;color:var(--text-muted);white-space:nowrap;letter-spacing:.04em; }
+.cr-chip { font-family:inherit;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:background .12s,color .12s,border-color .12s; }
+.cr-chip:hover { background:var(--border-light); }
+.cr-chip.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
+.cr-chip.in.active { background:var(--c-blue);border-color:var(--c-blue); }
+.cr-chip.out.active { background:var(--c-green);border-color:var(--c-green); }
+.cr-select { font-family:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-primary);outline:none;cursor:pointer; }
+
+.cr-tbl-wrap { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden; }
+.cr-row { border-bottom:1px solid var(--border-light); }
+.cr-row:last-child { border-bottom:none; }
+.cr-row-head { display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;transition:background .12s; }
+.cr-row-head:hover { background:#F8F9FB; }
+.cr-dir-badge { font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:9px;white-space:nowrap;flex-shrink:0;width:44px;text-align:center; }
+.cr-dir-badge.in  { background:var(--c-blue-bg);color:var(--c-blue); }
+.cr-dir-badge.out { background:var(--c-green-bg);color:var(--c-green); }
+.cr-date { font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;width:78px; }
+.cr-docno { font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;width:150px;overflow:hidden;text-overflow:ellipsis; }
+.cr-unit { font-size:11.5px;font-weight:600;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;width:70px;overflow:hidden;text-overflow:ellipsis; }
+.cr-subject { font-size:14px;font-weight:500;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.cr-pending-tag { font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--c-amber-bg);color:var(--c-amber);white-space:nowrap;flex-shrink:0; }
+.cr-chevron { color:var(--text-muted);font-size:10px;transition:transform .2s;flex-shrink:0; }
+.cr-row.open .cr-chevron { transform:rotate(90deg); }
+.cr-detail { display:none;background:var(--bg);border-top:1px solid var(--border-light);padding:14px 18px 14px 18px; }
+.cr-row.open .cr-detail { display:block; }
+.cr-detail-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px 20px;margin-bottom:10px; }
+.cr-detail-item .lbl { font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px; }
+.cr-detail-item .val { font-size:13.5px;color:var(--text-primary); }
+.cr-detail-notes { font-size:13px;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;line-height:1.6; }
+.cr-detail-actions { display:flex;gap:8px; }
+
+.cr-load-more { display:flex;justify-content:center;padding:20px 0; }
+
+@media(max-width:900px) {
+  .cr-unit { display:none; }
+}
+@media(max-width:767px) {
+  .cr-row-head { flex-wrap:wrap;padding:11px 14px; }
+  .cr-docno { display:none; }
+  .cr-subject { min-width:100%;order:5;font-size:13px;margin-top:2px; }
+  .cr-detail { padding:12px 14px; }
+  .cr-detail-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="header-mount"></div>
+<div class="layout">
+  <div class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="sidebar-inner">
+      <div class="sidebar-section-title">快速連結</div>
+      <a href="timeline.html" class="btn-secondary" style="text-decoration:none;text-align:center;">← 時間軸</a>
+      <a href="doctrack.html" class="btn-secondary" style="text-decoration:none;text-align:center;margin-top:6px;">文件管理 →</a>
+      <a href="docs.html" class="btn-secondary" style="text-decoration:none;text-align:center;margin-top:6px;">文件送審 →</a>
+    </div>
+  </div>
+  <div class="main">
+    <div class="tab-panel">
+      <div class="page-header">
+        <h2>收發函文</h2>
+        <button class="btn-primary" style="width:auto;padding:9px 16px;font-size:13.5px;" onclick="openAddCorrModal()">＋ 新增函文</button>
+      </div>
+
+      <div class="stat-grid" id="cr-stat-grid"></div>
+      <div class="cr-toolbar" id="cr-toolbar"></div>
+
+      <div class="cr-tbl-wrap" id="cr-list"></div>
+      <div class="cr-load-more" id="cr-load-more"></div>
+    </div>
+  </div>
+</div>
+<div class="dnv-brand-footer">DNV AS　減碳A標施工監造回報系統</div>
+
+<!-- 新增/編輯函文 Modal -->
+<div class="modal-overlay" id="corr-modal" style="display:none">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3 id="cm-modal-title">新增函文</h3><button class="modal-close" onclick="closeCorrModal()">×</button></div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>方向</label>
+          <select id="cm-direction">
+            <option value="out">發文（我方發出）</option>
+            <option value="in">收文（外部來函）</option>
+          </select>
+        </div>
+        <div class="field"><label>速別</label>
+          <select id="cm-urgency">
+            <option value="普通件">普通件</option>
+            <option value="最速件">最速件</option>
+            <option value="速件">速件</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>文號</label><input type="text" id="cm-docno" placeholder="例：碳集字第113011501號 或 DNV-86321005-0001"></div>
+      <div class="field"><label>主旨</label><input type="text" id="cm-subject" placeholder="例：檢送設計相關計畫A版"></div>
+      <div class="field"><label>發文／來源單位</label><input type="text" id="cm-unit" list="cr-unit-datalist" placeholder="例：碳集應用、DNV、營建處"></div>
+      <datalist id="cr-unit-datalist"></datalist>
+      <div class="field-row">
+        <div class="field"><label>發文日期</label><input type="date" id="cm-issue-date"></div>
+        <div class="field"><label>收文／簽收日期</label><input type="date" id="cm-receive-date"></div>
+      </div>
+      <div class="field"><label>簽收人（選填）</label><input type="text" id="cm-signed-by"></div>
+      <div class="field"><label>備註（選填）</label><textarea id="cm-notes" style="min-height:56px;"></textarea></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn-modal" id="cm-delete-btn" style="display:none;color:var(--c-red);border-color:var(--c-red-border);background:var(--c-red-bg);" onclick="deleteCorrFromModal()">刪除</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-modal" onclick="closeCorrModal()">取消</button>
+        <button class="btn-modal primary" onclick="saveCorr()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-confirm" id="toast-confirm">
+  <span id="toast-msg">確定要刪除？</span>
+  <div style="display:flex;gap:8px;">
+    <button class="toast-btn-cancel" onclick="toastResolve(false)">取消</button>
+    <button class="toast-btn-ok" id="toast-ok-btn" onclick="toastResolve(true)">刪除</button>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+'use strict';
+if (!requireAuth()) throw new Error('not auth');
+
+let corrList = [];
+let editingCorrId = null;
+let corrSearchTerm = '';
+let corrDirFilter = { in:true, out:true };
+let corrUnitFilter = '';
+let corrSortBy = 'issue-desc';
+let corrRowExpanded = {};
+let corrVisibleCount = 60;
+const CORR_PAGE_SIZE = 60;
+
+const corrSave = makeModuleSave(CORR_KEY, 'correspond', () => corrList);
+
+async function init() {
+  document.getElementById('header-mount').innerHTML = buildHeader('收發函文');
+  initSidebarState();
+  renderNav('correspond');
+  const data = await loadAllData();
+  corrList = data.correspond;
+  renderAll();
+}
+
+function allUnitsInUse() {
+  const set = new Set(corrList.map(c => c.unit).filter(Boolean));
+  return [...set].sort();
+}
+
+function renderAll() {
+  renderStats();
+  renderToolbar();
+  renderList();
+}
+
+// ── 統計卡 ──
+function renderStats() {
+  const today = todayStr();
+  const monthPrefix = today.slice(0,7);
+  const outThisMonth = corrList.filter(c => c.direction==='out' && (c.issueDate||'').startsWith(monthPrefix)).length;
+  const inThisMonth  = corrList.filter(c => c.direction==='in'  && (c.issueDate||'').startsWith(monthPrefix)).length;
+  const pending = corrList.filter(c => c.direction==='in' && !c.receiveDate).length;
+  document.getElementById('cr-stat-grid').innerHTML = `
+    <div class="stat-card blue"><div class="stat-label">本月發文</div><div class="stat-value">${outThisMonth}</div></div>
+    <div class="stat-card green"><div class="stat-label">本月收文</div><div class="stat-value">${inThisMonth}</div></div>
+    <div class="stat-card amber"><div class="stat-label">待簽收</div><div class="stat-value">${pending}</div></div>
+    <div class="stat-card"><div class="stat-label">總筆數</div><div class="stat-value">${corrList.length}</div></div>
+  `;
+}
+
+// ── 工具列 ──
+function renderToolbar() {
+  const units = allUnitsInUse();
+  document.getElementById('cr-toolbar').innerHTML = `
+    <div class="cr-toolbar-row">
+      <input type="search" placeholder="搜尋主旨、文號、單位、備註…" value="${esc(corrSearchTerm)}"
+        oninput="setCorrSearch(this.value)" style="flex:1;min-width:200px;">
+      <select class="cr-select" onchange="setCorrUnit(this.value)">
+        <option value="">全部單位</option>
+        ${units.map(u => `<option value="${esc(u)}" ${corrUnitFilter===u?'selected':''}>${esc(u)}</option>`).join('')}
+      </select>
+      <select class="cr-select" onchange="setCorrSort(this.value)">
+        <option value="issue-desc" ${corrSortBy==='issue-desc'?'selected':''}>發文日期（新→舊）</option>
+        <option value="issue-asc"  ${corrSortBy==='issue-asc'?'selected':''}>發文日期（舊→新）</option>
+      </select>
+    </div>
+    <div class="cr-toolbar-row">
+      <span class="cr-toolbar-label">方向</span>
+      <button class="cr-chip out${corrDirFilter.out?' active':''}" onclick="toggleCorrDir('out')">發文</button>
+      <button class="cr-chip in${corrDirFilter.in?' active':''}" onclick="toggleCorrDir('in')">收文</button>
+    </div>
+  `;
+  document.getElementById('cr-unit-datalist').innerHTML = units.map(u => `<option value="${esc(u)}">`).join('');
+}
+function setCorrSearch(v) { corrSearchTerm = v; corrVisibleCount = CORR_PAGE_SIZE; renderList(); }
+function setCorrUnit(v) { corrUnitFilter = v; corrVisibleCount = CORR_PAGE_SIZE; renderList(); }
+function setCorrSort(v) { corrSortBy = v; corrVisibleCount = CORR_PAGE_SIZE; renderList(); }
+function toggleCorrDir(d) { corrDirFilter[d] = !corrDirFilter[d]; corrVisibleCount = CORR_PAGE_SIZE; renderToolbar(); renderList(); }
+function toggleCorrRow(id) { corrRowExpanded[id] = !corrRowExpanded[id]; renderList(); }
+function loadMoreCorr() { corrVisibleCount += CORR_PAGE_SIZE; renderList(); }
+
+function getFilteredSortedCorr() {
+  const term = corrSearchTerm.trim().toLowerCase();
+  let items = corrList.filter(c => {
+    if (!corrDirFilter[c.direction]) return false;
+    if (corrUnitFilter && c.unit !== corrUnitFilter) return false;
+    if (term) {
+      const hay = [c.subject,c.docNo,c.unit,c.notes,c.signedBy].join(' ').toLowerCase();
+      if (!hay.includes(term)) return false;
+    }
+    return true;
+  });
+  items.sort((a,b) => corrSortBy === 'issue-asc'
+    ? (a.issueDate||'').localeCompare(b.issueDate||'')
+    : (b.issueDate||'').localeCompare(a.issueDate||''));
+  return items;
+}
+
+function renderList() {
+  const all = getFilteredSortedCorr();
+  const visible = all.slice(0, corrVisibleCount);
+  const el = document.getElementById('cr-list');
+
+  if (!all.length) { el.innerHTML = '<div class="empty">沒有符合條件的函文記錄</div>'; document.getElementById('cr-load-more').innerHTML=''; return; }
+
+  el.innerHTML = visible.map(renderCorrRow).join('');
+
+  const remain = all.length - visible.length;
+  document.getElementById('cr-load-more').innerHTML = remain > 0
+    ? `<button class="btn-secondary" style="width:auto;padding:9px 22px;" onclick="loadMoreCorr()">載入更多（還有 ${remain} 筆）</button>`
+    : `<span style="font-size:12px;color:var(--text-muted);">已顯示全部 ${all.length} 筆</span>`;
+}
+
+function renderCorrRow(c) {
+  const open = !!corrRowExpanded[c.id];
+  const pending = c.direction === 'in' && !c.receiveDate;
+  return `<div class="cr-row${open?' open':''}">
+    <div class="cr-row-head" onclick="toggleCorrRow('${c.id}')">
+      <span class="cr-chevron">▶</span>
+      <span class="cr-dir-badge ${c.direction}">${c.direction==='out'?'發文':'收文'}</span>
+      <span class="cr-date">${c.issueDate||'—'}</span>
+      <span class="cr-docno">${esc(c.docNo)||'—'}</span>
+      <span class="cr-unit">${esc(c.unit)||'—'}</span>
+      <span class="cr-subject">${esc(c.subject)||'（無主旨）'}</span>
+      ${pending ? '<span class="cr-pending-tag">待簽收</span>' : ''}
+    </div>
+    ${open ? renderCorrDetail(c) : ''}
+  </div>`;
+}
+
+function renderCorrDetail(c) {
+  return `<div class="cr-detail">
+    <div class="cr-detail-grid">
+      <div class="cr-detail-item"><div class="lbl">速別</div><div class="val">${esc(c.urgency)||'—'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">發文日期</div><div class="val">${c.issueDate||'—'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">收文／簽收日期</div><div class="val">${c.receiveDate||'—'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">簽收人</div><div class="val">${esc(c.signedBy)||'—'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">單位</div><div class="val">${esc(c.unit)||'—'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">文號</div><div class="val">${esc(c.docNo)||'—'}</div></div>
+    </div>
+    <div class="cr-detail-notes">${c.notes ? esc(c.notes) : '（無備註）'}</div>
+    <div class="cr-detail-actions">
+      <button class="btn-sm edit" onclick="event.stopPropagation();openEditCorrModal('${c.id}')">編輯</button>
+    </div>
+  </div>`;
+}
+
+// ── 新增／編輯 Modal ──
+function openAddCorrModal() {
+  editingCorrId = null;
+  document.getElementById('cm-modal-title').textContent = '新增函文';
+  document.getElementById('cm-direction').value = 'out';
+  document.getElementById('cm-urgency').value = '普通件';
+  document.getElementById('cm-docno').value = '';
+  document.getElementById('cm-subject').value = '';
+  document.getElementById('cm-unit').value = '';
+  document.getElementById('cm-issue-date').value = todayStr();
+  document.getElementById('cm-receive-date').value = '';
+  document.getElementById('cm-signed-by').value = '';
+  document.getElementById('cm-notes').value = '';
+  document.getElementById('cm-delete-btn').style.display = 'none';
+  document.getElementById('corr-modal').style.display = 'flex';
+}
+function openEditCorrModal(id) {
+  const c = corrList.find(x => x.id === id); if (!c) return;
+  editingCorrId = id;
+  document.getElementById('cm-modal-title').textContent = '編輯函文';
+  document.getElementById('cm-direction').value = c.direction || 'out';
+  document.getElementById('cm-urgency').value = c.urgency || '普通件';
+  document.getElementById('cm-docno').value = c.docNo || '';
+  document.getElementById('cm-subject').value = c.subject || '';
+  document.getElementById('cm-unit').value = c.unit || '';
+  document.getElementById('cm-issue-date').value = c.issueDate || '';
+  document.getElementById('cm-receive-date').value = c.receiveDate || '';
+  document.getElementById('cm-signed-by').value = c.signedBy || '';
+  document.getElementById('cm-notes').value = c.notes || '';
+  document.getElementById('cm-delete-btn').style.display = 'block';
+  document.getElementById('corr-modal').style.display = 'flex';
+}
+function closeCorrModal() { document.getElementById('corr-modal').style.display = 'none'; }
+async function deleteCorrFromModal() {
+  if (!editingCorrId) return;
+  if (!await toastConfirm('確定要刪除這筆函文記錄？')) return;
+  corrList = corrList.filter(c => c.id !== editingCorrId);
+  corrSave(); closeCorrModal(); renderAll();
+}
+function saveCorr() {
+  const subject = document.getElementById('cm-subject').value.trim();
+  if (!subject) { alert('請填寫主旨'); return; }
+  const payload = {
+    direction:   document.getElementById('cm-direction').value,
+    urgency:     document.getElementById('cm-urgency').value,
+    docNo:       document.getElementById('cm-docno').value.trim(),
+    subject,
+    unit:        document.getElementById('cm-unit').value.trim(),
+    issueDate:   document.getElementById('cm-issue-date').value,
+    receiveDate: document.getElementById('cm-receive-date').value,
+    signedBy:    document.getElementById('cm-signed-by').value.trim(),
+    notes:       document.getElementById('cm-notes').value.trim(),
+  };
+  if (editingCorrId) {
+    const idx = corrList.findIndex(c => c.id === editingCorrId);
+    if (idx !== -1) corrList[idx] = { ...corrList[idx], ...payload };
+  } else {
+    corrList.unshift({ id: uid(), ...payload });
+  }
+  corrSave(); closeCorrModal(); renderAll();
+}
+
+init().catch(function(e) { if (typeof showErrBanner === 'function') showErrBanner('頁面載入失敗：' + e.message); });
+</script>
+</body>
+</html>

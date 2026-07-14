@@ -47,6 +47,7 @@
 .htl-source-defect { background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border); }
 .htl-source-quality { background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border); }
 .htl-source-docsub { background:var(--c-teal-bg);color:var(--c-teal);border-color:var(--c-teal-border); }
+.htl-source-corr { background:var(--c-purple-bg);color:var(--c-purple);border-color:var(--c-purple-border); }
 .src-filter-bar { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px; }
 .src-chip {
   font-family:inherit;font-size:12px;font-weight:600;padding:6px 13px;border-radius:999px;
@@ -127,6 +128,8 @@
 .home-pill.green .home-pill-val { color:var(--c-green); }
 .home-pill.cyan  { border-top-color:var(--c-teal); }
 .home-pill.cyan  .home-pill-val { color:var(--c-teal); }
+.home-pill.indigo { border-top-color:var(--dnv-sea-blue); }
+.home-pill.indigo .home-pill-val { color:var(--dnv-sea-blue); }
 @media(max-width:599px) { .home-card-body { grid-template-columns:repeat(2,1fr); } }
 
 /* Mobile */
@@ -246,14 +249,14 @@
 if (!requireAuth()) throw new Error('not auth');
 
 let entries = [], defects = [];
-let qualityItemsData = [], docsSubmitData = [];
+let qualityItemsData = [], docsSubmitData = [], corrData = [];
 let editingId = null;
 const workCats = loadCats();
-let sourceFilter = { log:true, defect:true, quality:true, docsub:true };
+let sourceFilter = { log:true, defect:true, quality:true, docsub:true, corr:true };
 
-const SOURCE_LABEL = { log:'工程日誌', defect:'改善事項', quality:'監造查驗', docsub:'文件送審' };
-const SOURCE_ICON  = { log:'📕', defect:'🔧', quality:'✅', docsub:'📄' };
-const SOURCE_LINK  = { defect:'defects.html', quality:'quality.html', docsub:'docs.html' };
+const SOURCE_LABEL = { log:'工程日誌', defect:'改善事項', quality:'監造查驗', docsub:'文件送審', corr:'收發函文' };
+const SOURCE_ICON  = { log:'📕', defect:'🔧', quality:'✅', docsub:'📄', corr:'📨' };
+const SOURCE_LINK  = { defect:'defects.html', quality:'quality.html', docsub:'docs.html', corr:'correspond.html' };
 
 const STATUS_COLOR = { normal:'var(--dnv-sea-blue)', milestone:'var(--dnv-digi-green)', warn:'var(--c-amber)', pending:'var(--c-amber)', issue:'var(--dnv-energy-red)' };
 const STATUS_BG    = { normal:'#EAF3FB', milestone:'#EDF9EC', warn:'#FFF4E0', pending:'#FFF4E0', issue:'#FDE8E9' };
@@ -275,6 +278,7 @@ async function init() {
   defects = data.defects;
   qualityItemsData = data.qualityItems || [];
   docsSubmitData = data.docs || [];
+  corrData = data.correspond || [];
   populateMonthFilter();
   render();
   renderHomeCard(data);
@@ -306,6 +310,8 @@ function renderHomeCard(data) {
   const docTrackOverdue = (data.docTrack || []).filter(d =>
     d.dueDate && !d.returnDate && d.progress !== 'done' && d.dueDate < today
   ).length;
+
+  const corrPending = (data.correspond || []).filter(c => c.direction === 'in' && !c.receiveDate).length;
 
   const attThisMonth = (data.attRecords || []).filter(r => (r.date || '').startsWith(monthPrefix));
   const attAbnormal  = attThisMonth.filter(r => r.status === 'late' || r.status === 'absent' || r.status === 'leave').length;
@@ -343,6 +349,10 @@ function renderHomeCard(data) {
         <a href="doctrack.html" class="home-pill cyan">
           <span class="home-pill-val">${docTrackOverdue}</span>
           <span class="home-pill-label">文件管理<br>逾期未還</span>
+        </a>
+        <a href="correspond.html" class="home-pill indigo">
+          <span class="home-pill-val">${corrPending}</span>
+          <span class="home-pill-label">收發函文<br>待簽收</span>
         </a>
         <a href="attendance.html" class="home-pill blue">
           <span class="home-pill-val">${attAbnormal}</span>
@@ -423,12 +433,25 @@ function buildDocsEntries() {
   return out;
 }
 
+function buildCorrEntries() {
+  if (!sourceFilter.corr) return [];
+  return (corrData || []).filter(c => c.issueDate).map(c => ({
+    id: 'synth_corr_' + c.id,
+    date: c.issueDate,
+    status: 'normal',
+    title: (c.direction === 'out' ? '[發文] ' : '[收文] ') + (c.subject || '（無主旨）'),
+    alert: c.unit ? ('單位：' + c.unit) : '',
+    weather: '', cats: [],
+    _source: 'corr',
+  }));
+}
+
 function getFiltered() {
   const q  = (document.getElementById('search-input').value||'').trim().toLowerCase();
   const st = document.getElementById('filter-status').value;
   const mo = document.getElementById('filter-month').value;
   const merged = (sourceFilter.log ? entries.map(e => ({...e, _source:'log'})) : [])
-    .concat(buildDefectEntries(), buildQualityEntries(), buildDocsEntries());
+    .concat(buildDefectEntries(), buildQualityEntries(), buildDocsEntries(), buildCorrEntries());
   return merged.filter(e =>
     (!q  || e.title.toLowerCase().includes(q) || (e.alert||'').toLowerCase().includes(q)) &&
     (!st || e.status===st) &&
