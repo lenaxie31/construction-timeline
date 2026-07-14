@@ -43,6 +43,17 @@
 .htl-date-label.below { bottom:calc(50% + 24px); }
 .htl-today-pill { font-size:8px;font-weight:700;background:var(--dnv-digi-green);color:#fff;padding:1px 5px;border-radius:3px;display:block;text-align:center;margin-top:2px; }
 .htl-status { font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:6px;display:inline-block;margin-bottom:5px; }
+.htl-source-tag { font-size:9px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:6px;display:inline-block;margin-bottom:5px;cursor:pointer;border:1px solid; }
+.htl-source-defect { background:var(--c-red-bg);color:var(--c-red);border-color:var(--c-red-border); }
+.htl-source-quality { background:var(--c-amber-bg);color:var(--c-amber);border-color:var(--c-amber-border); }
+.htl-source-docsub { background:var(--c-teal-bg);color:var(--c-teal);border-color:var(--c-teal-border); }
+.src-filter-bar { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px; }
+.src-chip {
+  font-family:inherit;font-size:12px;font-weight:600;padding:6px 13px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;
+  transition:all .12s;display:inline-flex;align-items:center;gap:6px;
+}
+.src-chip.active { background:var(--dnv-dark-blue);color:#fff;border-color:var(--dnv-dark-blue); }
 .htl-title  { font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.45;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden; }
 .htl-sub    { font-size:11px;color:var(--text-muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:3px; }
 .htl-cat-tag { font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;margin-right:3px;margin-bottom:3px; }
@@ -75,46 +86,48 @@
 /* ── 工項新增側欄 ── */
 .sidebar-inner .field label { font-size:11px;font-weight:600;color:var(--text-secondary); }
 #f-cats { display:flex;flex-wrap:wrap;gap:5px;padding:6px 0;min-height:30px; }
-/* ── 首頁小卡 ── */
+/* ── 首頁統計儀表板 ── */
 .home-card {
-  background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-lg);
-  box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  border-top:2px solid var(--dnv-dark-blue);margin-bottom:20px;overflow:hidden;
 }
 .home-card-head {
   display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;border-bottom:1px solid var(--border-light);background:var(--bg);
+  padding:13px 18px;border-bottom:1px solid var(--border-light);
 }
-.home-card-title { font-size:12.5px;font-weight:700;color:var(--text-primary);letter-spacing:.02em; }
-.home-card-updated { font-size:10.5px;color:var(--text-muted); }
+.home-card-title { font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:.03em; }
+.home-card-updated { font-size:11px;color:var(--text-muted); }
 .home-card-toggle {
-  background:none;border:1px solid var(--border);border-radius:6px;width:22px;height:22px;
+  background:none;border:1px solid var(--border);border-radius:var(--radius-sm);width:26px;height:26px;
   font-size:14px;line-height:1;color:var(--text-muted);cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;transition:background var(--transition);
+  display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s;
 }
-.home-card-toggle:hover { background:var(--border-light);color:var(--text-primary); }
+.home-card-toggle:hover { border-color:var(--dnv-sea-blue);color:var(--dnv-sea-blue); }
 .home-card-body {
-  display:flex;flex-wrap:wrap;gap:10px;padding:14px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border-light);
 }
 .home-card.collapsed .home-card-body { display:none; }
 .home-pill {
-  flex:1;min-width:140px;display:flex;align-items:center;gap:10px;
-  padding:10px 14px;border-radius:var(--radius);text-decoration:none;
-  border:1px solid;transition:transform .1s,box-shadow var(--transition);
+  display:flex;flex-direction:column;gap:8px;
+  padding:18px 20px;text-decoration:none;background:var(--surface);
+  border-top:3px solid transparent;transition:background .12s;
 }
-.home-pill:hover { transform:translateY(-1px);box-shadow:var(--shadow); }
-.home-pill-val { font-family:'DM Mono',monospace;font-size:20px;font-weight:700;line-height:1;min-width:20px; }
-.home-pill-label { font-size:11px;color:var(--text-secondary);line-height:1.4; }
-.home-pill.red   { background:var(--c-red-bg);border-color:var(--c-red-border); }
+.home-pill:hover { background:var(--bg); }
+.home-pill-val { font-family:'DM Mono',monospace;font-size:32px;font-weight:500;line-height:1;letter-spacing:-.02em; }
+.home-pill-label { font-size:11.5px;color:var(--text-secondary);line-height:1.5;font-weight:500; }
+.home-pill.red   { border-top-color:var(--c-red); }
 .home-pill.red   .home-pill-val { color:var(--c-red); }
-.home-pill.amber { background:var(--c-amber-bg);border-color:var(--c-amber-border); }
+.home-pill.amber { border-top-color:var(--c-amber); }
 .home-pill.amber .home-pill-val { color:var(--c-amber); }
-.home-pill.blue  { background:var(--c-blue-bg);border-color:var(--c-blue-border); }
+.home-pill.blue  { border-top-color:var(--c-blue); }
 .home-pill.blue  .home-pill-val { color:var(--c-blue); }
-.home-pill.teal  { background:var(--c-purple-bg);border-color:var(--c-purple-border); }
+.home-pill.teal  { border-top-color:var(--c-purple); }
 .home-pill.teal  .home-pill-val { color:var(--c-purple); }
-.home-pill.green { background:var(--c-green-bg);border-color:var(--c-green-border); }
+.home-pill.green { border-top-color:var(--c-green); }
 .home-pill.green .home-pill-val { color:var(--c-green); }
-@media(max-width:599px) { .home-pill { min-width:100%; } }
+.home-pill.cyan  { border-top-color:var(--c-teal); }
+.home-pill.cyan  .home-pill-val { color:var(--c-teal); }
+@media(max-width:599px) { .home-card-body { grid-template-columns:repeat(2,1fr); } }
 
 /* Mobile */
 @media(max-width:599px) {
@@ -187,6 +200,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:var(--c-amber)"></div>待注意／待決議</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--c-red)"></div>異常／已開單</div>
       </div>
+      <div class="src-filter-bar" id="src-filter-bar"></div>
       <!-- 篩選列 -->
       <div class="filter-bar">
         <input type="search" id="search-input" placeholder="搜尋工項…" oninput="render()">
@@ -232,8 +246,14 @@
 if (!requireAuth()) throw new Error('not auth');
 
 let entries = [], defects = [];
+let qualityItemsData = [], docsSubmitData = [];
 let editingId = null;
 const workCats = loadCats();
+let sourceFilter = { log:true, defect:true, quality:true, docsub:true };
+
+const SOURCE_LABEL = { log:'工程日誌', defect:'改善事項', quality:'監造查驗', docsub:'文件送審' };
+const SOURCE_ICON  = { log:'📕', defect:'🔧', quality:'✅', docsub:'📄' };
+const SOURCE_LINK  = { defect:'defects.html', quality:'quality.html', docsub:'docs.html' };
 
 const STATUS_COLOR = { normal:'var(--dnv-sea-blue)', milestone:'var(--dnv-digi-green)', warn:'var(--c-amber)', pending:'var(--c-amber)', issue:'var(--dnv-energy-red)' };
 const STATUS_BG    = { normal:'#EAF3FB', milestone:'#EDF9EC', warn:'#FFF4E0', pending:'#FFF4E0', issue:'#FDE8E9' };
@@ -253,22 +273,40 @@ async function init() {
   const data = await loadAllData();
   entries = data.entries;
   defects = data.defects;
+  qualityItemsData = data.qualityItems || [];
+  docsSubmitData = data.docs || [];
   populateMonthFilter();
   render();
   renderHomeCard(data);
 }
 
-// ── 首頁小卡（取代原儀表板，僅顯示跨模組重點數字）──
+// ── 統計儀表板（跨模組重點數字，時間軸上方）──
 const HOME_CARD_KEY = 'construction_home_card_collapsed_v1';
 
 function renderHomeCard(data) {
   const mount = document.getElementById('home-card-mount');
   if (!mount) return;
 
-  const openDefects = (data.defects || []).filter(d => d.status !== 'closed').length;
-  const qiOpen      = (data.qualityItems || []).filter(q => q.progress !== 'Completed').length;
+  const today = todayStr();
+  const monthPrefix = today.slice(0, 7);
 
-  const monthPrefix = todayStr().slice(0, 7);
+  const logsThisMonth = (data.entries || []).filter(e => (e.date || '').startsWith(monthPrefix)).length;
+  const openDefects   = (data.defects || []).filter(d => d.status !== 'closed').length;
+  const qiOpen        = (data.qualityItems || []).filter(q => q.progress !== 'Completed').length;
+
+  const APPROVED_RESULTS = { approved:1, approved_mod:1, approved_after:1 };
+  const docsOverdue = (data.docs || []).filter(d => {
+    if (!d.versions || !d.versions.length) return false;
+    const last = d.versions[d.versions.length - 1];
+    if (APPROVED_RESULTS[last.result] || !last.date) return false;
+    if (last.result === 'sent' && !last.replyDate) return today > addDays(last.date, d.reviewDays || 14);
+    return false;
+  }).length;
+
+  const docTrackOverdue = (data.docTrack || []).filter(d =>
+    d.dueDate && !d.returnDate && d.progress !== 'done' && d.dueDate < today
+  ).length;
+
   const attThisMonth = (data.attRecords || []).filter(r => (r.date || '').startsWith(monthPrefix));
   const attAbnormal  = attThisMonth.filter(r => r.status === 'late' || r.status === 'absent' || r.status === 'leave').length;
 
@@ -281,11 +319,15 @@ function renderHomeCard(data) {
   mount.innerHTML = `
     <div class="home-card${collapsed ? ' collapsed' : ''}" id="home-card">
       <div class="home-card-head">
-        <span class="home-card-title">📌 今日重點</span>
+        <span class="home-card-title">📊 統計儀表板</span>
         <span class="home-card-updated">${esc(updatedLabel)}</span>
         <button class="home-card-toggle" id="home-card-toggle" onclick="toggleHomeCard()" title="收合／展開">${collapsed ? '▾' : '▴'}</button>
       </div>
       <div class="home-card-body">
+        <a href="timeline.html" class="home-pill green">
+          <span class="home-pill-val">${logsThisMonth}</span>
+          <span class="home-pill-label">本月<br>工程日誌</span>
+        </a>
         <a href="defects.html" class="home-pill red">
           <span class="home-pill-val">${openDefects}</span>
           <span class="home-pill-label">未結案<br>改善事項</span>
@@ -294,13 +336,17 @@ function renderHomeCard(data) {
           <span class="home-pill-val">${qiOpen}</span>
           <span class="home-pill-label">監造查驗<br>未完成</span>
         </a>
+        <a href="docs.html" class="home-pill teal">
+          <span class="home-pill-val">${docsOverdue}</span>
+          <span class="home-pill-label">文件送審<br>逾期未回覆</span>
+        </a>
+        <a href="doctrack.html" class="home-pill cyan">
+          <span class="home-pill-val">${docTrackOverdue}</span>
+          <span class="home-pill-label">文件管理<br>逾期未還</span>
+        </a>
         <a href="attendance.html" class="home-pill blue">
           <span class="home-pill-val">${attAbnormal}</span>
-          <span class="home-pill-label">本月出勤<br>異常（遲到／缺勤／請假）</span>
-        </a>
-        <a href="guide.html" class="home-pill teal">
-          <span class="home-pill-val">📘</span>
-          <span class="home-pill-label">送審須知<br>筆記</span>
+          <span class="home-pill-label">本月出勤<br>異常</span>
         </a>
       </div>
     </div>`;
@@ -330,18 +376,81 @@ function populateMonthFilter() {
     `<option value="${m}"${m===cur?' selected':''}>${m.replace('-','年')}月</option>`).join('');
 }
 
+function buildDefectEntries() {
+  if (!sourceFilter.defect) return [];
+  return (defects || []).filter(d => d.date).map(d => ({
+    id: 'synth_defect_' + d.id,
+    date: d.date,
+    status: d.status === 'closed' ? 'milestone' : (d.status === 'open' ? 'issue' : 'warn'),
+    title: (d.title || '（無說明）'),
+    alert: d.category ? ('分類：' + d.category) : '',
+    weather: '', cats: [],
+    _source: 'defect',
+  }));
+}
+function buildQualityEntries() {
+  if (!sourceFilter.quality) return [];
+  return (qualityItemsData || []).filter(q => q.date).map(q => ({
+    id: 'synth_qi_' + q.id,
+    date: q.date,
+    status: q.progress === 'Completed' ? 'milestone' : 'pending',
+    title: (q.item || q.group || '（無項目名稱）'),
+    alert: q.group ? ('施工項目：' + q.group) : '',
+    weather: '', cats: [],
+    _source: 'quality',
+  }));
+}
+function buildDocsEntries() {
+  if (!sourceFilter.docsub) return [];
+  const out = [];
+  (docsSubmitData || []).forEach(d => {
+    (d.versions || []).forEach((v, i) => {
+      if (!v.date) return;
+      let status = 'pending';
+      if (v.result === 'approved' || v.result === 'approved_mod' || v.result === 'approved_after') status = 'milestone';
+      else if (v.result === 'rejected') status = 'issue';
+      out.push({
+        id: 'synth_doc_' + d.id + '_' + i,
+        date: v.date,
+        status,
+        title: (d.name || '') + '（' + (v.revision || '') + '）',
+        alert: v.comment || '',
+        weather: '', cats: [],
+        _source: 'docsub',
+      });
+    });
+  });
+  return out;
+}
+
 function getFiltered() {
   const q  = (document.getElementById('search-input').value||'').trim().toLowerCase();
   const st = document.getElementById('filter-status').value;
   const mo = document.getElementById('filter-month').value;
-  return entries.filter(e =>
+  const merged = (sourceFilter.log ? entries.map(e => ({...e, _source:'log'})) : [])
+    .concat(buildDefectEntries(), buildQualityEntries(), buildDocsEntries());
+  return merged.filter(e =>
     (!q  || e.title.toLowerCase().includes(q) || (e.alert||'').toLowerCase().includes(q)) &&
     (!st || e.status===st) &&
     (!mo || e.date.startsWith(mo))
   );
 }
 
+function renderSourceFilterBar() {
+  const el = document.getElementById('src-filter-bar');
+  if (!el) return;
+  el.innerHTML = Object.keys(SOURCE_LABEL).map(src =>
+    `<button class="src-chip${sourceFilter[src]?' active':''}" onclick="toggleSourceFilter('${src}')">${SOURCE_ICON[src]} ${SOURCE_LABEL[src]}</button>`
+  ).join('');
+}
+function toggleSourceFilter(src) {
+  sourceFilter[src] = !sourceFilter[src];
+  renderSourceFilterBar();
+  render();
+}
+
 function render() {
+  renderSourceFilterBar();
   const filtered = getFiltered().sort((a,b)=>b.date.localeCompare(a.date));
   document.getElementById('filter-count').textContent = '共 '+filtered.length+' 筆';
 
@@ -388,16 +497,29 @@ function render() {
       return cat ? `<span class="htl-cat-tag" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44;">${esc(cat.label)}</span>` : '';
     }).join('');
 
+    const src = e._source || 'log';
+    const sourceTag = src !== 'log'
+      ? `<span class="htl-source-tag htl-source-${src}" onclick="event.stopPropagation();location.href='${SOURCE_LINK[src]}'">${SOURCE_ICON[src]} ${SOURCE_LABEL[src]}</span>`
+      : '';
+    const actionsHtml = src === 'log'
+      ? `<div class="htl-actions">
+          <button class="btn-sm edit" data-id="${e.id}" onclick="event.stopPropagation();editEntry(this.dataset.id)">編輯</button>
+          <button class="btn-sm del"  data-id="${e.id}" onclick="event.stopPropagation();deleteEntry(this.dataset.id)">刪除</button>
+        </div>`
+      : `<div class="htl-actions">
+          <button class="btn-sm" onclick="event.stopPropagation();location.href='${SOURCE_LINK[src]}'">查看 →</button>
+        </div>`;
+
     const card = `<div class="htl-card ${isAbove?'above':'below'}" style="border-top-color:${sc};">
-      <span class="htl-status" style="background:${sb};color:${sc};">${STATUS_LABEL[e.status]||e.status}</span>
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        <span class="htl-status" style="background:${sb};color:${sc};">${STATUS_LABEL[e.status]||e.status}</span>
+        ${sourceTag}
+      </div>
       ${e.title?`<div class="htl-title">${formatTitle(e.title)}</div>`:''}
       ${fs[2]?`<div class="htl-sub" style="color:var(--c-amber);">${esc(fs[2].slice(0,60))}${fs[2].length>60?'…':''}</div>`:''}
       ${e.alert?`<div style="font-size:10px;color:var(--text-muted);margin-top:4px;border-left:2px solid var(--border);padding-left:5px;">${esc(e.alert.slice(0,40))}</div>`:''}
       ${catTags?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${catTags}</div>`:''}
-      <div class="htl-actions">
-        <button class="btn-sm edit" data-id="${e.id}" onclick="event.stopPropagation();editEntry(this.dataset.id)">編輯</button>
-        <button class="btn-sm del"  data-id="${e.id}" onclick="event.stopPropagation();deleteEntry(this.dataset.id)">刪除</button>
-      </div>
+      ${actionsHtml}
     </div>`;
 
     const stem    = `<div class="htl-stem ${isAbove?'above':'below'}"></div>`;
