@@ -76,7 +76,10 @@
     <div class="tab-panel">
       <div class="page-header">
         <h2>收發函文</h2>
-        <button class="btn-primary" style="width:auto;padding:9px 16px;font-size:13.5px;" onclick="openAddCorrModal()">＋ 新增函文</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" style="width:auto;padding:9px 16px;font-size:13.5px;" onclick="bulkArchiveAll()">全部標記為已歸檔</button>
+          <button class="btn-primary" style="width:auto;padding:9px 16px;font-size:13.5px;" onclick="openAddCorrModal()">＋ 新增函文</button>
+        </div>
       </div>
 
       <div class="stat-grid" id="cr-stat-grid"></div>
@@ -226,6 +229,19 @@ function setCorrSort(v) { corrSortBy = v; corrVisibleCount = CORR_PAGE_SIZE; ren
 function toggleCorrDir(d) { corrDirFilter[d] = !corrDirFilter[d]; corrVisibleCount = CORR_PAGE_SIZE; renderToolbar(); renderList(); }
 function toggleCorrRow(id) { corrRowExpanded[id] = !corrRowExpanded[id]; renderList(); }
 function loadMoreCorr() { corrVisibleCount += CORR_PAGE_SIZE; renderList(); }
+
+async function bulkArchiveAll() {
+  const targets = getFilteredSortedCorr().filter(c => !c.archived);
+  if (!targets.length) { alert('目前條件下沒有未歸檔的函文。'); return; }
+  const scopeNote = (corrSearchTerm.trim() || corrUnitFilter || !corrDirFilter.in || !corrDirFilter.out)
+    ? `（依目前的搜尋／篩選條件，共 ${targets.length} 筆）` : `（共 ${targets.length} 筆）`;
+  if (!await toastConfirm(`確定要將這些函文全部標記為已歸檔嗎？${scopeNote}`)) return;
+  const today = todayStr();
+  const ids = new Set(targets.map(c => c.id));
+  corrList = corrList.map(c => ids.has(c.id) ? { ...c, archived: true, archiveDate: c.archiveDate || today } : c);
+  corrSave();
+  renderAll();
+}
 
 function onArchivedToggle() {
   const cb = document.getElementById('cm-archived');
