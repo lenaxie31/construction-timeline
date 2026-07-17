@@ -76,7 +76,7 @@
 
         <!-- 時間軸 -->
         <div class="export-card tl">
-          <span class="export-icon">📅</span>
+          <span class="export-icon">LOG</span>
           <h3>時間軸施工記錄</h3>
           <p>匯出全部施工日誌，含日期、天氣、狀態、工程說明、出工人數、備註，格式化為可列印的 Excel 表格。</p>
           <div class="export-btn-row">
@@ -87,21 +87,23 @@
 
         <!-- 改善事項 -->
         <div class="export-card def">
-          <span class="export-icon">📋</span>
+          <span class="export-icon">DEF</span>
           <h3>改善事項通知單</h3>
           <p>匯出全部改善事項記錄，含通知單標號、開立日期、期限、狀態、改善經過及結果。</p>
           <div class="export-btn-row">
-            <button class="export-btn blue" onclick="exportDefectsXLSX()">XLSX 匯出</button>
+            <button class="export-btn blue" onclick="exportDefectsXLSX()">內部版（含監造備註）</button>
+            <button class="export-btn outline" onclick="exportDefectsContractorXLSX()">承攬商版</button>
           </div>
         </div>
 
         <!-- 監造查驗 -->
         <div class="export-card qi">
-          <span class="export-icon">🔬</span>
+          <span class="export-icon">QI</span>
           <h3>監造查驗紀錄</h3>
           <p>匯出全部查驗紀錄，含分類、項目、各步驟完成狀態、查驗日期、查驗人、改善通知單等。</p>
           <div class="export-btn-row">
-            <button class="export-btn teal" onclick="exportQiXLSX()">XLSX 匯出</button>
+            <button class="export-btn teal" onclick="exportQiXLSX()">內部版（完整欄位）</button>
+            <button class="export-btn outline" onclick="exportQiContractorXLSX()">承攬商版</button>
           </div>
         </div>
 
@@ -129,14 +131,14 @@
         <p>檢查各模組資料數量、localStorage 用量，以及手動進行雲端同步操作。</p>
         <div class="export-btn-row" style="margin-bottom:14px;">
           <button class="export-btn grey" onclick="diagStorage()">診斷資料</button>
-          <button class="export-btn grey" onclick="diagAttRecords()">🔍 出勤記錄診斷</button>
-          <button class="export-btn grey" onclick="forceReload()">🔄 強制雲端拉取</button>
+          <button class="export-btn grey" onclick="diagAttRecords()">出勤記錄診斷</button>
+          <button class="export-btn grey" onclick="forceReload()">強制雲端拉取</button>
           <button class="export-btn outline" onclick="rescueDownload()">備份本機資料</button>
-          <button class="export-btn outline" onclick="rescueUpload()">⬆ 還原本機資料</button>
+          <button class="export-btn outline" onclick="rescueUpload()">還原本機資料</button>
           <input type="file" id="rescue-file" accept=".json" style="display:none;" onchange="rescueRestore(this)">
         </div>
         <div class="diag-section" id="diag-output" style="display:none;">
-          <h3>🔍 診斷結果</h3>
+          <h3>診斷結果</h3>
           <div id="diag-rows"></div>
           <div class="diag-log" id="diag-log" style="margin-top:12px;display:none;"></div>
         </div>
@@ -155,7 +157,6 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="shared.js"></script>
 <script>
@@ -228,90 +229,336 @@ function renderMemberPicker() {
   });
 }
 
-// ── XLSX 共用函式 ──
-function downloadXLSX(wb, filename) {
-  XLSX.writeFile(wb, filename);
-}
+// ── XLSX 共用函式（ExcelJS，支援真正的樣式輸出）──
+const DNV_NAVY  = 'FF17174B';
+const DNV_BLUE  = 'FF004F9F';
+const DNV_CYAN  = 'FF009FE3';
+const GREY_LINE = 'FFB7B7B2';
+const ROW_ALT   = 'FFF3F3F1';
 function s(txt) { return String(txt||''); }
 
-function applyHeaderStyle(ws, range, bgColor) {
-  for (let C = range.s.c; C <= range.e.c; C++) {
-    const addr = XLSX.utils.encode_cell({ r: range.s.r, c: C });
-    if (!ws[addr]) continue;
-    ws[addr].s = {
-      fill: { fgColor:{ rgb: bgColor||'0F204B' } },
-      font: { bold:true, color:{ rgb:'FFFFFF' }, sz:10 },
-      alignment: { horizontal:'center', vertical:'center', wrapText:true },
-      border: { bottom:{ style:'thin', color:{ rgb:'CCCBC9' } } },
-    };
-  }
+async function downloadWorkbook(wb, filename) {
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+const PROJECT_NAME = '台中減碳技術園區設備採購帶安裝委託監造技術服務工作';
+const PROJECT_SHORT = '減碳A標';
+
+// 建立標準報表標題區塊（logo色塊 + 標題 + 副標）。回傳下一個可用列號。
+function buildReportTitleBlock(ws, colCount, titleText, subLines, opts) {
+  opts = opts || {};
+  const navy = opts.navy || DNV_NAVY;
+  ws.mergeCells(1, 1, 1, colCount);
+  const titleCell = ws.getCell(1, 1);
+  titleCell.value = titleText;
+  titleCell.font = { name:'Arial', size:16, bold:true, color:{ argb:'FFFFFFFF' } };
+  titleCell.alignment = { horizontal:'center', vertical:'middle' };
+  titleCell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:navy } };
+  ws.getRow(1).height = 30;
+
+  let r = 2;
+  (subLines||[]).forEach(line => {
+    ws.mergeCells(r, 1, r, colCount);
+    const c = ws.getCell(r, 1);
+    c.value = line;
+    c.font = { name:'Arial', size:10, color:{ argb:'FF57564F' } };
+    c.alignment = { horizontal:'left', vertical:'middle' };
+    ws.getRow(r).height = 16;
+    r++;
+  });
+  r++; // 空一列
+  return r;
+}
+
+// 套用表頭列樣式（DNV 深藍底、白字、粗體、置中）
+function styleHeaderRow(row, navy) {
+  row.eachCell(cell => {
+    cell.font = { name:'Arial', size:10, bold:true, color:{ argb:'FFFFFFFF' } };
+    cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:navy || DNV_NAVY } };
+    cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+    cell.border = { top:{style:'thin',color:{argb:GREY_LINE}}, bottom:{style:'thin',color:{argb:GREY_LINE}},
+                     left:{style:'thin',color:{argb:GREY_LINE}}, right:{style:'thin',color:{argb:GREY_LINE}} };
+  });
+  row.height = 24;
+}
+
+// 套用資料列樣式（細框線、斑馬紋、垂直置中）
+function styleDataRow(row, isAlt, opts) {
+  opts = opts || {};
+  row.eachCell(cell => {
+    cell.font = { name:'Arial', size:10, color:{ argb:'FF1C1C1D' } };
+    cell.alignment = { horizontal: opts.align || 'left', vertical:'middle', wrapText:true };
+    cell.border = { top:{style:'thin',color:{argb:GREY_LINE}}, bottom:{style:'thin',color:{argb:GREY_LINE}},
+                     left:{style:'thin',color:{argb:GREY_LINE}}, right:{style:'thin',color:{argb:GREY_LINE}} };
+    if (isAlt) cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:ROW_ALT } };
+  });
+}
+
+// 套用欄寬
+function setColWidths(ws, widths) {
+  widths.forEach((w, i) => { ws.getColumn(i+1).width = w; });
 }
 
 // ── 時間軸匯出 ──
-function exportTimelineXLSX() {
+async function exportTimelineXLSX() {
   if (!allEntries.length) { alert('目前沒有時間軸記錄可匯出'); return; }
+  const ExcelJS = window.ExcelJS;
+  if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
+
   const STATUS_TW = { normal:'正常施工', milestone:'里程碑', warn:'待注意', pending:'待決議', issue:'異常／已開單' };
   const sorted = allEntries.slice().sort((a,b)=>a.date.localeCompare(b.date));
-  const ws_data = [
-    ['施工日期','天氣','狀態','一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛','四、其他重要事項','出工人數','異常備註','改善通知單'],
-    ...sorted.map(e => {
-      const fs = parseTitle(e.title||'');
-      return [ s(e.date), s(e.weather), STATUS_TW[e.status]||s(e.status), s(fs[0]), s(fs[1]), s(fs[2]), s(fs[3]), s(e.sub), s(e.alert), s(e.defectNo) ];
-    }),
-  ];
-  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
-  ws['!cols'] = [14,8,10,40,30,30,20,14,20,14].map(w=>({wch:w}));
-  ws['!rows'] = [{hpx:22}];
-  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:9} });
-  const wb  = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '時間軸施工記錄');
-  downloadXLSX(wb, '施工日誌_'+todayStr()+'.xlsx');
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'DNV監造系統';
+  const ws = wb.addWorksheet('時間軸施工記錄');
+  ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+
+  const COLS = 10;
+  let r = buildReportTitleBlock(ws, COLS, '施工日誌時間軸紀錄', [
+    `工程名稱：${PROJECT_NAME}`,
+    `匯出日期：${todayStr()}　　共 ${sorted.length} 筆記錄`,
+  ]);
+
+  const headerRow = ws.getRow(r);
+  headerRow.values = ['施工日期','天氣','狀態','一、工程進行情況','二、品質查驗工作項目','三、督導環保及職安衛','四、其他重要事項','出工人數','異常備註','改善通知單'];
+  styleHeaderRow(headerRow);
+  ws.views = [{ state:'frozen', ySplit:r }];
+  r++;
+
+  sorted.forEach((e, i) => {
+    const fs = parseTitle(e.title||'');
+    const row = ws.getRow(r);
+    row.values = [s(e.date), s(e.weather), STATUS_TW[e.status]||s(e.status), s(fs[0]), s(fs[1]), s(fs[2]), s(fs[3]), s(e.sub), s(e.alert), s(e.defectNo)];
+    styleDataRow(row, i % 2 === 1, { align:'center' });
+    row.getCell(4).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(5).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(6).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(7).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(9).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    r++;
+  });
+
+  setColWidths(ws, [12,8,11,32,26,26,18,12,18,13]);
+  await downloadWorkbook(wb, '施工日誌_'+todayStr()+'.xlsx');
 }
 
-// ── 改善事項匯出 ──
-function exportDefectsXLSX() {
+// ── 改善事項匯出（內部版：含監造備註）──
+async function exportDefectsXLSX() {
   if (!allDefects.length) { alert('目前沒有改善事項記錄可匯出'); return; }
+  const ExcelJS = window.ExcelJS;
+  if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
+
   const STATUS_TW = { open:'未結案（待承商改善）', replied:'承商已回覆改善', recheck:'複驗中', closed:'已結案（複驗合格）' };
   const RESULT_TW = { pass:'複驗合格', fail:'複驗不合格', partial:'部分合格' };
   const sorted = allDefects.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const ws_data = [
-    ['通知單標號','開立日期','改善期限','改善事項說明','開立時機','狀態','承商回覆改善經過','改善結果判定','監造備註'],
-    ...sorted.map(d => [
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'DNV監造系統';
+  const ws = wb.addWorksheet('改善事項通知單');
+  ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+
+  const COLS = 9;
+  let r = buildReportTitleBlock(ws, COLS, '改善事項通知單彙整表（內部版）', [
+    `工程名稱：${PROJECT_NAME}`,
+    `匯出日期：${todayStr()}　　共 ${sorted.length} 筆　　未結案 ${sorted.filter(d=>d.status!=='closed').length} 筆`,
+  ]);
+
+  const headerRow = ws.getRow(r);
+  headerRow.values = ['通知單標號','開立日期','改善期限','改善事項說明','開立時機','狀態','承商回覆改善經過','改善結果判定','監造備註'];
+  styleHeaderRow(headerRow);
+  ws.views = [{ state:'frozen', ySplit:r }];
+  r++;
+
+  sorted.forEach((d, i) => {
+    const row = ws.getRow(r);
+    row.values = [
       s(d.no), s(d.date), s(d.deadline), s(d.title),
       d.occasion==='checkpoint'?'檢驗停留點':'隨機抽查',
       STATUS_TW[d.status]||s(d.status), s(d.progress), RESULT_TW[d.result]||s(d.result), s(d.notes),
-    ]),
-  ];
-  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
-  ws['!cols'] = [14,12,12,40,12,16,36,14,30].map(w=>({wch:w}));
-  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:8} });
-  const wb  = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '改善事項通知單');
-  downloadXLSX(wb, '改善事項通知單_'+todayStr()+'.xlsx');
+    ];
+    styleDataRow(row, i % 2 === 1, { align:'center' });
+    row.getCell(4).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(7).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(9).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    if (d.status === 'open') row.getCell(6).font = { name:'Arial', size:10, bold:true, color:{argb:'FFB0242C'} };
+    r++;
+  });
+
+  setColWidths(ws, [12,11,11,34,11,20,30,13,26]);
+  await downloadWorkbook(wb, '改善事項通知單_內部版_'+todayStr()+'.xlsx');
 }
 
-// ── 監造查驗匯出 ──
-function exportQiXLSX() {
+// ── 改善事項匯出（承攬商版：正式公文格式，隱藏內部備註）──
+async function exportDefectsContractorXLSX() {
+  if (!allDefects.length) { alert('目前沒有改善事項記錄可匯出'); return; }
+  const ExcelJS = window.ExcelJS;
+  if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
+
+  const STATUS_TW = { open:'未結案，請儘速改善', replied:'已回覆，待複驗', recheck:'複驗中', closed:'已結案' };
+  const sorted = allDefects.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'DNV監造系統';
+  const ws = wb.addWorksheet('改善事項通知單');
+  ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+
+  const COLS = 6;
+  ws.mergeCells(1,1,1,COLS);
+  const t = ws.getCell(1,1);
+  t.value = PROJECT_SHORT + '　改善事項通知單';
+  t.font = { name:'Arial', size:18, bold:true, color:{argb:'FFFFFFFF'} };
+  t.alignment = { horizontal:'center', vertical:'middle' };
+  t.fill = { type:'pattern', pattern:'solid', fgColor:{argb:DNV_NAVY} };
+  ws.getRow(1).height = 34;
+
+  let r = 2;
+  const infoLines = [
+    `工程名稱：${PROJECT_NAME}`,
+    `受文者：承攬商　　發文日期：${todayStr()}　　監造單位：DNV`,
+    `本通知單彙整目前尚未結案及近期改善事項，請承攬商依限完成改善並回覆。`,
+  ];
+  infoLines.forEach(line => {
+    ws.mergeCells(r,1,r,COLS);
+    const c = ws.getCell(r,1);
+    c.value = line;
+    c.font = { name:'Arial', size:10, color:{argb:'FF57564F'} };
+    c.alignment = { horizontal:'left', vertical:'middle' };
+    ws.getRow(r).height = 16;
+    r++;
+  });
+  r++;
+
+  const headerRow = ws.getRow(r);
+  headerRow.values = ['通知單標號','開立日期','改善期限','改善事項說明','目前狀態','承商回覆改善經過'];
+  styleHeaderRow(headerRow);
+  ws.views = [{ state:'frozen', ySplit:r }];
+  r++;
+
+  sorted.forEach((d, i) => {
+    const row = ws.getRow(r);
+    row.values = [ s(d.no), s(d.date), s(d.deadline), s(d.title), STATUS_TW[d.status]||s(d.status), s(d.progress) ];
+    styleDataRow(row, i % 2 === 1, { align:'center' });
+    row.getCell(4).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(6).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    if (d.status === 'open') row.getCell(5).font = { name:'Arial', size:10, bold:true, color:{argb:'FFB0242C'} };
+    r++;
+  });
+
+  r += 2;
+  ws.mergeCells(r,1,r,2); ws.getCell(r,1).value = '監造單位簽章：______________________';
+  ws.mergeCells(r,4,r,6); ws.getCell(r,4).value = '承攬商簽收：______________________';
+  [ws.getCell(r,1), ws.getCell(r,4)].forEach(c => { c.font = { name:'Arial', size:10 }; c.alignment = { horizontal:'left', vertical:'middle' }; });
+  ws.getRow(r).height = 26;
+
+  setColWidths(ws, [14,12,12,40,20,36]);
+  await downloadWorkbook(wb, '改善事項通知單_承攬商版_'+todayStr()+'.xlsx');
+}
+
+// ── 監造查驗匯出（內部版）──
+async function exportQiXLSX() {
   if (!allQi.length) { alert('目前沒有查驗紀錄可匯出'); return; }
+  const ExcelJS = window.ExcelJS;
+  if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
+
   const PRG_TW = { 'Completed':'Completed（完成）' };
   const OS_TW  = { '完成':'完成', '文件待補':'文件待補', '製作中':'製作中', '未開始':'未開始' };
   const chk = v => v=='1'?'✓':'–';
-  const ws_data = [
-    ['分類','項目名稱','自檢','自檢日期','申請','申請日期','抽查','查驗日期','辦理進度','整體狀態','查驗人','改善通知單','改善期限','自檢表','申請單','抽查紀錄表','抽查報告','改善單','催件備註','備註'],
-    ...allQi.map(q => [
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'DNV監造系統';
+  const ws = wb.addWorksheet('監造查驗紀錄');
+  ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, margins:{left:0.3,right:0.3,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+
+  const COLS = 20;
+  let r = buildReportTitleBlock(ws, COLS, '監造查驗紀錄彙整表（內部版）', [
+    `工程名稱：${PROJECT_NAME}`,
+    `匯出日期：${todayStr()}　　共 ${allQi.length} 筆`,
+  ]);
+
+  const headerRow = ws.getRow(r);
+  headerRow.values = ['分類','項目名稱','自檢','自檢日期','申請','申請日期','抽查','查驗日期','辦理進度','整體狀態','查驗人','改善通知單','改善期限','自檢表','申請單','抽查紀錄表','抽查報告','改善單','催件備註','備註'];
+  styleHeaderRow(headerRow);
+  ws.views = [{ state:'frozen', ySplit:r }];
+  r++;
+
+  allQi.forEach((q, i) => {
+    const row = ws.getRow(r);
+    row.values = [
       s(q.type), s(q.item), chk(q.selfCheck), s(q.selfDate), chk(q.reqCheck), s(q.reqDate),
       chk(q.inspCheck), s(q.inspDate||q.date), PRG_TW[q.progress]||s(q.progress),
       OS_TW[q.overallStatus]||s(q.overallStatus), s(q.inspector), s(q.noticeNo), s(q.deadline),
       s(q.docSelfCheck), s(q.docReqForm), s(q.docRecord), s(q.docReport), s(q.docImprove),
       s(q.chaseNote), s(q.notes),
-    ]),
-  ];
-  const ws  = XLSX.utils.aoa_to_sheet(ws_data);
-  ws['!cols'] = [10,30,6,12,6,12,6,12,14,12,10,14,12,8,8,10,8,8,20,20].map(w=>({wch:w}));
-  applyHeaderStyle(ws, { s:{r:0,c:0}, e:{r:0,c:19} });
-  const wb  = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '監造查驗紀錄');
-  downloadXLSX(wb, '監造查驗紀錄_'+todayStr()+'.xlsx');
+    ];
+    styleDataRow(row, i % 2 === 1, { align:'center' });
+    row.getCell(2).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(19).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    row.getCell(20).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    r++;
+  });
+
+  setColWidths(ws, [9,28,6,11,6,11,6,11,13,11,9,13,11,7,7,9,7,7,18,18]);
+  await downloadWorkbook(wb, '監造查驗紀錄_內部版_'+todayStr()+'.xlsx');
+}
+
+// ── 監造查驗匯出（承攬商版：僅顯示需承商配合項目）──
+async function exportQiContractorXLSX() {
+  if (!allQi.length) { alert('目前沒有查驗紀錄可匯出'); return; }
+  const ExcelJS = window.ExcelJS;
+  if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
+
+  const OS_TW  = { '完成':'完成', '文件待補':'文件待補，請儘速補齊', '製作中':'製作中', '未開始':'未開始' };
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'DNV監造系統';
+  const ws = wb.addWorksheet('監造查驗辦理狀況');
+  ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2} };
+
+  const COLS = 6;
+  ws.mergeCells(1,1,1,COLS);
+  const t = ws.getCell(1,1);
+  t.value = PROJECT_SHORT + '　監造查驗辦理狀況表';
+  t.font = { name:'Arial', size:18, bold:true, color:{argb:'FFFFFFFF'} };
+  t.alignment = { horizontal:'center', vertical:'middle' };
+  t.fill = { type:'pattern', pattern:'solid', fgColor:{argb:DNV_NAVY} };
+  ws.getRow(1).height = 34;
+
+  let r = 2;
+  [`工程名稱：${PROJECT_NAME}`, `受文者：承攬商　　發文日期：${todayStr()}　　監造單位：DNV`].forEach(line => {
+    ws.mergeCells(r,1,r,COLS);
+    const c = ws.getCell(r,1);
+    c.value = line;
+    c.font = { name:'Arial', size:10, color:{argb:'FF57564F'} };
+    c.alignment = { horizontal:'left', vertical:'middle' };
+    ws.getRow(r).height = 16;
+    r++;
+  });
+  r++;
+
+  const headerRow = ws.getRow(r);
+  headerRow.values = ['分類','項目名稱','查驗日期','辦理進度','整體狀態','改善期限'];
+  styleHeaderRow(headerRow);
+  ws.views = [{ state:'frozen', ySplit:r }];
+  r++;
+
+  const PRG_TW = { 'Completed':'完成' };
+  allQi.forEach((q, i) => {
+    const row = ws.getRow(r);
+    row.values = [ s(q.type), s(q.item), s(q.inspDate||q.date), PRG_TW[q.progress]||s(q.progress), OS_TW[q.overallStatus]||s(q.overallStatus), s(q.deadline) ];
+    styleDataRow(row, i % 2 === 1, { align:'center' });
+    row.getCell(2).alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+    if (q.overallStatus === '文件待補') row.getCell(5).font = { name:'Arial', size:10, bold:true, color:{argb:'FFB0242C'} };
+    r++;
+  });
+
+  setColWidths(ws, [10,32,13,16,20,13]);
+  await downloadWorkbook(wb, '監造查驗辦理狀況_承攬商版_'+todayStr()+'.xlsx');
 }
 
 // ── 出勤月報匯出 ──
@@ -329,9 +576,6 @@ async function exportAttXLSX() {
   const hols    = loadHolidays().holidays || TW_HOLIDAYS_DEFAULT;
   const rocYear = y - 1911;
   const DOW_TW  = ['日','一','二','三','四','五','六'];
-  const PROJECT = '台中減碳技術園區設備採購帶安裝委託監造技術服務工作';
-  const today   = new Date();
-  const makeDate= `${y}-${String(mo).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   const daysInMonth = new Date(y, mo, 0).getDate();
   const moStr   = `${y}-${String(mo).padStart(2,'0')}`;
   const rangeStr= `${moStr}-01 ～ ${moStr}-${String(daysInMonth).padStart(2,'0')}`;
@@ -358,162 +602,206 @@ async function exportAttXLSX() {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'DNV監造系統';
   const ws = wb.addWorksheet(`考勤明細表_${mo}月`);
+  ws.views = [{ showGridLines:false }];
   ws.pageSetup = {
-    orientation:'portrait', scale:55, horizontalCentered:true,
-    margins:{ left:0.3, right:0.3, top:0.4, bottom:0.4, header:0.2, footer:0.2 },
+    orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1,
+    margins:{ left:0.3, right:0.3, top:0.3, bottom:0.3, header:0.2, footer:0.2 },
   };
 
-  // ── 純黑白樣式：白底、黑細框、黑字、表頭粗體 ──
-  const FONT = '新細明體';
-  const thin = { style:'thin', color:{ argb:'FF000000' } };
-  const box  = { top:thin, bottom:thin, left:thin, right:thin };
-  const aC   = { horizontal:'center', vertical:'middle', wrapText:true };
-  const aCn  = { horizontal:'center', vertical:'middle', wrapText:false }; // 數字/時間不換行
-  const aL   = { horizontal:'left',   vertical:'middle' };
-  const fnt  = (sz, bold) => ({ name:FONT, size:sz||10, bold:!!bold, color:{ argb:'FF000000' } });
+  // ── 純黑白樣式：白底、黑框、黑字（比照附件格式）──
+  const FONT = '微軟正黑體';
+  const BLACK = { argb:'FF000000' };
+  const thin   = { style:'thin',   color:BLACK };
+  const medium = { style:'medium', color:BLACK };
+  const aC  = { horizontal:'center', vertical:'middle', wrapText:true };
+  const aCn = { horizontal:'center', vertical:'middle', wrapText:false };
+  const aL  = { horizontal:'left',   vertical:'middle', wrapText:true };
+  const aR  = { horizontal:'right',  vertical:'middle', wrapText:false };
+  const fnt = (sz, bold) => ({ name:FONT, size:sz||10, bold:!!bold, color:BLACK });
+  const TIME_FMT = 'h:mm';
+  const DUR_FMT  = '[h]"h"mm"m"';
 
-  function put(r, c, val, sz, bold, align, border) {
+  function put(r, c, val, sz, bold, align) {
     const cell = ws.getRow(r).getCell(c);
     cell.value = val;
     cell.font = fnt(sz, bold);
     cell.alignment = align || aC;
-    cell.border = (border === false) ? undefined : box;
+    cell.border = { top:thin, bottom:thin, left:thin, right:thin };
     return cell;
   }
+  function excelTime(hhmm) {
+    const [h, m] = hhmm.split(':').map(Number);
+    return new Date(Date.UTC(1899, 11, 30, h, m, 0));
+  }
+  function colLetter(n) { let s=''; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26; } return s; }
 
-  // ── 版面：上下直式，每頁兩人；每人佔 4 欄（日期/星期、上班、下班、當日時數）──
-  const PW = 4;                 // 每人欄寬數
-  const GAP = 1;                // （單人版用不到，保留相容）
-  const PER_ROW = 1;            // 每列 1 人，上下堆疊
-  const STRIDE = PW + GAP;
-  const TOTAL_COLS = PW;        // 4
+  // 版面：每人 4 欄（日期/星期、上班、下班、當日時數），中間 1 欄空隙，每列並排 2 人
+  const PW = 4, GAP = 1, PER_ROW = 2, STRIDE = PW + GAP;
 
-  // 欄寬
-  ws.getColumn(1).width = 11;  // 日期/星期
-  ws.getColumn(2).width = 9;   // 上班
-  ws.getColumn(3).width = 9;   // 下班
-  ws.getColumn(4).width = 11;  // 當日時數
+  for (let i = 0; i < PER_ROW; i++) {
+    const base = 1 + i*STRIDE;
+    ws.getColumn(base).width   = 11;
+    ws.getColumn(base+1).width = 9;
+    ws.getColumn(base+2).width = 9;
+    ws.getColumn(base+3).width = 11;
+  }
+  ws.getColumn(PW+1).width = 2; // 中間空隙欄
 
-  // ── 全表大標題 ──
-  ws.getRow(1).height = 26;
-  put(1, 1, '考勤明細表', 16, true, aC, false);
-  ws.mergeCells(1, 1, 1, TOTAL_COLS);
-  ws.getRow(2).height = 16;
-  put(2, 1, `工程名稱：${PROJECT}　　考勤日期：${rangeStr}　　製表：${makeDate}`, 9, false, aL, false);
-  ws.mergeCells(2, 1, 2, TOTAL_COLS);
-  ws.getRow(3).height = 6;
-
-  // 每位人員一個區塊高度 = 6(表頭區) + 天數 + 1(月累計列)
-  const BLOCK_H = 6 + daysInMonth + 1;
-  let groupTopRow = 4;
+  let groupTopRow = 1;
 
   for (let gi = 0; gi < pickedMembers.length; gi += PER_ROW) {
     const group = pickedMembers.slice(gi, gi + PER_ROW);
     const top = groupTopRow;
 
-    // 每頁兩人：第 3、5、7… 人前插入分頁
-    if (gi > 0 && gi % 2 === 0) ws.getRow(top - 1).addPageBreak();
+    const R_TITLE = top, R_DATE = top+1, R_NAME = top+2, R_SUMLABEL = top+3, R_SUMVAL = top+4,
+          R_SECTION = top+5, R_DAYHEAD = top+6, R_DAY_FIRST = top+7, R_DAY_LAST = top+6+daysInMonth,
+          R_TOTAL = top+7+daysInMonth, R_NOTE = R_TOTAL+1, R_BLANK = R_NOTE+1,
+          R_SUM1 = R_BLANK+1, R_SUM2 = R_SUM1+1, R_SUM3 = R_SUM2+1;
+    const BLOCK_H = R_SUM3 - top + 1;
 
     group.forEach((mem, idx) => {
-      const base = 1 + idx * STRIDE; // 該人第一欄（1-based）
+      const base = 1 + idx * STRIDE;
       const C0 = base, C1 = base+1, C2 = base+2, C3 = base+3;
+      const inLetter  = colLetter(C1), outLetter = colLetter(C2), durLetter = colLetter(C3), dateLetter = colLetter(C0);
 
-      // 區塊：基本資料
-      put(top,   C0, '部門', 10, true);
-      put(top,   C1, mem.role || '工程部', 10, false);
-      put(top,   C2, '姓名', 10, true);
-      put(top,   C3, mem.name, 10, true);
+      // 標題
+      put(R_TITLE, C0, '出差勤紀錄表', 16, true, aC);
+      ws.mergeCells(R_TITLE, C0, R_TITLE, C3);
+      ws.getRow(R_TITLE).height = 26;
 
-      put(top+1, C0, '工號', 10, true);
-      put(top+1, C1, mem.empNo || (gi + idx + 1), 10, false);
-      put(top+1, C2, '日期', 10, true);
-      put(top+1, C3, moStr, 10, false);
+      // 考勤日期
+      put(R_DATE, C0, `考勤日期：${rangeStr}`, 9, false, aL);
+      ws.mergeCells(R_DATE, C0, R_DATE, C3);
 
-      // 摘要：出勤(日)〔公式自動計算〕 / 應上班日 / 月累計時數
-      put(top+2, C0, '出勤(日)', 10, true);
-      put(top+2, C1, '應上班日', 10, true);
-      put(top+2, C2, '月累計時數', 10, true);
-      ws.mergeCells(top+2, C2, top+2, C3);
-      // 值列：出勤日用公式（依下方打卡紀錄自動算），應上班日為當月固定值
-      const colLetter = (n) => { let s=''; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26; } return s; };
-      const inCol     = colLetter(C1);                 // 上班欄
-      const firstDay  = top + 6;                       // 第一個日期列
-      const lastDay   = top + 5 + daysInMonth;         // 最後日期列
-      // 上班欄含「:」者＝實際出勤日（例假日/星號/缺 皆不含冒號，自動排除）
-      const presentCell = ws.getRow(top+3).getCell(C1 - 1);
-      presentCell.value = { formula: `COUNTIF(${inCol}${firstDay}:${inCol}${lastDay},"*:*")` };
-      presentCell.font = fnt(11, true); presentCell.alignment = aCn; presentCell.border = box;
-      const expectCell  = put(top+3, C1, expectWorkDays, 11, true, aCn);
-      const totalCell   = put(top+3, C2, '', 11, true, aCn);
-      ws.mergeCells(top+3, C2, top+3, C3);
+      // 部門／姓名
+      put(R_NAME, C0, '部門', 10, true);
+      put(R_NAME, C1, mem.role || '監造人員', 10, false);
+      put(R_NAME, C2, '姓名', 10, true);
+      put(R_NAME, C3, mem.name, 10, true);
 
-      // 考勤報表小標
-      put(top+4, C0, '考勤報表', 10, true);
-      ws.mergeCells(top+4, C0, top+4, C3);
+      // 摘要標籤
+      put(R_SUMLABEL, C0, '實際出勤日數', 10, true);
+      put(R_SUMLABEL, C1, '當月應上班日數', 10, true);
+      put(R_SUMLABEL, C2, '月累計時數', 10, true);
+      ws.mergeCells(R_SUMLABEL, C2, R_SUMLABEL, C3);
+
+      // 摘要數值（公式）
+      const presentCell = put(R_SUMVAL, C0, '', 11, true, aCn);
+      presentCell.value = { formula: `SUMPRODUCT(--ISNUMBER(${durLetter}${R_DAY_FIRST}:${durLetter}${R_DAY_LAST}),--(RIGHT(${dateLetter}${R_DAY_FIRST}:${dateLetter}${R_DAY_LAST},1)<>"六"),--(RIGHT(${dateLetter}${R_DAY_FIRST}:${dateLetter}${R_DAY_LAST},1)<>"日"))` };
+      put(R_SUMVAL, C1, expectWorkDays, 11, true, aCn);
+      const totalRefCell = put(R_SUMVAL, C2, '', 11, true, aCn);
+      totalRefCell.value = { formula: `${durLetter}${R_TOTAL}` };
+      totalRefCell.numFmt = DUR_FMT;
+      ws.mergeCells(R_SUMVAL, C2, R_SUMVAL, C3);
+
+      // 考勤報表分隔列
+      put(R_SECTION, C0, '考勤報表', 10, true);
+      ws.mergeCells(R_SECTION, C0, R_SECTION, C3);
 
       // 日表頭
-      put(top+5, C0, '日期/星期', 9, true);
-      put(top+5, C1, '上班', 9, true);
-      put(top+5, C2, '下班', 9, true);
-      put(top+5, C3, '當日時數', 9, true);
+      put(R_DAYHEAD, C0, '日期/星期', 9, true);
+      put(R_DAYHEAD, C1, '上班', 9, true);
+      put(R_DAYHEAD, C2, '下班', 9, true);
+      put(R_DAYHEAD, C3, '當日時數', 9, true);
 
-      // 逐日
-      let totalMin = 0;
+      // 逐日資料
+      const notes = [];
       for (let d = 1; d <= daysInMonth; d++) {
-        const r  = top + 5 + d;
+        const r  = R_DAY_FIRST + d - 1;
         const ds = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const dow = new Date(ds).getDay();
-        const isRest = (dow===0 || dow===6 || !!hols[ds]); // 週末或國定假日＝例假日
+        const isRest = (dow===0 || dow===6 || !!hols[ds]);
         const rec = getMemberRec(mem.id, ds);
 
         put(r, C0, `${d}/${DOW_TW[dow]}`, 9, false);
 
         if (isRest) {
-          // 例假日：有打卡＝加班，以「＊」表示；無打卡＝例假日
-          const worked = rec && (rec.timeIn || rec.timeOut);
+          const worked = rec && rec.timeIn && rec.timeOut;
           if (worked) {
-            put(r, C1, '＊', 10, true, aCn);
-            put(r, C2, '＊', 10, true, aCn);
+            const inC  = put(r, C1, excelTime(rec.timeIn), 9, false, aCn);  inC.numFmt = TIME_FMT;
+            const outC = put(r, C2, excelTime(rec.timeOut), 9, false, aCn); outC.numFmt = TIME_FMT;
+            const durC = put(r, C3, '', 9, false, aCn);
+            durC.value = { formula: `IF(AND(ISNUMBER(${inLetter}${r}),ISNUMBER(${outLetter}${r})),${outLetter}${r}-${inLetter}${r},"")` };
+            durC.numFmt = DUR_FMT;
+            notes.push(`監造人員 ${mem.name} ${mo}/${d}(${DOW_TW[dow]})配合現場加班`);
           } else {
-            put(r, C1, '例假日', 9, false, aCn);
+            put(r, C1, hols[ds] ? '國定假日' : '例假日', 9, false, aCn);
             put(r, C2, '', 9, false, aCn);
             ws.mergeCells(r, C1, r, C2);
+            put(r, C3, '', 9, false, aCn);
           }
-          put(r, C3, '', 9, false, aCn);
-        } else if (rec && (rec.status==='present' || rec.status==='late')) {
-          const mins = calcWorkMinutes(rec.timeIn, rec.timeOut);
-          totalMin += mins;
-          put(r, C1, rec.timeIn  || '缺', 9, false, aCn);
-          put(r, C2, rec.timeOut || '缺', 9, false, aCn);
-          put(r, C3, mins ? fmtMinutes(mins) : '', 9, false, aCn);
+        } else if (rec && (rec.status==='present' || rec.status==='late') && rec.timeIn && rec.timeOut) {
+          const inC  = put(r, C1, excelTime(rec.timeIn), 9, false, aCn);  inC.numFmt = TIME_FMT;
+          const outC = put(r, C2, excelTime(rec.timeOut), 9, false, aCn); outC.numFmt = TIME_FMT;
+          const durC = put(r, C3, '', 9, false, aCn);
+          durC.value = { formula: `IF(AND(ISNUMBER(${inLetter}${r}),ISNUMBER(${outLetter}${r})),${outLetter}${r}-${inLetter}${r},"")` };
+          durC.numFmt = DUR_FMT;
         } else if (rec && (rec.status==='leave' || rec.status==='holiday')) {
           put(r, C1, rec.status==='holiday' ? '公假' : '請假', 9, false, aCn);
           put(r, C2, '', 9, false, aCn);
-          put(r, C3, '', 9, false, aCn);
           ws.mergeCells(r, C1, r, C2);
+          put(r, C3, '', 9, false, aCn);
         } else {
-          // 平日無打卡＝缺
           put(r, C1, '缺', 9, false, aCn);
           put(r, C2, '缺', 9, false, aCn);
           put(r, C3, '', 9, false, aCn);
         }
       }
 
-      // 月累計時數（摘要 + 底部）
-      totalCell.value = fmtMinutes(totalMin);
+      // 月累計總時數
+      put(R_TOTAL, C0, '月累計總時數', 10, true);
+      ws.mergeCells(R_TOTAL, C0, R_TOTAL, C2);
+      const sumCell = put(R_TOTAL, C3, '', 11, true, aCn);
+      sumCell.value = { formula: `SUM(${durLetter}${R_DAY_FIRST}:${durLetter}${R_DAY_LAST})` };
+      sumCell.numFmt = DUR_FMT;
 
-      // 月累計總時數列
-      const sumRow = top + 6 + daysInMonth;
-      put(sumRow, C0, '月累計總時數', 10, true);
-      ws.mergeCells(sumRow, C0, sumRow, C2);
-      put(sumRow, C3, fmtMinutes(totalMin), 11, true, aCn);
+      // 備註列（加班說明，若無則留空）
+      const noteCell = put(R_NOTE, C0, notes.length ? '*' + notes.join('；') : '', 9, false, aL);
+      ws.mergeCells(R_NOTE, C0, R_NOTE, C3);
+      ws.getRow(R_NOTE).height = notes.length ? 24 : 14;
+
+      // 摘要區塊（出勤日數／應上班日數／計價金額）
+      put(R_SUM1, C0, '常駐監造人力當月實際出勤日數', 9, false, aR);
+      ws.mergeCells(R_SUM1, C0, R_SUM1, C2);
+      const sum1v = put(R_SUM1, C3, '', 9, false, aCn);
+      sum1v.value = { formula: `${dateLetter}${R_SUMVAL}` };
+
+      put(R_SUM2, C0, '當月應上班日數', 9, false, aR);
+      ws.mergeCells(R_SUM2, C0, R_SUM2, C2);
+      const sum2v = put(R_SUM2, C3, '', 9, false, aCn);
+      sum2v.value = { formula: `${colLetter(C1)}${R_SUMVAL}` };
+
+      put(R_SUM3, C0, '該人月數計價項目費用', 9, false, aR);
+      ws.mergeCells(R_SUM3, C0, R_SUM3, C2);
+      put(R_SUM3, C3, '', 9, false, aCn); // 需人工填入契約單價，故留空
+
+      // ── 外框：把整組（標題～月累計總時數）加上粗外框 ──
+      for (let r = R_TITLE; r <= R_TOTAL; r++) {
+        const leftCell = ws.getRow(r).getCell(C0);
+        const rightCell = ws.getRow(r).getCell(C3);
+        leftCell.border  = { ...leftCell.border,  left:medium };
+        rightCell.border = { ...rightCell.border, right:medium };
+      }
+      for (let c = C0; c <= C3; c++) {
+        const topCell = ws.getRow(R_TITLE).getCell(c);
+        const botCell = ws.getRow(R_TOTAL).getCell(c);
+        topCell.border = { ...topCell.border, top:medium };
+        botCell.border = { ...botCell.border, bottom:medium };
+      }
+      // 摘要小方框外框
+      for (let r = R_SUM1; r <= R_SUM3; r++) {
+        const leftCell = ws.getRow(r).getCell(C0);
+        const rightCell = ws.getRow(r).getCell(C3);
+        leftCell.border  = { ...leftCell.border,  left:thin };
+        rightCell.border = { ...rightCell.border, right:thin };
+      }
     });
 
-    // 設定該組所有列的高度
-    for (let r = top; r < top + BLOCK_H; r++) {
-      if (!ws.getRow(r).height) ws.getRow(r).height = 16;
+    for (let r = top; r <= R_SUM3; r++) {
+      if (!ws.getRow(r).height) ws.getRow(r).height = 15.75;
     }
-    groupTopRow = top + BLOCK_H + 1; // 組間空一列
+    if (gi + PER_ROW < pickedMembers.length) ws.getRow(R_SUM3).addPageBreak();
+    groupTopRow = R_SUM3 + 2; // 組間空一列
   }
 
   // ── 輸出 ──
@@ -521,7 +809,7 @@ async function exportAttXLSX() {
   const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = `考勤明細表_${rocYear}年${mo}月.xlsx`;
+  a.href = url; a.download = `出差勤紀錄表_${rocYear}年${mo}月.xlsx`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
