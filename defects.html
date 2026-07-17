@@ -161,9 +161,8 @@
         <div class="field"><label>目前狀態</label>
           <select id="dm-status">
             <option value="open">未結案（待承商改善）</option>
-            <option value="replied">承商已回覆改善</option>
-            <option value="recheck">複驗中</option>
-            <option value="closed">已結案（複驗合格）</option>
+            <option value="recheck">照片已上傳，待甲方簽核</option>
+            <option value="closed">已結案</option>
           </select>
         </div>
         <div class="field"><label>改善經過</label><textarea id="dm-progress" style="min-height:56px;" placeholder="承商說明改善過程…"></textarea></div>
@@ -179,8 +178,8 @@
         <div class="field"><label>改善結果判定</label>
           <select id="dm-result">
             <option value="">—（尚未判定）</option>
-            <option value="pass">複驗合格</option>
-            <option value="fail">複驗不合格</option>
+            <option value="pass">改善完成</option>
+            <option value="fail">改善不合格</option>
             <option value="partial">部分合格</option>
           </select>
         </div>
@@ -375,7 +374,7 @@ function renderDefects() {
   const filterBarEl = document.getElementById('defect-filter-bar');
   if (filterBarEl) {
     const statusList = [['open','未結案'],['replied','已回覆'],['recheck','複驗中'],['closed','已結案']];
-    const catList    = [['env','🌱 環保'],['safety','⛑️ 工安'],['quality','🔍 品質']];
+    const catList    = [['env','環保'],['safety','工安'],['quality','品質']];
     filterBarEl.innerHTML = `
       <div class="d-filter-row">
         <span class="d-filter-label">狀態篩選</span>
@@ -414,10 +413,10 @@ function renderDefects() {
   }
 
   const today = todayStr();
-  const sMap  = { open:'未結案', replied:'承商已回覆', recheck:'複驗中', closed:'已結案' };
-  const rMap  = { pass:'複驗合格', fail:'複驗不合格', partial:'部分合格' };
-  const srcMap = { supervisor:'📝 監造紙本', utility:'💻 台電電子系統' };
-  const catMap = { env:'🌱 環保', safety:'⛑️ 工安', quality:'🔍 品質' };
+  const sMap  = { open:'未結案', , recheck:'改善中', closed:'已結案' };
+  const rMap  = { pass:'改善完成', fail:'改善不合格', partial:'部分完成' };
+  const srcMap = { supervisor:'監造紙本', utility:'台電電子系統' };
+  const catMap = { env:'環保', safety:'工安', quality:'品質' };
   const statusOrder = { open:0, replied:1, recheck:2, closed:3 };
   let sorted;
   if (defectSortBy === 'date-asc') {
@@ -457,10 +456,9 @@ function renderDefects() {
             <div class="d-detail-label">狀態</div>
             <div style="display:flex;gap:5px;flex-wrap:wrap;">
               <button class="btn-status${d.status==='open'?' active-open':''}" data-id="${d.id}" data-status="open" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">未結案</button>
-              <button class="btn-status${d.status==='replied'?' active-replied':''}" data-id="${d.id}" data-status="replied" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">承商已回覆</button>
-              <button class="btn-status${d.status==='recheck'?' active-recheck':''}" data-id="${d.id}" data-status="recheck" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">複驗中</button>
+              <button class="btn-status${d.status==='recheck'?' active-recheck':''}" data-id="${d.id}" data-status="recheck" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">照片已上傳，待甲方簽核</button>
               <button class="btn-status${d.status==='closed'?' active-closed':''}" data-id="${d.id}" data-status="closed" onclick="event.stopPropagation();setDefectStatus(this.dataset.id,this.dataset.status)">已結案</button>
-              <button class="btn-sm edit" style="margin-left:auto;" data-id="${d.id}" onclick="event.stopPropagation();openEditDefectModal(this.dataset.id)">✏️ 編輯完整資訊</button>
+              <button class="btn-sm edit" style="margin-left:auto;" data-id="${d.id}" onclick="event.stopPropagation();openEditDefectModal(this.dataset.id)">編輯完整資訊</button>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -529,7 +527,7 @@ function updateRemindBanner() {
     const dl = Math.ceil((new Date(d.deadline)-new Date(today))/86400000);
     const icon = dl<0?'🔴':dl<=3?'🟡':'🟠';
     const msg  = dl<0?`逾期 ${Math.abs(dl)} 天`:dl===0?'今天到期！':`還剩 ${dl} 天`;
-    const srcTag = d.source==='utility' ? '<span class="d-src-tag d-src-utility">💻 台電</span>' : '<span class="d-src-tag d-src-supervisor">📝 監造</span>';
+    const srcTag = d.source==='utility' ? '<span class="d-src-tag d-src-utility">台電</span>' : '<span class="d-src-tag d-src-supervisor">監造</span>';
     return `<div class="remind-banner">
       <div style="flex:1;min-width:0;"><strong>${esc(d.no||'—')}</strong>${srcTag}　${esc(d.title.slice(0,40))}${d.title.length>40?'…':''}<br>
       <span style="font-size:11px;">期限：${d.deadline}　${icon} <strong>${msg}</strong></span></div>
