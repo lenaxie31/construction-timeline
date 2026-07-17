@@ -28,7 +28,8 @@
 .cr-docno { font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text-muted);white-space:nowrap;flex-shrink:0;width:150px;overflow:hidden;text-overflow:ellipsis; }
 .cr-unit { font-size:11.5px;font-weight:600;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;width:70px;overflow:hidden;text-overflow:ellipsis; }
 .cr-subject { font-size:14px;font-weight:500;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.cr-pending-tag { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;background:var(--surface);border:1px solid var(--c-amber);color:var(--c-amber);white-space:nowrap;flex-shrink:0; }
+.cr-status-tag { font-size:10px;font-weight:700;padding:2px 8px;border-radius:0;background:var(--surface);border:1px solid var(--c-amber);color:var(--c-amber);white-space:nowrap;flex-shrink:0; }
+.cr-status-tag.done { border-color:var(--c-green);color:var(--c-green); }
 .cr-chevron { color:var(--text-muted);font-size:10px;transition:transform .2s;flex-shrink:0; }
 .cr-row.open .cr-chevron { transform:rotate(90deg); }
 .cr-detail { display:none;background:var(--bg);border-top:1px solid var(--border-light);padding:14px 18px 14px 18px; }
@@ -40,6 +41,10 @@
 .cr-detail-actions { display:flex;gap:8px; }
 
 .cr-load-more { display:flex;justify-content:center;padding:20px 0; }
+
+.cm-checkbox-field { display:flex;align-items:center;gap:8px;margin-bottom:14px; }
+.cm-checkbox-field input[type="checkbox"] { width:auto;accent-color:var(--dnv-dark-blue);cursor:pointer; }
+.cm-checkbox-field label { margin:0;cursor:pointer; }
 
 @media(max-width:900px) {
   .cr-unit { display:none; }
@@ -106,13 +111,14 @@
       </div>
       <div class="field"><label>文號</label><input type="text" id="cm-docno" placeholder="例：碳集字第113011501號 或 DNV-86321005-0001"></div>
       <div class="field"><label>主旨</label><input type="text" id="cm-subject" placeholder="例：檢送設計相關計畫A版"></div>
-      <div class="field"><label>發文／來源單位</label><input type="text" id="cm-unit" list="cr-unit-datalist" placeholder="例：碳集應用、DNV、營建處"></div>
+      <div class="field"><label>發文／來源單位（留空＝監造方發文）</label><input type="text" id="cm-unit" list="cr-unit-datalist" placeholder="例：碳集應用、DNV、營建處"></div>
       <datalist id="cr-unit-datalist"></datalist>
-      <div class="field-row">
-        <div class="field"><label>發文日期</label><input type="date" id="cm-issue-date"></div>
-        <div class="field"><label>收文／簽收日期</label><input type="date" id="cm-receive-date"></div>
+      <div class="field"><label>發文日期</label><input type="date" id="cm-issue-date"></div>
+      <div class="cm-checkbox-field">
+        <input type="checkbox" id="cm-archived" onchange="onArchivedToggle()">
+        <label for="cm-archived">已歸檔</label>
       </div>
-      <div class="field"><label>簽收人（選填）</label><input type="text" id="cm-signed-by"></div>
+      <div class="field"><label>歸檔日期（選填）</label><input type="date" id="cm-archive-date"></div>
       <div class="field"><label>備註（選填）</label><textarea id="cm-notes" style="min-height:56px;"></textarea></div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;">
@@ -150,6 +156,11 @@ const CORR_PAGE_SIZE = 60;
 
 const corrSave = makeModuleSave(CORR_KEY, 'correspond', () => corrList);
 
+// 發文單位留空時，代表由監造方發文（僅顯示用，不寫入資料）
+function unitDisplay(c) {
+  return c.unit || (c.direction === 'out' ? '監造' : '');
+}
+
 async function init() {
   document.getElementById('header-mount').innerHTML = buildHeader('收發函文');
   initSidebarState();
@@ -160,7 +171,7 @@ async function init() {
 }
 
 function allUnitsInUse() {
-  const set = new Set(corrList.map(c => c.unit).filter(Boolean));
+  const set = new Set(corrList.map(unitDisplay).filter(Boolean));
   return [...set].sort();
 }
 
@@ -176,11 +187,11 @@ function renderStats() {
   const monthPrefix = today.slice(0,7);
   const outThisMonth = corrList.filter(c => c.direction==='out' && (c.issueDate||'').startsWith(monthPrefix)).length;
   const inThisMonth  = corrList.filter(c => c.direction==='in'  && (c.issueDate||'').startsWith(monthPrefix)).length;
-  const pending = corrList.filter(c => c.direction==='in' && !c.receiveDate).length;
+  const notArchived = corrList.filter(c => !c.archived).length;
   document.getElementById('cr-stat-grid').innerHTML = `
     <div class="stat-card blue"><div class="stat-label">本月發文</div><div class="stat-value">${outThisMonth}</div></div>
     <div class="stat-card green"><div class="stat-label">本月收文</div><div class="stat-value">${inThisMonth}</div></div>
-    <div class="stat-card amber"><div class="stat-label">待簽收</div><div class="stat-value">${pending}</div></div>
+    <div class="stat-card amber"><div class="stat-label">未歸檔</div><div class="stat-value">${notArchived}</div></div>
     <div class="stat-card"><div class="stat-label">總筆數</div><div class="stat-value">${corrList.length}</div></div>
   `;
 }
@@ -216,13 +227,19 @@ function toggleCorrDir(d) { corrDirFilter[d] = !corrDirFilter[d]; corrVisibleCou
 function toggleCorrRow(id) { corrRowExpanded[id] = !corrRowExpanded[id]; renderList(); }
 function loadMoreCorr() { corrVisibleCount += CORR_PAGE_SIZE; renderList(); }
 
+function onArchivedToggle() {
+  const cb = document.getElementById('cm-archived');
+  const dateInput = document.getElementById('cm-archive-date');
+  if (cb.checked && !dateInput.value) dateInput.value = todayStr();
+}
+
 function getFilteredSortedCorr() {
   const term = corrSearchTerm.trim().toLowerCase();
   let items = corrList.filter(c => {
     if (!corrDirFilter[c.direction]) return false;
-    if (corrUnitFilter && c.unit !== corrUnitFilter) return false;
+    if (corrUnitFilter && unitDisplay(c) !== corrUnitFilter) return false;
     if (term) {
-      const hay = [c.subject,c.docNo,c.unit,c.notes,c.signedBy].join(' ').toLowerCase();
+      const hay = [c.subject,c.docNo,unitDisplay(c),c.notes].join(' ').toLowerCase();
       if (!hay.includes(term)) return false;
     }
     return true;
@@ -250,16 +267,16 @@ function renderList() {
 
 function renderCorrRow(c) {
   const open = !!corrRowExpanded[c.id];
-  const pending = c.direction === 'in' && !c.receiveDate;
+  const notArchived = !c.archived;
   return `<div class="cr-row${open?' open':''}">
     <div class="cr-row-head" onclick="toggleCorrRow('${c.id}')">
       <span class="cr-chevron">▶</span>
       <span class="cr-dir-badge ${c.direction}">${c.direction==='out'?'發文':'收文'}</span>
       <span class="cr-date">${c.issueDate||'—'}</span>
       <span class="cr-docno">${esc(c.docNo)||'—'}</span>
-      <span class="cr-unit">${esc(c.unit)||'—'}</span>
+      <span class="cr-unit">${esc(unitDisplay(c))||'—'}</span>
       <span class="cr-subject">${esc(c.subject)||'（無主旨）'}</span>
-      ${pending ? '<span class="cr-pending-tag">待簽收</span>' : ''}
+      ${notArchived ? '<span class="cr-status-tag">未歸檔</span>' : '<span class="cr-status-tag done">已歸檔</span>'}
     </div>
     ${open ? renderCorrDetail(c) : ''}
   </div>`;
@@ -270,9 +287,9 @@ function renderCorrDetail(c) {
     <div class="cr-detail-grid">
       <div class="cr-detail-item"><div class="lbl">速別</div><div class="val">${esc(c.urgency)||'—'}</div></div>
       <div class="cr-detail-item"><div class="lbl">發文日期</div><div class="val">${c.issueDate||'—'}</div></div>
-      <div class="cr-detail-item"><div class="lbl">收文／簽收日期</div><div class="val">${c.receiveDate||'—'}</div></div>
-      <div class="cr-detail-item"><div class="lbl">簽收人</div><div class="val">${esc(c.signedBy)||'—'}</div></div>
-      <div class="cr-detail-item"><div class="lbl">單位</div><div class="val">${esc(c.unit)||'—'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">歸檔狀態</div><div class="val">${c.archived ? '已歸檔' : '未歸檔'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">歸檔日期</div><div class="val">${c.archiveDate||'—'}</div></div>
+      <div class="cr-detail-item"><div class="lbl">單位</div><div class="val">${esc(unitDisplay(c))||'—'}</div></div>
       <div class="cr-detail-item"><div class="lbl">文號</div><div class="val">${esc(c.docNo)||'—'}</div></div>
     </div>
     <div class="cr-detail-notes">${c.notes ? esc(c.notes) : '（無備註）'}</div>
@@ -292,8 +309,8 @@ function openAddCorrModal() {
   document.getElementById('cm-subject').value = '';
   document.getElementById('cm-unit').value = '';
   document.getElementById('cm-issue-date').value = todayStr();
-  document.getElementById('cm-receive-date').value = '';
-  document.getElementById('cm-signed-by').value = '';
+  document.getElementById('cm-archived').checked = false;
+  document.getElementById('cm-archive-date').value = '';
   document.getElementById('cm-notes').value = '';
   document.getElementById('cm-delete-btn').style.display = 'none';
   document.getElementById('corr-modal').style.display = 'flex';
@@ -308,8 +325,8 @@ function openEditCorrModal(id) {
   document.getElementById('cm-subject').value = c.subject || '';
   document.getElementById('cm-unit').value = c.unit || '';
   document.getElementById('cm-issue-date').value = c.issueDate || '';
-  document.getElementById('cm-receive-date').value = c.receiveDate || '';
-  document.getElementById('cm-signed-by').value = c.signedBy || '';
+  document.getElementById('cm-archived').checked = !!c.archived;
+  document.getElementById('cm-archive-date').value = c.archiveDate || '';
   document.getElementById('cm-notes').value = c.notes || '';
   document.getElementById('cm-delete-btn').style.display = 'block';
   document.getElementById('corr-modal').style.display = 'flex';
@@ -331,8 +348,8 @@ function saveCorr() {
     subject,
     unit:        document.getElementById('cm-unit').value.trim(),
     issueDate:   document.getElementById('cm-issue-date').value,
-    receiveDate: document.getElementById('cm-receive-date').value,
-    signedBy:    document.getElementById('cm-signed-by').value.trim(),
+    archived:    document.getElementById('cm-archived').checked,
+    archiveDate: document.getElementById('cm-archive-date').value,
     notes:       document.getElementById('cm-notes').value.trim(),
   };
   if (editingCorrId) {
