@@ -111,15 +111,20 @@
         <div class="export-card att">
           <span class="export-icon">ATT</span>
           <h3>出勤月報</h3>
-          <p>選擇月份與人員，匯出純黑白「考勤明細表」直式格式，含每日上下班、當日時數、出勤/請假天數與月累計總時數。</p>
+          <p>選擇月份與人員，匯出出勤紀錄，提供兩種版型可選。</p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
             <select class="month-select" id="att-export-month" style="margin-bottom:0;"></select>
           </div>
           <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">選擇匯出人員（可複選）</div>
           <div id="att-member-picker" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:120px;overflow-y:auto;padding:2px;"></div>
-          <div class="export-btn-row">
-            <button class="export-btn purple" onclick="exportAttXLSX()">XLSX 月報匯出</button>
+          <div class="export-btn-row" style="margin-bottom:10px;">
+            <button class="export-btn purple" onclick="exportAttXLSX()">版型一：考勤明細表（直式）</button>
           </div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:6px;">版型一：純黑白直式格式，含每日上下班、當日時數、出勤/請假天數與月累計總時數。</div>
+          <div class="export-btn-row" style="margin-bottom:10px;">
+            <button class="export-btn purple" onclick="exportAttXLSX2()">版型二：打卡月曆＋出勤比較表</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">版型二：橫式打卡時間表（比照公司範本）＋「預定/實際出勤人力比較表」，兩個工作表。</div>
         </div>
 
       </div>
@@ -813,6 +818,237 @@ async function exportAttXLSX() {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
+// ── 出勤月報匯出（版型二：打卡月曆＋出勤比較表，比照公司範本）──
+async function exportAttXLSX2() {
+  const selMonth = document.getElementById('att-export-month').value;
+  if (!selMonth) { alert('請選擇要匯出的月份'); return; }
+
+  const checkedIds = Array.from(
+    document.querySelectorAll('#att-member-picker input[type=checkbox]:checked')
+  ).map(cb => cb.value);
+  if (!checkedIds.length) { alert('請至少選擇一位人員'); return; }
+  const pickedMembers = allMembers.filter(m => checkedIds.includes(m.id));
+
+  const [y, mo] = selMonth.split('-').map(Number);
+  const hols    = loadHolidays().holidays || TW_HOLIDAYS_DEFAULT;
+  const rocYear = y - 1911;
+  const DOW_TW  = ['日','一','二','三','四','五','六'];
+  const daysInMonth = new Date(y, mo, 0).getDate();
+
+  // 當月應上班日 = 週一～五且非國定假日的天數
+  let expectWorkDays = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(ds).getDay();
+    if (dow >= 1 && dow <= 5 && !hols[ds]) expectWorkDays++;
+  }
+
+  function validRec(r) {
+    if (r.status==='present' && r.note==='XLS匯入' && hols[r.date]) return false;
+    return true;
+  }
+  function getMemberRec(memberId, dateStr) {
+    return allAtt.find(r => r.memberId===memberId && r.date===dateStr && validRec(r)) || null;
+  }
+
+  const ExcelJS = window.ExcelJS;
+  if (!ExcelJS) { alert('ExcelJS 未載入，請重新整理頁面'); return; }
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'DNV監造系統';
+
+  const FONT = '微軟正黑體';
+  const BLACK = { argb:'FF000000' };
+  const thin = { style:'thin', color:BLACK };
+  const aC  = { horizontal:'center', vertical:'middle', wrapText:true };
+  const aL  = { horizontal:'left',   vertical:'middle', wrapText:true };
+  const fnt = (sz, bold) => ({ name:FONT, size:sz||10, bold:!!bold, color:BLACK });
+  const TIME_FMT = 'h:mm';
+  const DUR_FMT  = '[h]"h"mm"m"';
+  function colLetter(n) { let s=''; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26; } return s; }
+  function excelTime(hhmm) {
+    const [h, m] = hhmm.split(':').map(Number);
+    return new Date(Date.UTC(1899, 11, 30, h, m, 0));
+  }
+  function put(ws, r, c, val, sz, bold, align, border) {
+    const cell = ws.getRow(r).getCell(c);
+    cell.value = val;
+    cell.font = fnt(sz, bold);
+    cell.alignment = align || aC;
+    if (border !== false) cell.border = { top:thin, bottom:thin, left:thin, right:thin };
+    return cell;
+  }
+
+  // ══════════════════════ 工作表一：打卡時間_M月 ══════════════════════
+  const ws1 = wb.addWorksheet(`打卡時間_${mo}月`);
+  ws1.views = [{ showGridLines:false }];
+  ws1.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0,
+    margins:{ left:0.3, right:0.3, top:0.3, bottom:0.3, header:0.2, footer:0.2 } };
+
+  const S1_LASTCOL = 2 + daysInMonth; // A 姓名, B 職稱, C.. 每日
+  ws1.getColumn(1).width = 8;
+  ws1.getColumn(2).width = 10;
+  for (let d = 1; d <= daysInMonth; d++) ws1.getColumn(2+d).width = 7;
+
+  // 標題
+  ws1.mergeCells(1, 1, 1, S1_LASTCOL);
+  put(ws1, 1, 1, `監造人員出差勤紀錄　民國 ${rocYear} 年 ${mo} 月`, 14, true, aC, false);
+  ws1.getRow(1).height = 24;
+
+  // 工程名稱
+  ws1.mergeCells(2, 1, 2, S1_LASTCOL);
+  put(ws1, 2, 1, `工程名稱：${PROJECT_NAME}`, 10, false, aL, false);
+  ws1.getRow(2).height = 18;
+
+  // 表頭
+  put(ws1, 3, 1, '姓名', 10, true);
+  put(ws1, 3, 2, '職稱', 10, true);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds  = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(ds).getDay();
+    put(ws1, 3, 2+d, `${d}\n(${DOW_TW[dow]})`, 9, true);
+  }
+  ws1.getRow(3).height = 26;
+
+  let r1 = 4;
+  pickedMembers.forEach(mem => {
+    const rIn = r1, rOut = r1+1, rDur = r1+2;
+    ws1.mergeCells(rIn, 1, rDur, 1);
+    put(ws1, rIn, 1, mem.name, 10, true);
+    ws1.mergeCells(rIn, 2, rOut, 2);
+    put(ws1, rIn, 2, mem.role || '監造人員', 9, true);
+    put(ws1, rDur, 2, '當日工時', 9, true);
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const c   = 2 + d;
+      const ds  = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dow = new Date(ds).getDay();
+      const isRest = (dow===0 || dow===6 || !!hols[ds]);
+      const rec = getMemberRec(mem.id, ds);
+      const colL = colLetter(c);
+      const worked = rec && rec.timeIn && rec.timeOut && (rec.status==='present' || rec.status==='late');
+
+      if (worked) {
+        const inC  = put(ws1, rIn,  c, excelTime(rec.timeIn), 8, false);  inC.numFmt = TIME_FMT;
+        const outC = put(ws1, rOut, c, excelTime(rec.timeOut), 8, false); outC.numFmt = TIME_FMT;
+        const durC = put(ws1, rDur, c, '', 8, false);
+        durC.value = { formula: `IF(AND(ISNUMBER(${colL}${rIn}),ISNUMBER(${colL}${rOut})),${colL}${rOut}-${colL}${rIn},"")` };
+        durC.numFmt = DUR_FMT;
+      } else if (!isRest && rec && (rec.status==='leave' || rec.status==='holiday')) {
+        const label = rec.status==='holiday' ? '公假' : '假';
+        put(ws1, rIn,  c, label, 8, false);
+        put(ws1, rOut, c, label, 8, false);
+        put(ws1, rDur, c, label, 8, false);
+      } else if (!isRest) {
+        put(ws1, rIn,  c, '缺', 8, false);
+        put(ws1, rOut, c, '缺', 8, false);
+        put(ws1, rDur, c, '', 8, false);
+      } else {
+        // 例假日/國定假日且未加班：留白
+        put(ws1, rIn,  c, '', 8, false);
+        put(ws1, rOut, c, '', 8, false);
+        put(ws1, rDur, c, '', 8, false);
+      }
+    }
+    ws1.getRow(rIn).height  = 20;
+    ws1.getRow(rOut).height = 20;
+    ws1.getRow(rDur).height = 22;
+    r1 = rDur + 1;
+  });
+
+  // ══════════════════ 工作表二：出勤人次_M月 ══════════════════
+  const ws2 = wb.addWorksheet(`出勤人次_${mo}月`);
+  ws2.views = [{ showGridLines:false }];
+  ws2.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0,
+    margins:{ left:0.3, right:0.3, top:0.3, bottom:0.3, header:0.2, footer:0.2 } };
+
+  const S2_TOTALCOL = 3 + daysInMonth + 1; // No,姓名,職稱 + 每日 + 實際/預定出勤天數
+  ws2.getColumn(1).width = 5;
+  ws2.getColumn(2).width = 10;
+  ws2.getColumn(3).width = 12;
+  for (let d = 1; d <= daysInMonth; d++) ws2.getColumn(3+d).width = 6;
+  ws2.getColumn(S2_TOTALCOL).width = 12;
+
+  ws2.mergeCells(1, 1, 1, S2_TOTALCOL);
+  put(ws2, 1, 1, `監造預定人力配置與實際出勤人力比較表　民國 ${rocYear} 年 ${mo} 月 （本月應出勤日數共 ${expectWorkDays} 日）`, 12, true, aC, false);
+  ws2.getRow(1).height = 24;
+
+  put(ws2, 2, 1, 'No.', 9, true);
+  put(ws2, 2, 2, '姓名', 9, true);
+  put(ws2, 2, 3, '職稱', 9, true);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds  = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(ds).getDay();
+    put(ws2, 2, 3+d, `${d}\n(${DOW_TW[dow]})`, 8, true);
+  }
+  put(ws2, 2, S2_TOTALCOL, '實際/預定\n出勤天數', 8, true);
+  ws2.getRow(2).height = 26;
+
+  // 預定出勤人數
+  ws2.mergeCells(3, 1, 3, 3);
+  put(ws2, 3, 1, '預定出勤人數', 9, true);
+  let totalPlanned = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds  = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(ds).getDay();
+    const isRest = (dow===0 || dow===6 || !!hols[ds]);
+    if (!isRest) { put(ws2, 3, 3+d, pickedMembers.length, 9, false); totalPlanned += pickedMembers.length; }
+    else put(ws2, 3, 3+d, '', 9, false);
+  }
+  put(ws2, 3, S2_TOTALCOL, `${totalPlanned}/${totalPlanned}`, 9, true);
+
+  // 各人員逐日出勤（1/0）
+  let r2 = 4;
+  const memberRowRange = [];
+  pickedMembers.forEach((mem, idx) => {
+    put(ws2, r2, 1, idx+1, 9, false);
+    put(ws2, r2, 2, mem.name, 9, true, aL);
+    put(ws2, r2, 3, mem.role || '監造人員', 9, false, aL);
+    let actualDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds  = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dow = new Date(ds).getDay();
+      const isRest = (dow===0 || dow===6 || !!hols[ds]);
+      const rec = getMemberRec(mem.id, ds);
+      const worked = rec && rec.timeIn && rec.timeOut && (rec.status==='present' || rec.status==='late');
+      if (isRest) { put(ws2, r2, 3+d, '', 9, false); }
+      else if (worked) { put(ws2, r2, 3+d, 1, 9, false); actualDays++; }
+      else { put(ws2, r2, 3+d, 0, 9, false); }
+    }
+    put(ws2, r2, S2_TOTALCOL, `${actualDays}/${expectWorkDays}`, 9, true);
+    memberRowRange.push(r2);
+    r2++;
+  });
+
+  // 實際出勤人數
+  const rTotal = r2;
+  ws2.mergeCells(rTotal, 1, rTotal, 3);
+  put(ws2, rTotal, 1, '實際出勤人數', 9, true);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds  = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(ds).getDay();
+    const isRest = (dow===0 || dow===6 || !!hols[ds]);
+    const colL = colLetter(3+d);
+    if (isRest) { put(ws2, rTotal, 3+d, '', 9, false); }
+    else {
+      const cell = put(ws2, rTotal, 3+d, '', 9, false);
+      cell.value = { formula: `SUM(${colL}${memberRowRange[0]}:${colL}${memberRowRange[memberRowRange.length-1]})` };
+    }
+  }
+  // 總計欄以文字呈現「實際出勤天數合計/預定出勤天數合計」
+  let sumActualDays = 0;
+  pickedMembers.forEach((mem, idx) => {
+    const cellVal = ws2.getRow(memberRowRange[idx]).getCell(S2_TOTALCOL).value;
+    if (typeof cellVal === 'string') {
+      const n = parseInt(cellVal.split('/')[0], 10);
+      if (!isNaN(n)) sumActualDays += n;
+    }
+  });
+  put(ws2, rTotal, S2_TOTALCOL, `${sumActualDays}/${totalPlanned}`, 9, true);
+
+  // ── 輸出 ──
+  await downloadWorkbook(wb, `監造出勤紀錄_${rocYear}年${mo}月.xlsx`);
+}
+
 function diagAttRecords() {
   // 找出所有人員與對應的出勤記錄，顯示有無時間資料
   const lines = [];
